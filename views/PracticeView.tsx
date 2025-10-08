@@ -9,6 +9,7 @@ import ChartComponent from '../components/practice/ChartComponent';
 import PracticeSidebar from '../components/practice/PracticeSidebar';
 import OrderDialog from '../components/practice/OrderDialog';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
+import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -31,6 +32,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
+    const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool>('crosshair');
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
@@ -182,11 +184,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                                 </svg>
                              </div>
                         ) : (
-                           <ChartComponent 
-                                ref={chartComponentRef}
-                                key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
-                                initialData={initialChartData} 
-                           />
+                           <>
+                               <DrawingToolbar 
+                                   activeTool={activeDrawingTool}
+                                   onToolSelect={setActiveDrawingTool}
+                               />
+                               <ChartComponent 
+                                   ref={chartComponentRef}
+                                   key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
+                                   initialData={initialChartData} 
+                                   activeTool={activeDrawingTool}
+                               />
+                           </>
                         )}
                     </div>
                 </main>

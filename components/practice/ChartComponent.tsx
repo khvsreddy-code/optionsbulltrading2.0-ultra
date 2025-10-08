@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, LineWidth } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, LineWidth, CrosshairMode } from 'lightweight-charts';
 import type { CandleData } from '../../types';
+import type { DrawingTool } from './DrawingToolbar';
 
 interface ChartComponentProps {
   initialData: CandleData[];
+  activeTool: DrawingTool;
 }
 
 // forwardRef allows the parent component (PracticeView) to get a ref to this component's instance
-const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData }, ref) => {
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, activeTool }, ref) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -50,7 +52,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         borderColor: '#485158',
       },
       crosshair: {
-        mode: 1, // Magnet mode
+        mode: CrosshairMode.Normal,
         vertLine: {
           width: 2 as LineWidth,
           color: '#C3BCDB',
@@ -87,6 +89,21 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
       }
     };
   }, []); // Create chart only once
+
+  // Effect to handle drawing tool changes
+  useEffect(() => {
+    if (chartRef.current) {
+      chartRef.current.applyOptions({
+        crosshair: {
+          mode: activeTool === 'crosshair' ? CrosshairMode.Normal : CrosshairMode.Magnet,
+        }
+      });
+    }
+    if (chartContainerRef.current) {
+      // Use a crosshair cursor for any tool other than the default one
+      chartContainerRef.current.style.cursor = activeTool === 'crosshair' ? '' : 'crosshair';
+    }
+  }, [activeTool]);
 
   // Effect for initializing data
   useEffect(() => {
