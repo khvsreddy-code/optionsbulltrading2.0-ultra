@@ -26,6 +26,9 @@ const PositionManagerDialog: React.FC<PositionManagerDialogProps> = ({ position,
     }
   };
 
+  const remainingQuantity = position.quantity - quantity;
+  const isClosingFullPosition = quantity === position.quantity;
+
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
       <div className="bg-slate-800 rounded-lg shadow-xl w-full max-w-sm text-white">
@@ -46,15 +49,16 @@ const PositionManagerDialog: React.FC<PositionManagerDialogProps> = ({ position,
               max={position.quantity}
             />
           </div>
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-slate-400 space-y-1">
             <p>Order Type: Market</p>
             <p>Approx. Value: ₹{(position.lastPrice * quantity).toFixed(2)}</p>
+            <p>Remaining Shares: <span className="font-semibold text-slate-200">{remainingQuantity}</span></p>
           </div>
         </div>
         <div className="p-4 border-t border-slate-700 grid grid-cols-2 gap-2">
-          <button onClick={onClose} className="p-3 bg-slate-700 rounded-md font-semibold">Cancel</button>
-          <button onClick={handleClose} className="p-3 bg-red-600 rounded-md font-semibold">
-            Close {quantity} Share(s)
+          <button onClick={onClose} className="p-3 bg-slate-700 rounded-md font-semibold button-press-feedback">Cancel</button>
+          <button onClick={handleClose} className="p-3 bg-red-600 rounded-md font-semibold button-press-feedback">
+            {isClosingFullPosition ? 'Close Full Position' : `Close ${quantity} Share(s)`}
           </button>
         </div>
       </div>

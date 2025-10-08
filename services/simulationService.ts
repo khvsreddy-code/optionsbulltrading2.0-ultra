@@ -1,4 +1,4 @@
-import type { Order, Portfolio, Position, OrderSide, OrderType, Instrument } from '../types';
+import type { Order, Portfolio, Position } from '../types';
 
 const INITIAL_CASH = 100000; // Start with ₹1,00,000
 
@@ -9,62 +9,76 @@ export const createInitialPortfolio = (): Portfolio => ({
   orders: [],
 });
 
+/**
+ * Executes a trade order and updates the portfolio. This version is refactored for clarity,
+ * correctly handles adding to existing positions, and immediately updates position prices.
+ * @param portfolio The current portfolio state.
+ * @param order The order to be executed.
+ * @param executionPrice The price at which the order is executed.
+ * @returns The new, updated portfolio state.
+ */
 export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice: number): Portfolio => {
     const newPortfolio = JSON.parse(JSON.stringify(portfolio));
-    const orderCost = order.quantity * executionPrice;
+    const { instrument, side, quantity } = order;
+    const orderValue = quantity * executionPrice;
 
-    if (order.side === 'BUY') {
-        if (newPortfolio.cash < orderCost) {
-            console.error("Not enough cash to execute buy order.");
-            // Mark order as failed/cancelled if we had such a status
-            return portfolio; // Return original portfolio
+    const positionIndex = newPortfolio.positions.findIndex(
+        (p: Position) => p.instrument.instrument_key === instrument.instrument_key
+    );
+    let existingPosition: Position | undefined = positionIndex > -1 ? newPortfolio.positions[positionIndex] : undefined;
+
+    if (side === 'BUY') {
+        if (newPortfolio.cash < orderValue) {
+            console.error("Not enough cash for buy order.");
+            return portfolio; // Not enough funds, return original state
         }
-        newPortfolio.cash -= orderCost;
+        newPortfolio.cash -= orderValue;
 
-        const existingPositionIndex = newPortfolio.positions.findIndex(
-            (p: Position) => p.instrument.instrument_key === order.instrument.instrument_key
-        );
-
-        if (existingPositionIndex > -1) {
-            const pos = newPortfolio.positions[existingPositionIndex];
-            const newTotalValue = pos.averagePrice * pos.quantity + orderCost;
-            pos.quantity += order.quantity;
-            pos.averagePrice = newTotalValue / pos.quantity;
+        if (existingPosition) {
+            // Add to existing position
+            const currentTotalValue = existingPosition.averagePrice * existingPosition.quantity;
+            const newTotalQuantity = existingPosition.quantity + quantity;
+            existingPosition.averagePrice = (currentTotalValue + orderValue) / newTotalQuantity;
+            existingPosition.quantity = newTotalQuantity;
+            existingPosition.lastPrice = executionPrice; // Update last price immediately
         } else {
+            // Create new position
             newPortfolio.positions.push({
-                instrument: order.instrument,
-                quantity: order.quantity,
+                instrument: instrument,
+                quantity: quantity,
                 averagePrice: executionPrice,
                 lastPrice: executionPrice,
                 pnl: 0,
             });
         }
     } else { // SELL
-        const existingPositionIndex = newPortfolio.positions.findIndex(
-            (p: Position) => p.instrument.instrument_key === order.instrument.instrument_key
-        );
-        if (existingPositionIndex === -1 || newPortfolio.positions[existingPositionIndex].quantity < order.quantity) {
-             console.error("Cannot sell more shares than owned.");
-             return portfolio;
+        if (!existingPosition || existingPosition.quantity < quantity) {
+            console.error("Not enough shares to sell or position does not exist.");
+            return portfolio; // Can't sell what you don't own
         }
+        
+        newPortfolio.cash += orderValue;
+        existingPosition.quantity -= quantity;
+        existingPosition.lastPrice = executionPrice; // Update last price immediately
 
-        newPortfolio.cash += orderCost;
-        const pos = newPortfolio.positions[existingPositionIndex];
-        pos.quantity -= order.quantity;
-
-        // If all shares are sold, remove the position
-        if (pos.quantity === 0) {
-            newPortfolio.positions.splice(existingPositionIndex, 1);
+        if (existingPosition.quantity === 0) {
+            // Remove position if all shares are sold
+            newPortfolio.positions.splice(positionIndex, 1);
         }
     }
 
-    // Update order status
-    // FIX: Corrected object property assignment. The property is 'executedPrice' and the value comes from the 'executionPrice' variable.
-    const executedOrder = { ...order, status: 'EXECUTED', executedAt: Date.now() / 1000, executedPrice: executionPrice };
-    newPortfolio.orders.unshift(executedOrder); // Add to beginning of orders list
+    const executedOrder: Order = { 
+        ...order, 
+        status: 'EXECUTED', 
+        executedAt: Date.now() / 1000, 
+        executedPrice: executionPrice 
+    };
+    newPortfolio.orders.unshift(executedOrder);
 
+    // Recalculate portfolio value immediately after the transaction
     return updatePortfolioValue(newPortfolio);
 };
+
 
 export const updatePortfolioValue = (portfolio: Portfolio, livePrices?: { [instrumentKey: string]: number }): Portfolio => {
     let positionsValue = 0;
