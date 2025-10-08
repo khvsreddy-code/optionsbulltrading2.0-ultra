@@ -1,10 +1,9 @@
 import React from 'react';
 import { ChevronRight } from '../common/Icons';
-import type { View } from '../../types';
 
 interface PolicyPageLayoutProps {
     title: string;
-    onNavigate: (view: View) => void;
+    onNavigate: (path: string) => void;
     children: React.ReactNode;
 }
 
@@ -13,7 +12,7 @@ const PolicyPageLayout: React.FC<PolicyPageLayoutProps> = ({ title, onNavigate, 
         <div className="font-sans antialiased text-gray-900 bg-white dark:bg-slate-900 dark:text-slate-200 min-h-screen flex flex-col">
             <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm p-3 border-b border-gray-200 dark:border-slate-700">
                 <div className="flex items-center">
-                    <button onClick={() => onNavigate('policiesList')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="Go back to policies list">
+                    <button onClick={() => onNavigate('/policies')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" aria-label="Go back to policies list">
                         <ChevronRight size={22} className="text-gray-600 dark:text-slate-400 transform rotate-180" />
                     </button>
                     <h1 className="text-lg font-semibold text-gray-800 dark:text-slate-200 ml-2">{title}</h1>

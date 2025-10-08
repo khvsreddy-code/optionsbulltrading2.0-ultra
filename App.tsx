@@ -35,18 +35,17 @@ const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<SupabaseUser | null>(null);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState<View>('home');
     const [isDrawerOpen, setDrawerOpen] = useState(false);
-    const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
-    const [activePatternId, setActivePatternId] = useState<string | null>(null);
+    
+    // --- NEW: Routing State Management ---
+    const [location, setLocation] = useState(window.location.hash.slice(1) || '/home');
+
     const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('theme');
-        // Default to dark theme for the new look
         return (savedTheme === 'dark' || savedTheme === 'light') ? savedTheme : 'dark';
     });
 
     useEffect(() => {
-        // Apply theme class to the root element
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -58,60 +57,89 @@ const App: React.FC = () => {
     const toggleTheme = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
+    
+    // --- NEW: Effect to handle browser history events ---
+    useEffect(() => {
+        const handleHashChange = () => {
+            setLocation(window.location.hash.slice(1) || '/home');
+            window.scrollTo(0, 0); // Scroll to top on navigation
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
 
     useEffect(() => {
-        // Using an async function inside useEffect to handle session fetching robustly.
         const fetchSession = async () => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
-
-                // If Supabase returns an error, log it.
-                if (error) {
-                    console.error("Error fetching session:", error.message);
-                }
-                
+                if (error) console.error("Error fetching session:", error.message);
                 setSession(session);
                 setUser(session?.user ?? null);
             } catch (error) {
-                // Catch any other network-related or unexpected errors.
                 console.error("An unexpected error occurred while fetching the session:", error);
             } finally {
-                // IMPORTANT: Always stop loading, regardless of success or failure.
                 setLoading(false);
             }
         };
         
         fetchSession();
 
-        // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             if (_event === 'SIGNED_IN') {
-                setView('home'); // Reset to home view on sign-in
+                handleNavigate('/home'); // Reset to home view on sign-in
             }
         });
 
-        // Cleanup subscription on unmount
         return () => subscription.unsubscribe();
     }, []);
 
-    const handleNavigate = (newView: View, params?: { chapterId?: string; patternId?: string }) => {
-        setView(newView);
-        if (newView === 'learningChapter' && params?.chapterId) {
-            setActiveChapterId(params.chapterId);
-        } else if (newView !== 'learningChapter') {
-            setActiveChapterId(null);
-        }
-
-        if (newView === 'patternDetail' && params?.patternId) {
-            setActivePatternId(params.patternId);
-        } else if (newView !== 'patternDetail') {
-            setActivePatternId(null);
-        }
-        window.scrollTo(0, 0); // Scroll to top on navigation
+    // --- NEW: Path-based navigation function ---
+    const handleNavigate = (path: string) => {
+        window.location.hash = path;
         setDrawerOpen(false); // Close drawer on navigation
     };
+    
+    // --- NEW: Derive view and params from the location state ---
+    const parseLocation = () => {
+        const parts = location.split('/').filter(Boolean);
+        let view: View = 'home';
+        let activeChapterId: string | null = null;
+        let activePatternId: string | null = null;
+
+        if (parts[0] === 'pricing') view = 'pricing';
+        else if (parts[0] === 'practice') view = 'practice';
+        else if (parts[0] === 'profile') view = 'profile';
+        else if (parts[0] === 'policies') {
+            switch (parts[1]) {
+                case 'cancellation': view = 'cancellation'; break;
+                case 'terms': view = 'terms'; break;
+                case 'shipping': view = 'shipping'; break;
+                case 'privacy': view = 'privacy'; break;
+                case 'contact': view = 'contact'; break;
+                default: view = 'policiesList';
+            }
+        } else if (parts[0] === 'learning') {
+            if (parts.length === 1) view = 'learningHome';
+            else if (parts[1] === 'chapter' && parts[2]) {
+                view = 'learningChapter';
+                activeChapterId = parts[2];
+            } else if (parts[1] === 'bullish') view = 'bullishPatternsList';
+            else if (parts[1] === 'bearish') view = 'bearishPatternsList';
+            else if (parts[1] === 'pattern' && parts[2]) {
+                view = 'patternDetail';
+                activePatternId = parts[2];
+            } else view = 'learningHome';
+        } else {
+            view = 'home';
+        }
+        return { view, activeChapterId, activePatternId };
+    };
+
+    const { view, activeChapterId, activePatternId } = parseLocation();
+
 
     const renderView = () => {
         switch (view) {
@@ -169,8 +197,7 @@ const App: React.FC = () => {
         );
     }
     
-    // For certain views, we use a different layout without the standard header/navbar
-    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail'];
+    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }
@@ -191,7 +218,7 @@ const App: React.FC = () => {
                     {renderView()}
                 </main>
                 <BottomNavBar
-                    activeTab={view}
+                    activeView={view}
                     onTabChange={handleNavigate}
                     onMenuClick={() => setDrawerOpen(true)}
                 />

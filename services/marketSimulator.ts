@@ -42,27 +42,32 @@ export class MarketSimulator {
         }
     }
 
-    public start(initialDataPoints = 300): CandleData[] {
-        const historicalData = this.generateHistoricalData(initialDataPoints);
-        
-        if (this.tickIntervalId) clearInterval(this.tickIntervalId);
+    public async start(initialDataPoints = 300): Promise<CandleData[]> {
+        return new Promise(resolve => {
+            // Yield to event loop to allow UI to update (e.g., show spinner) before heavy calculation
+            setTimeout(() => {
+                const historicalData = this.generateHistoricalData(initialDataPoints);
+                
+                if (this.tickIntervalId) clearInterval(this.tickIntervalId);
 
-        const lastHistoricalCandle = historicalData[historicalData.length - 1];
-        this.lastPrice = lastHistoricalCandle.close;
-        
-        this.currentCandle = {
-            time: lastHistoricalCandle.time + this.timeframeInSeconds,
-            open: lastHistoricalCandle.close,
-            high: lastHistoricalCandle.close,
-            low: lastHistoricalCandle.close,
-            close: lastHistoricalCandle.close,
-        };
-        this.tickCounter = 0;
-        
-        // Start the internal generation loop
-        this.tickIntervalId = setInterval(() => this.tick(), 1000 / this.TICKS_PER_SECOND);
+                const lastHistoricalCandle = historicalData[historicalData.length - 1];
+                this.lastPrice = lastHistoricalCandle.close;
+                
+                this.currentCandle = {
+                    time: lastHistoricalCandle.time + this.timeframeInSeconds,
+                    open: lastHistoricalCandle.close,
+                    high: lastHistoricalCandle.close,
+                    low: lastHistoricalCandle.close,
+                    close: lastHistoricalCandle.close,
+                };
+                this.tickCounter = 0;
+                
+                // Start the internal generation loop
+                this.tickIntervalId = setInterval(() => this.tick(), 1000 / this.TICKS_PER_SECOND);
 
-        return historicalData;
+                resolve(historicalData);
+            }, 0);
+        });
     }
 
     public stop(): void {

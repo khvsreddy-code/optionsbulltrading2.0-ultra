@@ -1,10 +1,7 @@
-// FIX: Removed invalid frontmatter from the top of the file which was causing parsing errors.
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
-import type { View } from '../types';
 
-// Add type declaration for the Razorpay Checkout script to the global window object
 declare global {
   interface Window {
     Razorpay: any;
@@ -12,7 +9,7 @@ declare global {
 }
 
 interface PricingViewProps {
-    onNavigate: (view: View) => void;
+    onNavigate: (path: string) => void;
     user: SupabaseUser | null;
 }
 
@@ -36,34 +33,30 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
         }
 
         const options = {
-            // Your Razorpay Key ID is now integrated here.
             key: 'rzp_test_RQ5XAtXLTbM4dL', 
-            amount: plan.price * 100, // Amount in paise (e.g., 299900 for ₹2999)
+            amount: plan.price * 100, 
             currency: 'INR',
             name: 'Optionsbulltrading Inc.',
             description: `Subscription for ${plan.title}`,
             image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png',
             handler: function (response: any) {
                 alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
-                // In a real application, you would send this payment ID to your backend server
-                // to verify the transaction and grant the user access to the subscription.
                 console.log('Payment Response:', response);
             },
             prefill: {
                 name: user.user_metadata?.full_name || 'Valued Customer',
                 email: user.email,
-                contact: '' // Optional: You can prefill contact number if available
+                contact: '' 
             },
             notes: {
                 plan_title: plan.title,
                 user_id: user.id,
             },
             theme: {
-                color: '#0094D3' // A color that matches your brand
+                color: '#0094D3'
             }
         };
         
-        // Check if the Razorpay script has loaded
         if (window.Razorpay) {
             const rzp = new window.Razorpay(options);
             rzp.open();
@@ -72,16 +65,13 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
         }
     };
 
-
     return (
         <div className="relative text-white min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0e1121]">
-            {/* Layer 1: Animated Background. These elements are styled by global CSS in index.html */}
             <div className="stars" aria-hidden="true"></div>
             <div className="twinkling" aria-hidden="true"></div>
             
-            {/* Layer 2: All visible content. */}
             <button 
-                onClick={() => onNavigate('home')}
+                onClick={() => onNavigate('/home')}
                 className="absolute top-4 left-4 z-20 text-white font-semibold text-sm hover:underline"
             >
                 &lt; Back to Home

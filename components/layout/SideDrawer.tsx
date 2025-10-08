@@ -2,13 +2,12 @@ import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, PieChart, Grid, Layers, Star, Settings, HelpCircle, Shield, FileText, ChevronRight, Sun, SignOut, Moon } from '../common/Icons';
 import { signOutUser } from '../../services/authService';
-import type { View } from '../../types';
 
 interface SideDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     user: SupabaseUser | null;
-    onNavigate: (view: View) => void;
+    onNavigate: (path: string) => void;
     theme: 'light' | 'dark';
     toggleTheme: () => void;
 }
@@ -17,17 +16,17 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose, user, onNaviga
     const userEmail = user?.user_metadata?.full_name || user?.email || 'Guest User';
     const userAvatar = user?.user_metadata?.avatar_url;
     
-    const handleNavigation = (view: View | null) => {
-        if (!view) return;
-        onNavigate(view);
+    const handleNavigation = (path: string | null) => {
+        if (!path) return;
+        onNavigate(path);
         onClose();
     };
 
-    const items: { name: string; icon: React.FC<any>; view: View | null }[] = [
-        { name: 'My Plans', icon: Star, view: null },
-        { name: 'Pricing', icon: FileText, view: 'pricing' },
-        { name: 'Settings', icon: Settings, view: null },
-        { name: 'Policies', icon: Shield, view: 'policiesList' },
+    const items: { name: string; icon: React.FC<any>; path: string | null }[] = [
+        { name: 'My Plans', icon: Star, path: null },
+        { name: 'Pricing', icon: FileText, path: '/pricing' },
+        { name: 'Settings', icon: Settings, path: null },
+        { name: 'Policies', icon: Shield, path: '/policies' },
     ];
 
     return (
@@ -55,7 +54,9 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose, user, onNaviga
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-800 dark:text-slate-200">Subscribe Now</span>
-                        <button className="px-5 py-1.5 border border-blue-600 text-blue-600 text-sm font-semibold rounded-md hover:bg-blue-50 dark:hover:bg-blue-500/10 dark:text-blue-400 dark:border-blue-400 transition">
+                        <button 
+                            onClick={() => handleNavigation('/pricing')}
+                            className="px-5 py-1.5 border border-blue-600 text-blue-600 text-sm font-semibold rounded-md hover:bg-blue-50 dark:hover:bg-blue-500/10 dark:text-blue-400 dark:border-blue-400 transition">
                             Subscribe
                         </button>
                     </div>
@@ -66,8 +67,8 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose, user, onNaviga
                         {items.map((item) => (
                              <li key={item.name} className="border-b dark:border-slate-700 last:border-0">
                                 <button 
-                                    onClick={() => handleNavigation(item.view)}
-                                    disabled={!item.view}
+                                    onClick={() => handleNavigation(item.path)}
+                                    disabled={!item.path}
                                     className="flex justify-between items-center p-4 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 w-full text-left disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <div className="flex items-center">
