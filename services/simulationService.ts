@@ -1,4 +1,4 @@
-import type { Order, Portfolio, Position } from '../types';
+import type { Order, Portfolio, Position, Trade } from '../types';
 
 const INITIAL_CASH = 100000; // Start with ₹1,00,000
 
@@ -7,11 +7,12 @@ export const createInitialPortfolio = (): Portfolio => ({
   positions: [],
   totalValue: INITIAL_CASH,
   orders: [],
+  trades: [],
 });
 
 /**
  * Executes a trade order and updates the portfolio. This version is re-architected to
- * handle both LONG and SHORT positions using a signed quantity.
+ * handle both LONG and SHORT positions and generate detailed trade logs on close.
  * @param portfolio The current portfolio state.
  * @param order The order to be executed.
  * @param executionPrice The price at which the order is executed.
@@ -27,6 +28,32 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
     );
     let existingPosition: Position | undefined = positionIndex > -1 ? newPortfolio.positions[positionIndex] : undefined;
 
+    // --- LOGIC FOR CREATING TRADE RECORDS ON CLOSE ---
+    if (existingPosition) {
+        const isClosingLong = side === 'SELL' && existingPosition.quantity > 0;
+        const isClosingShort = side === 'BUY' && existingPosition.quantity < 0;
+
+        if (isClosingLong || isClosingShort) {
+            const closedQty = Math.min(quantity, Math.abs(existingPosition.quantity));
+            const realizedPnl = (executionPrice - existingPosition.averagePrice) * (isClosingLong ? closedQty : -closedQty);
+
+            const newTrade: Trade = {
+                id: `trade_${Date.now()}`,
+                instrument: existingPosition.instrument,
+                side: isClosingLong ? 'LONG' : 'SHORT',
+                quantity: closedQty,
+                entryPrice: existingPosition.averagePrice,
+                exitPrice: executionPrice,
+                realizedPnl: realizedPnl,
+                entryTime: existingPosition.createdAt,
+                exitTime: Date.now() / 1000,
+            };
+            newPortfolio.trades.unshift(newTrade);
+        }
+    }
+    // --- END OF TRADE LOGIC ---
+
+
     if (!existingPosition) {
         // --- OPENING A NEW POSITION ---
         if (side === 'BUY') {
@@ -41,6 +68,7 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
                 averagePrice: executionPrice,
                 lastPrice: executionPrice,
                 pnl: 0, pnlPercent: 0,
+                createdAt: Date.now() / 1000, // NEW
             });
         } else { // SELL (to open a short position)
             newPortfolio.cash += orderValue;
@@ -50,6 +78,7 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
                 averagePrice: executionPrice,
                 lastPrice: executionPrice,
                 pnl: 0, pnlPercent: 0,
+                createdAt: Date.now() / 1000, // NEW
             });
         }
     } else {

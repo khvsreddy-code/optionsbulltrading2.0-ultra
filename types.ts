@@ -71,6 +71,20 @@ export interface Position {
   lastPrice: number;
   pnl: number;
   pnlPercent: number;
+  createdAt: number; // NEW: Timestamp of position opening
+}
+
+// NEW: Trade interface for completed trades
+export interface Trade {
+  id: string;
+  instrument: Instrument;
+  side: 'LONG' | 'SHORT';
+  quantity: number;
+  entryPrice: number;
+  exitPrice: number;
+  realizedPnl: number;
+  entryTime: number;
+  exitTime: number;
 }
 
 export interface Portfolio {
@@ -78,6 +92,7 @@ export interface Portfolio {
   positions: Position[];
   totalValue: number;
   orders: Order[];
+  trades: Trade[]; // NEW: To store completed trades
 }
 
 // Re-export Timeframe to be accessible from types

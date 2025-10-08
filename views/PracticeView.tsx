@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order } from '../types';
+import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order, Trade } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator, Timeframe } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
@@ -163,6 +163,33 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             setPortfolio(createInitialPortfolio());
         }
     };
+    
+    const handleManageFunds = () => {
+        const currentTotal = portfolio.totalValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+        const result = window.prompt(`Enter your desired total portfolio value.\nYour current value is ${currentTotal}.\nMinimum value is ₹1,00,000.`, portfolio.totalValue.toFixed(0));
+        
+        if (result === null) return; // User cancelled
+
+        const newTotalValue = parseFloat(result);
+
+        if (isNaN(newTotalValue)) {
+            alert("Invalid input. Please enter a number.");
+            return;
+        }
+
+        if (newTotalValue < 100000) {
+            alert("The minimum portfolio value is ₹1,00,000.");
+            return;
+        }
+
+        setPortfolio(prevPortfolio => {
+            const portfolioCopy = JSON.parse(JSON.stringify(prevPortfolio));
+            const diff = newTotalValue - portfolioCopy.totalValue;
+            portfolioCopy.cash += diff;
+            // Recalculate total value to be precise
+            return updatePortfolioValue(portfolioCopy);
+        });
+    };
 
     const handleToolSelect = (tool: DrawingTool) => {
         if (tool === 'trash') {
@@ -226,6 +253,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         portfolio={portfolio}
                         onPositionClick={handleOpenPositionManager}
                         onResetPortfolio={handleResetPortfolio}
+                        onManageFunds={handleManageFunds}
                    />
                 </aside>
             </div>

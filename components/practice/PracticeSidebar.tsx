@@ -9,16 +9,17 @@ interface PracticeSidebarProps {
   portfolio: Portfolio;
   onPositionClick: (position: Position) => void;
   onResetPortfolio: () => void;
+  onManageFunds: () => void;
 }
 
-const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPositionClick, onResetPortfolio }) => {
+const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPositionClick, onResetPortfolio, onManageFunds }) => {
     const [activeTab, setActiveTab] = useState<'positions' | 'history'>('positions');
     
     return (
         <div className="bg-[#1C2127] flex flex-col h-full border-l border-[#2A2E39]">
             {/* Portfolio Summary */}
             <div className="flex-shrink-0 border-b border-[#2A2E39]">
-                <PortfolioDisplay portfolio={portfolio} />
+                <PortfolioDisplay portfolio={portfolio} onManageFunds={onManageFunds} />
             </div>
 
             {/* Tabs */}
@@ -34,7 +35,7 @@ const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPosition
                         onClick={() => setActiveTab('history')}
                         className={`py-2.5 font-semibold text-center text-sm transition-colors ${activeTab === 'history' ? 'border-b-2 border-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}
                     >
-                        History ({portfolio.orders.length})
+                        History ({portfolio.trades.length})
                     </button>
                 </div>
             </div>
@@ -48,7 +49,7 @@ const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPosition
                     />
                 )}
                 {activeTab === 'history' && (
-                    <TradeHistoryPanel orders={portfolio.orders} />
+                    <TradeHistoryPanel trades={portfolio.trades} />
                 )}
             </div>
 
