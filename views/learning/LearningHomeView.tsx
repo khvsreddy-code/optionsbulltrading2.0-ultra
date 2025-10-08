@@ -34,14 +34,20 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                     {/* Render Basics Module Separately */}
                     {basicsModule && (
                         <div>
-                             <div
-                                key={basicsModule.id}
-                                onClick={() => onNavigate('/learning')}
-                                className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow mb-4 ${basicsModule.bgColor || 'bg-slate-700'}`}
-                            >
-                                <img src={basicsModule.image} alt="" className="absolute w-32 h-32 -right-5 -bottom-5 opacity-50 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
-                                <h3 className="font-bold text-xl z-10">{basicsModule.title.split(': ')[1]}</h3>
-                            </div>
+                            {(() => {
+                                const Icon = basicsModule.icon;
+                                return (
+                                    <div
+                                        key={basicsModule.id}
+                                        onClick={() => onNavigate('/learning')}
+                                        className={`p-6 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group pro-card mb-4 ${basicsModule.bgColor || 'bg-slate-700'}`}
+                                        style={{ height: '160px' }}
+                                    >
+                                        <Icon size={72} className="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform duration-300" />
+                                        <h3 className="font-bold text-xl z-10">{basicsModule.title.split(': ')[1]}</h3>
+                                    </div>
+                                );
+                            })()}
                             <div className="space-y-3">
                                 {basicsModule.subChapters.map((subChapter) => (
                                     <button
@@ -62,16 +68,19 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                     
                     {/* Render Other Modules as a Grid */}
                     <div className="grid grid-cols-2 gap-4">
-                        {otherModules.map((chapter) => (
-                             <div
-                                key={chapter.id}
-                                onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
-                                className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow ${chapter.bgColor || 'bg-slate-700'}`}
-                            >
-                                <img src={chapter.image} alt="" className="absolute w-28 h-28 -right-5 -bottom-5 opacity-50 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
-                                <h3 className="font-bold text-lg z-10">{chapter.title.split(': ')[1]}</h3>
-                            </div>
-                        ))}
+                        {otherModules.map((chapter) => {
+                            const Icon = chapter.icon;
+                            return (
+                                <div
+                                    key={chapter.id}
+                                    onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
+                                    className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group pro-card ${chapter.bgColor || 'bg-slate-700'}`}
+                                >
+                                    <Icon size={64} className="absolute -right-3 -bottom-3 opacity-20 transform group-hover:scale-110 transition-transform duration-300" />
+                                    <h3 className="font-bold text-lg z-10">{chapter.title.split(': ')[1]}</h3>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             </main>

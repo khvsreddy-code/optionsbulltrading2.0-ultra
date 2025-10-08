@@ -1,4 +1,5 @@
 import React from 'react';
+import { Zap, TrendingUp, TrendingDown, Sliders, BarChart2 } from '../components/common/Icons';
 
 export interface SubChapter {
   id: string;
@@ -10,7 +11,7 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
-  image?: string; // Icon URL
+  icon: React.FC<any>; // Icon component
   bgColor?: string; // Background color class
   isExternalLink?: boolean; 
   subChapters: SubChapter[];
@@ -20,7 +21,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
     title: 'Module 1: Basics',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-investment-3d-fluency-96.png',
+    icon: Zap,
     bgColor: 'bg-cyan-600',
     subChapters: [
       { 
@@ -50,7 +51,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-candlestick-chart-3d-fluency-96.png',
+    icon: TrendingUp,
     bgColor: 'bg-green-600',
     isExternalLink: true,
     subChapters: []
@@ -58,7 +59,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-stock-decline-3d-fluency-96.png',
+    icon: TrendingDown,
     bgColor: 'bg-red-600',
     isExternalLink: true,
     subChapters: []
@@ -66,7 +67,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-graph-report-3d-fluency-96.png',
+    icon: Sliders,
     bgColor: 'bg-slate-700',
     isExternalLink: true,
     subChapters: []
@@ -74,7 +75,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-bank-building-3d-fluency-96.png',
+    icon: BarChart2,
     bgColor: 'bg-orange-600',
     isExternalLink: true,
     subChapters: []

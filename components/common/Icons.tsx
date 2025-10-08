@@ -70,6 +70,8 @@ export const Globe = createIcon(<><circle cx="12" cy="12" r="10"/><line x1="2" y
 export const GitPullRequest = createIcon(<><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></>);
 export const Sliders = createIcon(<><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></>);
 export const Dna = createIcon(<><path d="M12 3a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/><path d="M12 17a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/><path d="M6.3 7.8A12.3 12.3 0 0 1 12 10c2.4 0 4.6-.7 6.4-1.8"/><path d="M17.7 16.2A12.3 12.3 0 0 0 12 14c-2.4 0-4.6.7-6.4 1.8"/><path d="m7.1 12.8 1-5.6"/><path d="m15.9 5.6-1 5.6"/></>);
+export const TrendingDown = createIcon(<><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></>);
+export const Calendar = createIcon(<><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>);
 
 
 // --- Drawing Toolbar Icons ---
