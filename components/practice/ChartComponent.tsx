@@ -119,7 +119,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }
   }, [initialData]);
 
-  return <div ref={chartContainerRef} className="w-full h-full" />;
+  return <div ref={chartContainerRef} className="absolute inset-0" />;
 });
 
 export default ChartComponent;

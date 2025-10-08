@@ -28,6 +28,8 @@ const PositionManagerDialog: React.FC<PositionManagerDialogProps> = ({ position,
 
   const remainingQuantity = position.quantity - quantity;
   const isClosingFullPosition = quantity === position.quantity;
+  const realizedPnl = (position.lastPrice - position.averagePrice) * quantity;
+  const pnlColor = realizedPnl >= 0 ? 'text-green-500' : 'text-red-500';
 
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
@@ -52,6 +54,7 @@ const PositionManagerDialog: React.FC<PositionManagerDialogProps> = ({ position,
           <div className="text-sm text-slate-400 space-y-1">
             <p>Order Type: Market</p>
             <p>Approx. Value: ₹{(position.lastPrice * quantity).toFixed(2)}</p>
+            <p>Realized P&amp;L: <span className={`font-semibold ${pnlColor}`}>{realizedPnl >= 0 ? '+' : ''}₹{realizedPnl.toFixed(2)}</span></p>
             <p>Remaining Shares: <span className="font-semibold text-slate-200">{remainingQuantity}</span></p>
           </div>
         </div>
