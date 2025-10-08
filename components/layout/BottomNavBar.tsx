@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, PieChart, Swap, Briefcase, User } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, User } from '../common/Icons';
 import type { View } from '../../types';
 
 interface BottomNavBarProps {
@@ -10,7 +10,7 @@ interface BottomNavBarProps {
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) => {
     const navItems = [
         { label: 'Home', icon: Home, path: '/home' },
-        { label: 'Learn', icon: PieChart, path: '/learning' },
+        { label: 'Learn', icon: BookOpen, path: '/learning' },
         { label: 'Practice', icon: Swap, path: '/practice', isCentral: true },
         { label: 'Portfolio', icon: Briefcase, path: '/home' }, // Placeholder path
         { label: 'Profile', icon: User, path: '/profile' },
@@ -24,8 +24,8 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
     };
 
     return (
-        <footer className="fixed bottom-0 left-0 right-0 z-30 h-24 bg-transparent">
-             <div className="relative h-full w-full bg-white/80 backdrop-blur-lg border-t border-border-color flex justify-around items-center pt-2">
+        <footer className="fixed bottom-0 left-0 right-0 z-30 h-20 bg-card border-t border-border">
+             <div className="relative h-full w-full flex justify-around items-center">
                 {navItems.map((item) => {
                     const isActive = activeViewsMap[item.path]?.includes(activeView);
                     
@@ -33,7 +33,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
                         return (
                              <div 
                                 key={item.label}
-                                className="-mt-12 z-20"
+                                className="-mt-10 z-20"
                                 onClick={() => item.path && onTabChange(item.path)}
                             >
                                 <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center cursor-pointer button-press-feedback shadow-lg shadow-primary/30">

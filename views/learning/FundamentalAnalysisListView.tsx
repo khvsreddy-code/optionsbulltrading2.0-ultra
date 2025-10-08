@@ -26,7 +26,7 @@ const FundamentalAnalysisListView: React.FC<FundamentalAnalysisListViewProps> = 
                         <button
                             key={topic.id}
                             onClick={() => onNavigate(`/learning/pattern/${topic.id}`)}
-                            className="w-full text-left p-4 bg-white rounded-lg transition-colors hover:bg-gray-50 button-press-feedback flex items-center justify-between border border-border-color"
+                            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex items-center justify-between border border-border"
                         >
                             <div className="flex items-center space-x-4">
                                 {topic.icon && (

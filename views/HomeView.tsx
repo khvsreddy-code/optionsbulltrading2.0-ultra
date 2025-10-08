@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { ChevronRight, TrendingUp } from '../components/common/Icons';
-import { curatedStocks } from '../data/curatedStocks';
-import Sparkline from '../components/home/Sparkline';
+import IconLink from '../components/home/IconLink';
+import { Telegram, BookOpen, CandlestickChart, Clock } from '../components/common/Icons';
+import { learningCurriculum } from '../data/learningContent';
 
 interface HomeViewProps {
     onNavigate: (path: string) => void;
@@ -10,90 +10,58 @@ interface HomeViewProps {
 }
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
-    const [activeTab, setActiveTab] = useState('Stocks');
 
-    const assetCards = curatedStocks.slice(0, 2);
-    const assetList = curatedStocks.slice(0, 4);
+    const mainCards = [
+        { title: "Daily Chart Analysis", image: "https://plus.unsplash.com/premium_photo-1681487814165-018814c29141?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+        { title: "Upcoming Stock Events", image: "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+        { title: "Telegram Subscriptions", image: "https://images.unsplash.com/photo-1611606063065-ee7946f0787a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
+        { title: "Courses", image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }
+    ];
+
+    const getTargetPathForChapter = (chapterId: string): string => {
+        if (chapterId === 'ch3') return '/learning/bullish';
+        if (chapterId === 'ch4') return '/learning/bearish';
+        if (chapterId === 'ch5') return '/learning/indicators';
+        if (chapterId === 'ch6') return '/learning/fundamental';
+        return '/learning';
+    };
 
     return (
-        <div className="p-4 space-y-6">
-            {/* Portfolio Summary Card */}
-            <div className="pro-card p-5">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <p className="text-sm text-text-secondary">My portfolio</p>
-                        <p className="text-3xl font-bold text-text-main mt-1">₹1,00,021.31</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm text-text-secondary">Profit</p>
-                        <div className="flex items-center mt-1 text-green-500 font-semibold">
-                            <TrendingUp size={16} className="mr-1" />
-                            <span>+0.18%</span>
-                        </div>
-                         <p className="text-sm text-text-secondary font-semibold">+₹21.31</p>
-                    </div>
+        <div className="p-4 space-y-8">
+            {/* Quick Links */}
+            <div className="pro-card p-4">
+                <div className="grid grid-cols-4 gap-4">
+                    <IconLink title="Premium" href="https://t.me/optionsbulltrading" icon={Telegram} />
+                    <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
+                    <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={BookOpen} />
+                    <IconLink title="Simulator" onClick={() => onNavigate('/practice')} icon={Clock} />
                 </div>
             </div>
 
-            {/* My Assets Section */}
+            {/* Main Content Cards */}
             <div>
-                <h2 className="text-xl font-bold text-text-main mb-3">My Assets</h2>
+                <h2 className="text-xl font-bold text-text-main mb-4">What are you looking for?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mainCards.map(card => (
+                        <div key={card.title} className="pro-card p-4 h-40 flex items-end" style={{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.7), transparent), url(${card.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <h3 className="text-white font-bold text-lg">{card.title}</h3>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Learning Library Section */}
+            <div>
+                <h2 className="text-xl font-bold text-text-main mb-4">Learning Library</h2>
                 <div className="grid grid-cols-2 gap-4">
-                    {assetCards.map(asset => (
-                        <div key={asset.instrument_key} className="pro-card p-4">
-                            <div className="flex items-center space-x-2 mb-3">
-                                <div className="w-8 h-8 flex items-center justify-center bg-primary-light rounded-full">
-                                    <asset.icon size={18} className="text-primary" />
-                                </div>
-                                <span className="font-bold text-text-main">{asset.tradingsymbol}</span>
-                            </div>
-                            <div className="h-10 -mx-2">
-                                <Sparkline />
-                            </div>
-                            <div className="mt-3">
-                                <p className="font-bold text-text-main">₹{asset.instrument_key.includes('BTC') ? '63,920.34' : '2,885.50'}</p>
-                                <p className="text-sm text-green-500 font-semibold">+2.37%</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Tabbed Asset List */}
-            <div>
-                <div className="flex items-center space-x-4 border-b border-border-color mb-4">
-                    {['Stocks', 'Mutual funds', 'Gold'].map(tab => (
-                        <button 
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`py-2 font-semibold transition-colors ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-text-secondary'}`}
+                    {learningCurriculum.map(chapter => (
+                        <div
+                            key={chapter.id}
+                            onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
+                            className="learning-card cursor-pointer"
+                            style={{ backgroundImage: `url(${chapter.image})` }}
                         >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="space-y-3">
-                    {assetList.map(asset => (
-                        <div key={asset.instrument_key} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-100">
-                             <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 flex items-center justify-center bg-primary-light rounded-full">
-                                    <asset.icon size={20} className="text-primary" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-text-main">{asset.tradingsymbol}</p>
-                                    <p className="text-sm text-text-secondary">{asset.name.split(' ')[0]}</p>
-                                </div>
-                            </div>
-                            <div className="w-20 h-8 -mx-2">
-                                <Sparkline isPositive={Math.random() > 0.5}/>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-text-main">₹{asset.instrument_key.includes('BTC') ? '63,920.34' : '2,885.50'}</p>
-                                <p className={`text-sm font-semibold ${Math.random() > 0.5 ? 'text-green-500' : 'text-red-500'}`}>
-                                    {Math.random() > 0.5 ? '+' : '-'}{ (1 + Math.random() * 2).toFixed(2) }%
-                                </p>
-                            </div>
+                            <h3 className="font-bold text-lg">{chapter.title.split(': ')[1] || chapter.title}</h3>
                         </div>
                     ))}
                 </div>

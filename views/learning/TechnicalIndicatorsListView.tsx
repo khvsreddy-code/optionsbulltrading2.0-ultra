@@ -26,7 +26,7 @@ const TechnicalIndicatorsListView: React.FC<TechnicalIndicatorsListViewProps> = 
                         <button
                             key={indicator.id}
                             onClick={() => onNavigate(`/learning/pattern/${indicator.id}`)}
-                            className="w-full text-left p-4 bg-white rounded-lg transition-colors hover:bg-gray-50 button-press-feedback flex justify-between items-center border border-border-color"
+                            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
                         >
                             <p className="font-semibold text-text-main">{indicator.emoji} {indicator.title}</p>
                             <ChevronRight size={20} className="text-text-secondary" />

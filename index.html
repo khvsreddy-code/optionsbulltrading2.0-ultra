@@ -27,9 +27,14 @@
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
-              'primary': '#7065F0',
-              'primary-light': '#E9E7FF',
-              'background': '#F7F7FD',
+              'primary': '#53AC53',
+              'primary-dark': '#367A36',
+              'primary-light': 'rgba(83, 172, 83, 0.1)',
+              'background': '#FAF9F6', // Cream White
+              'card': '#FFFFFF',
+              'border': '#E5E7EB',
+              'text-main': '#1F2937',
+              'text-secondary': '#6B7280'
             }
           }
         }
@@ -45,14 +50,15 @@
 
     <style>
       :root {
-        --background: #F7F7FD;
+        --background: #FAF9F6;
         --card-bg: #FFFFFF;
-        --primary: #7065F0;
-        --primary-light: #E9E7FF;
-        --text-main: #0D0C22;
-        --text-secondary: #6E6D7A;
-        --border-color: #EFEFF5;
-        --shadow-color: rgba(112, 101, 240, 0.1);
+        --primary: #53AC53;
+        --primary-dark: #367A36;
+        --primary-light: rgba(83, 172, 83, 0.1);
+        --text-main: #1F2937;
+        --text-secondary: #6B7280;
+        --border-color: #E5E7EB;
+        --accent-yellow: #F59E0B;
       }
 
       body {
@@ -64,13 +70,41 @@
       
       .pro-card {
         background-color: var(--card-bg);
-        border-radius: 1.5rem; /* 24px */
-        box-shadow: 0 4px 15px var(--shadow-color);
+        border-radius: 1rem; /* 16px */
+        border: 1px solid var(--border-color);
         transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       }
       .pro-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px var(--shadow-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      }
+      
+      .learning-card {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        border-radius: 1rem;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        color: white;
+        display: flex;
+        align-items: flex-end;
+        padding: 1rem;
+        transition: transform 0.3s ease;
+      }
+      .learning-card:hover {
+        transform: scale(1.03);
+      }
+      .learning-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.1));
+      }
+      .learning-card > * {
+        position: relative;
+        z-index: 1;
       }
       
       .button-press-feedback {
@@ -80,64 +114,13 @@
         transform: scale(0.96);
       }
 
-      /* Page transition animation */
       @keyframes page-enter {
-        from {
-          opacity: 0;
-          transform: translateY(8px) scale(0.99);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       .animate-page-enter {
-        animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: page-enter 0.3s ease-out forwards;
       }
-      
-      /* Dialog/Modal animation */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translate3d(0, 20px, 0) scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: translate3d(0, 0, 0) scale(1);
-        }
-      }
-      .animate-fadeInUp {
-        animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      }
-
-      /* Background animation for pricing view */
-      @keyframes move-twinkle-back {
-          from {background-position:0 0;}
-          to {background-position:-10000px 5000px;}
-      }
-
-      .stars, .twinkling {
-        position:absolute;
-        top:0;
-        left:0;
-        right:0;
-        bottom:0;
-        width:100%;
-        height:100%;
-        display:block;
-      }
-
-      .stars {
-        background:#0e1121 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) repeat top center;
-        z-index: -2;
-      }
-
-      .twinkling{
-        background:transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) repeat top center;
-        animation:move-twinkle-back 200s linear infinite;
-        z-index:-1;
-      }
-
     </style>
   </head>
   <body>

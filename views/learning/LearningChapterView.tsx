@@ -28,16 +28,9 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         );
     }
     
-    const adjustedContent = React.isValidElement(subChapter.content) 
-    ? React.cloneElement(subChapter.content as React.ReactElement<any>, { 
-        className: 'prose max-w-none text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary-light prose-code:bg-gray-800 prose-headings:font-bold'
-    })
-    : subChapter.content;
-
-
     return (
         <div className="bg-background text-text-main min-h-screen font-sans">
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm p-4 flex items-center border-b border-border-color">
+            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
                  <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2" aria-label="Back to curriculum list">
                     <ChevronRight size={24} className="transform rotate-180 text-text-secondary" />
                 </button>
@@ -45,7 +38,7 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
             </header>
 
             <main className="p-4">
-                 <div className="prose max-w-none text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold prose-table:bg-white prose-th:text-text-main prose-tr:border-border-color prose-td:text-text-secondary">
+                 <div className="prose max-w-none prose-p:text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold prose-table:bg-card prose-th:text-text-main prose-tr:border-border prose-td:text-text-secondary">
                     {subChapter.content}
                 </div>
             </main>

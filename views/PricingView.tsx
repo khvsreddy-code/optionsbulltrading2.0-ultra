@@ -21,6 +21,7 @@ const plans = [
     {
         title: '3 month plan',
         price: 8997,
+        highlight: true,
     },
 ];
 
@@ -53,7 +54,7 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                 user_id: user.id,
             },
             theme: {
-                color: '#0094D3'
+                color: '#53AC53'
             }
         };
         
@@ -66,25 +67,22 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     };
 
     return (
-        <div className="relative text-white min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-[#0e1121]">
-            <div className="stars" aria-hidden="true"></div>
-            <div className="twinkling" aria-hidden="true"></div>
-            
+        <div className="relative text-text-main min-h-screen flex flex-col items-center justify-center p-4 bg-background">
             <button 
                 onClick={() => onNavigate('/home')}
-                className="absolute top-4 left-4 z-20 text-white font-semibold text-sm hover:underline"
+                className="absolute top-4 left-4 z-20 text-text-secondary font-semibold text-sm hover:underline"
             >
                 &lt; Back to Home
             </button>
 
-            <div className="relative z-10 max-w-7xl mx-auto text-center">
+            <div className="relative z-10 max-w-4xl mx-auto text-center">
                 <header>
-                    <h1 className="text-4xl md:text-5xl font-bold leading-tight">Plans for every level</h1>
-                    <h1 className="text-4xl md:text-5xl font-bold leading-tight">of ambition</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-text-main">Plans for every level of ambition</h1>
+                    <p className="text-lg text-text-secondary mt-2">Start your journey to becoming a pro trader.</p>
                 </header>
 
-                <main className="mt-12">
-                    <div className="flex flex-row items-stretch justify-center gap-2 md:gap-6">
+                <main className="mt-12 w-full">
+                    <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-2xl mx-auto">
                         {plans.map(plan => (
                             <PricingCard key={plan.title} plan={plan} onSubscribe={handleSubscribe} />
                         ))}

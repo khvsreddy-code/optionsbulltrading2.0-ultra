@@ -58,11 +58,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
                     <img
                         src={avatarUrl}
                         alt="Profile Avatar"
-                        className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-background shadow-lg"
                     />
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white"
+                        className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-card"
                         aria-label="Change profile picture"
                     >
                         <Pencil size={14} />
@@ -125,7 +125,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
 };
 
 const ProfileMenuItem: React.FC<{icon: React.FC<any>, label: string, onClick?: () => void}> = ({ icon: Icon, label, onClick }) => (
-    <button onClick={onClick} className="w-full flex items-center justify-between p-4 bg-white rounded-lg border border-border-color hover:bg-gray-50">
+    <button onClick={onClick} className="w-full flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:bg-background transition-colors">
         <div className="flex items-center space-x-3">
             <Icon size={20} className="text-text-secondary" />
             <span className="font-semibold text-text-main">{label}</span>

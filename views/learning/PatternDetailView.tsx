@@ -45,7 +45,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     
     return (
         <div className="bg-background text-text-main min-h-screen font-sans">
-            <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm p-4 flex items-center border-b border-border-color">
+            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
                  <button onClick={() => onNavigate(backTargetPath)} className="p-2 -ml-2" aria-label="Back to list">
                     <ChevronRight size={24} className="transform rotate-180 text-text-secondary" />
                 </button>
