@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import anime from 'animejs';
 import PortfolioPanel from './PortfolioPanel';
 import TradeHistoryPanel from './TradeHistoryPanel';
 import PortfolioDisplay from './PortfolioDisplay';
@@ -15,7 +16,28 @@ interface BottomPanelProps {
 
 const BottomPanel: React.FC<BottomPanelProps> = ({ portfolio, onPositionClick, onReversePosition, onResetPortfolio, onManageFunds }) => {
     const [activeTab, setActiveTab] = useState<'positions' | 'history'>('positions');
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const contentEl = contentRef.current;
+        if (contentEl) {
+            anime.remove(contentEl);
+            anime({
+                targets: contentEl,
+                height: isCollapsed ? 0 : 240,
+                opacity: isCollapsed ? 0 : 1,
+                duration: 350,
+                easing: 'easeOutCubic',
+                begin: () => {
+                    if (!isCollapsed) contentEl.style.display = 'block';
+                },
+                complete: () => {
+                    if (isCollapsed) contentEl.style.display = 'none';
+                }
+            });
+        }
+    }, [isCollapsed]);
     
     return (
         <div className="flex-shrink-0 bg-[#1C2127] flex flex-col border-t border-[#2A2E39]">
@@ -51,20 +73,18 @@ const BottomPanel: React.FC<BottomPanelProps> = ({ portfolio, onPositionClick, o
             </div>
 
             {/* Collapsible Content */}
-            {!isCollapsed && (
-                <div className="overflow-y-auto" style={{ height: '240px' }}>
-                    {activeTab === 'positions' && (
-                        <PortfolioPanel 
-                            portfolio={portfolio} 
-                            onPositionClick={onPositionClick}
-                            onReversePosition={onReversePosition}
-                        />
-                    )}
-                    {activeTab === 'history' && (
-                        <TradeHistoryPanel trades={portfolio.trades} />
-                    )}
-                </div>
-            )}
+            <div ref={contentRef} className="overflow-y-auto" style={{ height: 0, opacity: 0, display: 'none' }}>
+                {activeTab === 'positions' && (
+                    <PortfolioPanel 
+                        portfolio={portfolio} 
+                        onPositionClick={onPositionClick}
+                        onReversePosition={onReversePosition}
+                    />
+                )}
+                {activeTab === 'history' && (
+                    <TradeHistoryPanel trades={portfolio.trades} />
+                )}
+            </div>
         </div>
     );
 };

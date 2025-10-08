@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import anime from 'animejs';
 import type { Instrument, OrderSide } from '../../types';
 
 interface OrderDialogProps {
@@ -12,31 +13,67 @@ interface OrderDialogProps {
 const OrderDialog: React.FC<OrderDialogProps> = ({ instrument, isOpen, onClose, onPlaceOrder, initialSide }) => {
   const [quantity, setQuantity] = useState(1);
   const [side, setSide] = useState<OrderSide>(initialSide);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const isAnimatingOut = useRef(false);
 
   useEffect(() => {
     setSide(initialSide);
   }, [initialSide, isOpen]);
 
-  if (!isOpen || !instrument) return null;
+  useEffect(() => {
+    const dialogEl = dialogRef.current;
+    if (dialogEl) {
+        if (isOpen) {
+            isAnimatingOut.current = false;
+            anime.remove(dialogEl);
+            anime({
+                targets: dialogEl,
+                scale: [0.85, 1],
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 500,
+                easing: 'easeOutElastic(1, .8)'
+            });
+        }
+    }
+  }, [isOpen]);
+  
+  const handleClose = () => {
+      if (isAnimatingOut.current) return;
+      isAnimatingOut.current = true;
+      anime({
+          targets: dialogRef.current,
+          scale: 0.9,
+          opacity: 0,
+          translateY: 10,
+          duration: 200,
+          easing: 'easeInQuad',
+          complete: () => {
+              onClose();
+          }
+      });
+  };
 
   const handlePlaceOrder = () => {
     if (quantity > 0) {
       onPlaceOrder(side, quantity);
-      onClose();
+      handleClose();
     }
   };
 
+  if (!isOpen || !instrument) return null;
+
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-800 rounded-lg shadow-xl w-full max-w-sm text-white">
+      <div ref={dialogRef} className="bg-slate-800 rounded-lg shadow-xl w-full max-w-sm text-white opacity-0">
         <div className="p-4 border-b border-slate-700">
           <h2 className="text-lg font-semibold">{instrument.tradingsymbol}</h2>
           <p className="text-sm text-slate-400">{instrument.name}</p>
         </div>
         <div className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => setSide('BUY')} className={`p-3 rounded-md font-semibold ${side === 'BUY' ? 'bg-green-600' : 'bg-slate-700 hover:bg-slate-600'}`}>BUY</button>
-            <button onClick={() => setSide('SELL')} className={`p-3 rounded-md font-semibold ${side === 'SELL' ? 'bg-red-600' : 'bg-slate-700 hover:bg-slate-600'}`}>SELL</button>
+            <button onClick={() => setSide('BUY')} className={`p-3 rounded-md font-semibold transition-colors ${side === 'BUY' ? 'bg-green-600' : 'bg-slate-700 hover:bg-slate-600'}`}>BUY</button>
+            <button onClick={() => setSide('SELL')} className={`p-3 rounded-md font-semibold transition-colors ${side === 'SELL' ? 'bg-red-600' : 'bg-slate-700 hover:bg-slate-600'}`}>SELL</button>
           </div>
           <div>
             <label htmlFor="quantity" className="block text-sm font-medium text-slate-400">Quantity</label>
@@ -55,8 +92,8 @@ const OrderDialog: React.FC<OrderDialogProps> = ({ instrument, isOpen, onClose, 
           </div>
         </div>
         <div className="p-4 border-t border-slate-700 grid grid-cols-2 gap-2">
-          <button onClick={onClose} className="p-3 bg-slate-700 rounded-md font-semibold">Cancel</button>
-          <button onClick={handlePlaceOrder} className={`p-3 rounded-md font-semibold ${side === 'BUY' ? 'bg-green-600' : 'bg-red-600'}`}>
+          <button onClick={handleClose} className="p-3 bg-slate-700 rounded-md font-semibold button-press-feedback">Cancel</button>
+          <button onClick={handlePlaceOrder} className={`p-3 rounded-md font-semibold button-press-feedback ${side === 'BUY' ? 'bg-green-600' : 'bg-red-600'}`}>
             {side === 'BUY' ? 'Place Buy Order' : 'Place Sell Order'}
           </button>
         </div>

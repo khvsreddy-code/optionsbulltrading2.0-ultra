@@ -7,7 +7,7 @@ import SimulatorHeader from '../components/practice/SimulatorHeader';
 import ChartHeader from '../components/practice/ChartHeader';
 import ChartComponent from '../components/practice/ChartComponent';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
-import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
+import OrderDialog from '../components/practice/OrderDialog'; // NEW
 import ChartTradeButtons from '../components/practice/ChartTradeButtons';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
@@ -31,8 +31,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
-    const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool>('crosshair');
     const [showWelcome, setShowWelcome] = useState(false);
+    
+    // --- NEW: State for Order Dialog ---
+    const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+    const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
@@ -120,6 +123,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setSelectedInstrument(initialInstrument);
     }, []);
 
+    // --- NEW: Function to open order dialog ---
+    const handleOpenOrderDialog = (side: OrderSide) => {
+        setOrderDialogSide(side);
+        setIsOrderDialogOpen(true);
+    };
 
     const handlePlaceOrder = (side: OrderSide, quantity: number) => {
         if (!selectedInstrument || quantity <= 0) return;
@@ -230,17 +238,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         });
     };
 
-    const handleToolSelect = (tool: DrawingTool) => {
-        if (tool === 'trash') {
-            // This is a special case. We set the tool to 'trash' to trigger the
-            // clearing effect in the child, then immediately reset it to the default.
-            setActiveDrawingTool('trash');
-            setTimeout(() => setActiveDrawingTool('crosshair'), 50);
-        } else {
-            setActiveDrawingTool(tool);
-        }
-    };
-
     const handleCloseWelcome = () => {
         setShowWelcome(false);
         localStorage.setItem('hasSeenSimulatorWelcome', 'true');
@@ -273,19 +270,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                              </div>
                         ) : (
                            <>
-                               <DrawingToolbar 
-                                   activeTool={activeDrawingTool}
-                                   onToolSelect={handleToolSelect}
-                               />
                                <ChartTradeButtons
                                    instrument={displayedInstrument}
-                                   onPlaceOrder={handlePlaceOrder}
+                                   onTradeButtonClick={handleOpenOrderDialog}
                                />
                                <ChartComponent 
                                    ref={chartComponentRef}
                                    key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
                                    initialData={initialChartData} 
-                                   activeTool={activeDrawingTool}
                                    liveOhlc={liveOhlc}
                                    timeframe={timeframe}
                                />
@@ -307,6 +299,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 isOpen={isPositionManagerOpen}
                 onClose={() => setIsPositionManagerOpen(false)}
                 onClosePosition={handleClosePosition}
+            />
+
+            <OrderDialog
+                instrument={displayedInstrument}
+                isOpen={isOrderDialogOpen}
+                onClose={() => setIsOrderDialogOpen(false)}
+                onPlaceOrder={handlePlaceOrder}
+                initialSide={orderDialogSide}
             />
         </div>
     );

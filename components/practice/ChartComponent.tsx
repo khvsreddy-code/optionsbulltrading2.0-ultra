@@ -1,49 +1,19 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, LineWidth, CrosshairMode, IPriceLine, MouseEventParams, LineStyle, ILineSeriesApi } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode, MouseEventParams, LineStyle, ILineSeriesApi } from 'lightweight-charts';
 import type { CandleData } from '../../types';
 import type { Timeframe } from '../../services/marketSimulator';
-import type { DrawingTool } from './DrawingToolbar';
 
 interface ChartComponentProps {
   initialData: CandleData[];
-  activeTool: DrawingTool;
   liveOhlc: CandleData | null;
   timeframe: Timeframe;
 }
 
-// --- Data Structures for Drawings ---
-interface Point { time: UTCTimestamp; price: number; }
-interface BaseDrawing { id: string; type: DrawingTool; }
-interface TrendLineDrawing extends BaseDrawing { type: 'trendline'; start: Point; end: Point; }
-interface HorizontalLineDrawing extends BaseDrawing { type: 'horizontal'; price: number; }
-interface FibRetracementDrawing extends BaseDrawing { type: 'fib'; start: Point; end: Point; }
-interface TextDrawing extends BaseDrawing { type: 'text'; point: Point; text: string; }
-type Drawing = TrendLineDrawing | HorizontalLineDrawing | FibRetracementDrawing | TextDrawing;
-
-type DrawingState = 
-    | { tool: 'trendline' | 'fib'; step: 1; start?: Point; }
-    | { tool: 'horizontal' | 'text'; step: 1; }
-    | null;
-
-const fibLevels = [
-    { level: 0, color: '#F44336', label: '0%' }, { level: 0.236, color: '#FF9800', label: '23.6%' },
-    { level: 0.382, color: '#FFEB3B', label: '38.2%' }, { level: 0.5, color: '#4CAF50', label: '50%' },
-    { level: 0.618, color: '#2196F3', label: '61.8%' }, { level: 0.786, color: '#9C27B0', label: '78.6%' },
-    { level: 1, color: '#F44336', label: '100%' },
-];
-const MAGNET_THRESHOLD_PX = 10;
-
-const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, activeTool, liveOhlc, timeframe }, ref) => {
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, liveOhlc, timeframe }, ref) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
     const [countdown, setCountdown] = useState('');
-
-    // --- NEW: Advanced Drawing State Management ---
-    const [drawings, setDrawings] = useState<Drawing[]>([]);
-    const [drawingState, setDrawingState] = useState<DrawingState>(null);
-    const drawnObjectsRef = useRef<Map<string, any[]>>(new Map());
-    const previewLineRef = useRef<ILineSeriesApi | null>(null);
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -109,161 +79,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             });
         }
     }, [liveOhlc, countdown]);
-
-    // --- REFINED: Advanced Snapping Logic ---
-    const findSnapPoint = (param: MouseEventParams): Point => {
-        const series = candlestickSeriesRef.current;
-        if (!series || !param.point || !param.time) return { time: 0 as UTCTimestamp, price: 0 };
-
-        const price = param.seriesPrices.get(series) as BarData['close'] ?? 0;
-        const time = param.time;
-        const cursorY = series.priceToCoordinate(price);
-        if (cursorY === null) return { time, price };
-
-        let bestSnap = { price, distance: Infinity };
-
-        // 1. Snap to candle OHLC
-        const bar = Array.from(param.seriesPrices.values()).find(p => p) as BarData;
-        if (bar) {
-            [bar.open, bar.high, bar.low, bar.close].forEach(p => {
-                const pY = series.priceToCoordinate(p);
-                if (pY !== null) {
-                    const distance = Math.abs(cursorY - pY);
-                    if (distance < bestSnap.distance) bestSnap = { price: p, distance };
-                }
-            });
-        }
-
-        // 2. Snap to existing drawing anchors and lines
-        drawings.forEach(d => {
-            const pointsToSnap: number[] = [];
-            if (d.type === 'trendline') {
-                pointsToSnap.push(d.start.price, d.end.price);
-            } else if (d.type === 'horizontal') {
-                pointsToSnap.push(d.price);
-            } else if (d.type === 'text') {
-                pointsToSnap.push(d.point.price);
-            } else if (d.type === 'fib') {
-                pointsToSnap.push(d.start.price, d.end.price);
-                const startPrice = Math.max(d.start.price, d.end.price);
-                const endPrice = Math.min(d.start.price, d.end.price);
-                const diff = startPrice - endPrice;
-                fibLevels.forEach(({ level }) => {
-                    pointsToSnap.push(endPrice + diff * level);
-                });
-            }
-
-            pointsToSnap.forEach(p => {
-                const pY = series.priceToCoordinate(p);
-                if (pY !== null) {
-                    const distance = Math.abs(cursorY - pY);
-                    if (distance < bestSnap.distance) {
-                        bestSnap = { price: p, distance };
-                    }
-                }
-            });
-        });
-        
-        return bestSnap.distance < MAGNET_THRESHOLD_PX ? { time, price: bestSnap.price } : { time, price };
-    };
-
-    // --- Drawing Logic ---
-    useEffect(() => {
-        const chart = chartRef.current;
-        const series = candlestickSeriesRef.current;
-        if (!chart || !series) return;
-
-        // Reset state when tool changes
-        setDrawingState(activeTool === 'trendline' || activeTool === 'fib' ? { tool: activeTool, step: 1 } : activeTool === 'horizontal' || activeTool === 'text' ? { tool: activeTool, step: 1 } : null);
-        chart.applyOptions({ crosshair: { mode: activeTool === 'crosshair' ? CrosshairMode.Normal : CrosshairMode.Magnet } });
-        if (previewLineRef.current) previewLineRef.current.setData([]);
-
-        if (activeTool === 'trash') {
-            setDrawings([]);
-            return;
-        }
-
-        const handleCrosshairMove = (param: MouseEventParams) => {
-            if (drawingState?.step === 1 && drawingState.start && (drawingState.tool === 'trendline' || drawingState.tool === 'fib')) {
-                const snapPoint = findSnapPoint(param);
-                if (!previewLineRef.current) {
-                    previewLineRef.current = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false });
-                }
-                previewLineRef.current.setData([drawingState.start, snapPoint]);
-            }
-        };
-
-        const handleClick = (param: MouseEventParams) => {
-            if (!drawingState) return;
-            const snapPoint = findSnapPoint(param);
-            const { tool } = drawingState;
-
-            if (tool === 'horizontal') {
-                setDrawings(prev => [...prev, { id: `h_${Date.now()}`, type: 'horizontal', price: snapPoint.price }]);
-            } else if (tool === 'text') {
-                const text = prompt("Enter annotation text:");
-                if (text) setDrawings(prev => [...prev, { id: `t_${Date.now()}`, type: 'text', point: snapPoint, text }]);
-            } else if (tool === 'trendline' || tool === 'fib') {
-                if (!drawingState.start) {
-                    setDrawingState({ ...drawingState, start: snapPoint });
-                } else {
-                    setDrawings(prev => [...prev, { id: `${tool}_${Date.now()}`, type: tool, start: drawingState.start!, end: snapPoint }]);
-                    setDrawingState({ tool, step: 1 }); // Reset for next drawing
-                    if (previewLineRef.current) previewLineRef.current.setData([]);
-                }
-            }
-        };
-
-        if (activeTool && activeTool !== 'crosshair') {
-            chart.subscribeClick(handleClick);
-            chart.subscribeCrosshairMove(handleCrosshairMove);
-        }
-
-        return () => {
-            chart.unsubscribeClick(handleClick);
-            chart.unsubscribeCrosshairMove(handleCrosshairMove);
-        };
-    }, [activeTool, drawings, drawingState]);
-
-
-    // --- Rendering Effect for Drawings ---
-    useEffect(() => {
-        const chart = chartRef.current;
-        const series = candlestickSeriesRef.current;
-        if (!chart || !series) return;
-
-        // Clear all old objects
-        drawnObjectsRef.current.forEach(objects => {
-            objects.forEach(obj => {
-                if ('remove' in obj) obj.remove();
-                else series.removePriceLine(obj);
-            });
-        });
-        drawnObjectsRef.current.clear();
-
-        // Render all current drawings
-        drawings.forEach(d => {
-            const objects = [];
-            if (d.type === 'horizontal') {
-                objects.push(series.createPriceLine({ price: d.price, color: '#2962FF', lineWidth: 2, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: '' }));
-            } else if (d.type === 'trendline') {
-                const lineSeries = chart.addLineSeries({ color: '#FFEB3B', lineWidth: 2, lastValueVisible: false, priceLineVisible: false });
-                lineSeries.setData([d.start, d.end]);
-                objects.push(lineSeries);
-            } else if (d.type === 'text') {
-                 objects.push(series.createPriceLine({ price: d.point.price, color: 'transparent', axisLabelVisible: true, title: d.text, lineVisible: false, axisLabelColor: '#FFFFFF', axisLabelTextColor: '#131722' }));
-            } else if (d.type === 'fib') {
-                const startPrice = Math.max(d.start.price, d.end.price);
-                const endPrice = Math.min(d.start.price, d.end.price);
-                const diff = startPrice - endPrice;
-                fibLevels.forEach(({ level, color, label }) => {
-                    const price = endPrice + diff * level;
-                    objects.push(series.createPriceLine({ price, color, lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: true, title: label }));
-                });
-            }
-            drawnObjectsRef.current.set(d.id, objects);
-        });
-    }, [drawings]);
 
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
