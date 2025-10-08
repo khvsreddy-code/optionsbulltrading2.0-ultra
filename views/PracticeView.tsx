@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { View, CandleData, Instrument, OrderSide, Portfolio, Position, Order } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator, Timeframe } from '../services/marketSimulator';
@@ -35,53 +35,65 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
-
-    const updatePrices = useCallback((lastPrice: number, instrumentKey: string) => {
-        const livePrices = { [instrumentKey]: lastPrice };
-        setInstruments(prev => prev.map(inst => inst.instrument_key === instrumentKey ? { ...inst, last_price: lastPrice } : inst));
-        
-        setSelectedInstrument(prev => {
-            if (prev && prev.instrument_key === instrumentKey) {
-                return { ...prev, last_price: lastPrice };
-            }
-            return prev;
-        });
-
-        setPortfolio(prev => updatePortfolioValue(JSON.parse(JSON.stringify(prev)), livePrices));
-    }, []);
     
+    // Ref to hold the tick handler function. This is the key to fixing the re-render loop.
+    const onTickRef = useRef((_candle: CandleData, _isUpdate: boolean) => {});
+
+    // This effect updates the ref on every render with a new function that has
+    // access to the latest state (e.g., portfolio, selectedInstrument).
+    useEffect(() => {
+        onTickRef.current = (candle, isUpdate) => {
+            setLiveOhlc(candle);
+            chartComponentRef.current?.updateCandle(candle);
+
+            if (selectedInstrument) {
+                const livePrices = { [selectedInstrument.instrument_key]: candle.close };
+
+                // Update the master list of instruments with the new price
+                setInstruments(prev => prev.map(inst =>
+                    inst.instrument_key === selectedInstrument.instrument_key
+                        ? { ...inst, last_price: candle.close }
+                        : inst
+                ));
+
+                // Update portfolio using a functional update to avoid stale state issues.
+                setPortfolio(prevPortfolio => updatePortfolioValue(
+                    JSON.parse(JSON.stringify(prevPortfolio)),
+                    livePrices
+                ));
+            }
+        };
+    }); // No dependency array: this runs on every render to keep the closure fresh.
+
+    // Effect to set the initial instrument, runs only once.
     useEffect(() => {
         const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
         setSelectedInstrument(initialInstrument);
-    }, [instruments]);
+    }, []);
 
 
-    const handleNewCandle = useCallback((candle: CandleData) => {
-        setLiveOhlc(candle);
-        chartComponentRef.current?.updateCandle(candle);
-        if(selectedInstrument) {
-           updatePrices(candle.close, selectedInstrument.instrument_key);
-        }
-    }, [selectedInstrument, updatePrices]);
-
-
+    // Main effect to manage the simulator lifecycle.
     useEffect(() => {
         if (!selectedInstrument) return;
 
         setIsLoading(true);
         setInitialChartData([]);
-
-        // Stop any existing simulator
         simulatorRef.current?.stop();
         
-        simulatorRef.current = new MarketSimulator(handleNewCandle, timeframe);
+        // This callback is stable and safe to pass to the simulator.
+        // It will always call the latest logic from onTickRef.current.
+        const tickCallback = (candle: CandleData, isUpdate: boolean) => {
+            onTickRef.current(candle, isUpdate);
+        };
+        
+        simulatorRef.current = new MarketSimulator(tickCallback, timeframe);
         const initialData = simulatorRef.current.start();
         setInitialChartData(initialData);
         
         if (initialData.length > 0) {
             const lastCandle = initialData[initialData.length - 1];
-            updatePrices(lastCandle.close, selectedInstrument.instrument_key);
-            setLiveOhlc(lastCandle);
+            // Manually call the tick handler to set initial prices correctly.
+            onTickRef.current(lastCandle, false);
         }
         
         setIsLoading(false);
@@ -89,15 +101,20 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         return () => {
             simulatorRef.current?.stop();
         };
-
-    }, [selectedInstrument, timeframe, handleNewCandle, updatePrices]);
+    // This effect now only re-runs when the user *actually* changes instrument or timeframe.
+    }, [selectedInstrument, timeframe]);
 
     const handlePlaceOrder = (side: OrderSide, quantity: number) => {
         if (!selectedInstrument) return;
+        
+        // Use the live price from the instruments list for accurate execution
+        const currentInstrument = instruments.find(i => i.instrument_key === selectedInstrument.instrument_key);
+        if (!currentInstrument) return;
+
 
         const newOrder: Order = {
             id: `ord_${Date.now()}`,
-            instrument: selectedInstrument,
+            instrument: currentInstrument,
             type: 'MARKET',
             side,
             quantity,
@@ -105,7 +122,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             createdAt: Date.now() / 1000,
         };
         
-        const executionPrice = selectedInstrument.last_price;
+        const executionPrice = currentInstrument.last_price;
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, newOrder, executionPrice));
     };
 
@@ -136,6 +153,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const executionPrice = instrument.last_price;
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, sellOrder, executionPrice));
     };
+    
+    // Derive the instrument to be displayed from the master instruments list,
+    // ensuring it always has the live price for the UI.
+    const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
     return (
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
@@ -172,7 +193,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 {/* Sidebar */}
                 <aside className="w-80 flex-shrink-0 hidden md:block">
                    <PracticeSidebar 
-                        instrument={selectedInstrument}
+                        instrument={displayedInstrument}
                         portfolio={portfolio}
                         onPlaceOrder={handleOpenOrderDialog}
                         onPositionClick={handleOpenPositionManager}
@@ -181,7 +202,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             </div>
             
             <OrderDialog 
-                instrument={selectedInstrument}
+                instrument={displayedInstrument}
                 isOpen={isOrderDialogOpen}
                 onClose={() => setIsOrderDialogOpen(false)}
                 onPlaceOrder={handlePlaceOrder}
