@@ -141,8 +141,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const positionToClose = portfolio.positions.find(p => p.instrument.instrument_key === instrumentKey);
         if (!positionToClose) return;
 
-        // Determine the correct side for closing the position
-        const closingSide: OrderSide = 'SELL';
+        // Determine the correct side for closing the position: SELL for LONG, BUY for SHORT
+        const closingSide: OrderSide = positionToClose.quantity > 0 ? 'SELL' : 'BUY';
         
         const closeOrder: Order = {
             id: `ord_close_${Date.now()}`,

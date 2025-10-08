@@ -11,11 +11,11 @@ interface DrawingToolbarProps {
 const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onToolSelect }) => {
   const tools = [
     { id: 'crosshair', icon: Crosshair, enabled: true, description: 'Show crosshair pointer' },
-    { id: 'trendline', icon: TrendLine, enabled: false, description: 'Draw a trend line' },
+    { id: 'trendline', icon: TrendLine, enabled: true, description: 'Draw a trend line' },
     { id: 'horizontal', icon: HorizontalLine, enabled: true, description: 'Draw a horizontal line' },
-    { id: 'fib', icon: FibRetracement, enabled: false, description: 'Draw Fibonacci Retracement' },
+    { id: 'fib', icon: FibRetracement, enabled: true, description: 'Draw Fibonacci Retracement' },
     { id: 'brush', icon: Brush, enabled: false, description: 'Freeform drawing' },
-    { id: 'text', icon: TextIcon, enabled: false, description: 'Add text annotation' },
+    { id: 'text', icon: TextIcon, enabled: true, description: 'Add text annotation' },
     { id: 'eraser', icon: Eraser, enabled: false, description: 'Erase individual drawings' },
     { id: 'trash', icon: Trash, enabled: true, description: 'Delete all drawings' },
   ];

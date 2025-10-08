@@ -110,7 +110,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         }
     }, [liveOhlc, countdown]);
 
-    // --- NEW: Snapping Logic ---
+    // --- REFINED: Advanced Snapping Logic ---
     const findSnapPoint = (param: MouseEventParams): Point => {
         const series = candlestickSeriesRef.current;
         if (!series || !param.point || !param.time) return { time: 0 as UTCTimestamp, price: 0 };
@@ -134,19 +134,32 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             });
         }
 
-        // 2. Snap to existing drawing anchors
+        // 2. Snap to existing drawing anchors and lines
         drawings.forEach(d => {
-            const pointsToSnap = [];
-            if (d.type === 'trendline' || d.type === 'fib') {
+            const pointsToSnap: number[] = [];
+            if (d.type === 'trendline') {
                 pointsToSnap.push(d.start.price, d.end.price);
             } else if (d.type === 'horizontal') {
                 pointsToSnap.push(d.price);
+            } else if (d.type === 'text') {
+                pointsToSnap.push(d.point.price);
+            } else if (d.type === 'fib') {
+                pointsToSnap.push(d.start.price, d.end.price);
+                const startPrice = Math.max(d.start.price, d.end.price);
+                const endPrice = Math.min(d.start.price, d.end.price);
+                const diff = startPrice - endPrice;
+                fibLevels.forEach(({ level }) => {
+                    pointsToSnap.push(endPrice + diff * level);
+                });
             }
+
             pointsToSnap.forEach(p => {
                 const pY = series.priceToCoordinate(p);
                 if (pY !== null) {
                     const distance = Math.abs(cursorY - pY);
-                    if (distance < bestSnap.distance) bestSnap = { price: p, distance };
+                    if (distance < bestSnap.distance) {
+                        bestSnap = { price: p, distance };
+                    }
                 }
             });
         });
@@ -154,7 +167,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         return bestSnap.distance < MAGNET_THRESHOLD_PX ? { time, price: bestSnap.price } : { time, price };
     };
 
-    // --- NEW: Overhauled Drawing Logic ---
+    // --- Drawing Logic ---
     useEffect(() => {
         const chart = chartRef.current;
         const series = candlestickSeriesRef.current;
@@ -213,7 +226,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }, [activeTool, drawings, drawingState]);
 
 
-    // --- NEW: Rendering Effect for Drawings ---
+    // --- Rendering Effect for Drawings ---
     useEffect(() => {
         const chart = chartRef.current;
         const series = candlestickSeriesRef.current;

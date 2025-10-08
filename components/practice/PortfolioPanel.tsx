@@ -17,9 +17,10 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionCl
       {/* Table Header */}
       <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-700/50 bg-slate-800/20 sticky top-0">
         <span className="col-span-3">Symbol</span>
-        <span className="col-span-2 text-right">Qty</span>
+        <span className="col-span-2">Side</span>
+        <span className="col-span-1 text-right">Qty</span>
         <span className="col-span-3 text-right">Avg. Price</span>
-        <span className="col-span-3 text-right">P&L (₹)</span>
+        <span className="col-span-2 text-right">P&L (₹)</span>
         <span className="col-span-1 text-right"></span>
       </div>
       
@@ -27,6 +28,7 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionCl
       <ul className="divide-y divide-slate-700/50">
         {portfolio.positions.map(pos => {
           const pnlColor = pos.pnl >= 0 ? 'text-green-500' : 'text-red-500';
+          const isLong = pos.quantity > 0;
 
           return (
             <li key={pos.instrument.instrument_key} className="hover:bg-slate-700/30">
@@ -34,13 +36,16 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionCl
                 <div className="col-span-3 font-bold text-white truncate">
                   {pos.instrument.tradingsymbol}
                 </div>
-                <div className="col-span-2 text-right font-mono text-white">
-                  {pos.quantity}
+                <div className={`col-span-2 font-bold ${isLong ? 'text-green-500' : 'text-red-500'}`}>
+                  {isLong ? 'LONG' : 'SHORT'}
+                </div>
+                <div className="col-span-1 text-right font-mono text-white">
+                  {Math.abs(pos.quantity)}
                 </div>
                 <div className="col-span-3 text-right font-mono text-slate-300">
                   {pos.averagePrice.toFixed(2)}
                 </div>
-                <div className="col-span-3 text-right">
+                <div className="col-span-2 text-right">
                    <p className={`font-mono font-semibold ${pnlColor}`}>
                         {pos.pnl >= 0 ? '+' : ''}{pos.pnl.toFixed(2)}
                    </p>

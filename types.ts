@@ -66,7 +66,7 @@ export interface Order {
 
 export interface Position {
   instrument: Instrument;
-  quantity: number;
+  quantity: number; // Positive for LONG, negative for SHORT
   averagePrice: number;
   lastPrice: number;
   pnl: number;
