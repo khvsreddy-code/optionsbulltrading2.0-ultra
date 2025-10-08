@@ -1,5 +1,6 @@
 // types.ts
 import React from 'react';
+import type { Timeframe } from './services/marketSimulator';
 
 // Navigation view types
 export type View =
@@ -77,3 +78,6 @@ export interface Portfolio {
   totalValue: number;
   orders: Order[];
 }
+
+// Re-export Timeframe to be accessible from types
+export type { Timeframe };

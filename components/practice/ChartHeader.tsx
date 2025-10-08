@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import type { Instrument, CandleData } from '../../types';
 import type { Timeframe } from '../../services/marketSimulator';
 import StockSelector from './StockSelector';
 import TimeframeSelector from './TimeframeSelector';
-import { Clock } from '../common/Icons';
 
 interface ChartHeaderProps {
   instruments: Instrument[];
@@ -22,46 +21,11 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   onSelectTimeframe,
   liveOhlc
 }) => {
-  const [countdown, setCountdown] = useState('');
   const price = liveOhlc?.close ?? selectedInstrument?.last_price ?? 0;
   const open = liveOhlc?.open ?? 0;
   const change = price - open;
   const changePercent = open === 0 ? 0 : (change / open) * 100;
   const priceColor = change >= 0 ? 'text-green-500' : 'text-red-500';
-  
-  useEffect(() => {
-    if (!liveOhlc || selectedTimeframe === '1s') {
-        setCountdown('');
-        return;
-    }
-
-    const timeframeMap: Record<Timeframe, number | undefined> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
-    const timeframeInSeconds = timeframeMap[selectedTimeframe];
-
-    if (!timeframeInSeconds) {
-        setCountdown('');
-        return;
-    }
-    
-    const closeTime = liveOhlc.time + timeframeInSeconds;
-
-    const timerId = setInterval(() => {
-        const nowSeconds = Date.now() / 1000;
-        const remainingSeconds = Math.max(0, Math.floor(closeTime - nowSeconds));
-        
-        if (remainingSeconds <= 0) {
-             setCountdown('00:00');
-        } else {
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
-            setCountdown(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
-        }
-    }, 1000);
-
-    return () => clearInterval(timerId);
-
-  }, [liveOhlc, selectedTimeframe]);
-
 
   return (
     <div className="flex-shrink-0 bg-[#131722] border-b border-[#2A2E39] p-2 flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
@@ -94,12 +58,6 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
             selectedTimeframe={selectedTimeframe}
             onSelectTimeframe={onSelectTimeframe}
         />
-        {countdown && (
-            <div className="flex items-center space-x-1.5 text-sm font-mono text-yellow-400 hidden lg:flex" title="Time until bar close">
-                <Clock size={16} />
-                <span>{countdown}</span>
-            </div>
-        )}
       </div>
     </div>
   );

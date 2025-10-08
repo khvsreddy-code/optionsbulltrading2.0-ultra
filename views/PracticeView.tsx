@@ -10,6 +10,7 @@ import PracticeSidebar from '../components/practice/PracticeSidebar';
 import OrderDialog from '../components/practice/OrderDialog';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
 import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
+import ChartTradeButtons from '../components/practice/ChartTradeButtons';
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -159,6 +160,23 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, sellOrder, executionPrice));
     };
     
+    const handleResetPortfolio = () => {
+        if (window.confirm('Are you sure you want to reset your portfolio? This action cannot be undone.')) {
+            setPortfolio(createInitialPortfolio());
+        }
+    };
+
+    const handleToolSelect = (tool: DrawingTool) => {
+        if (tool === 'trash') {
+            // This is a special case. We set the tool to 'trash' to trigger the
+            // clearing effect in the child, then immediately reset it to the default.
+            setActiveDrawingTool('trash');
+            setTimeout(() => setActiveDrawingTool('crosshair'), 50);
+        } else {
+            setActiveDrawingTool(tool);
+        }
+    };
+
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
     return (
@@ -187,13 +205,19 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                            <>
                                <DrawingToolbar 
                                    activeTool={activeDrawingTool}
-                                   onToolSelect={setActiveDrawingTool}
+                                   onToolSelect={handleToolSelect}
+                               />
+                               <ChartTradeButtons
+                                   instrument={displayedInstrument}
+                                   onPlaceOrder={handleOpenOrderDialog}
                                />
                                <ChartComponent 
                                    ref={chartComponentRef}
                                    key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
                                    initialData={initialChartData} 
                                    activeTool={activeDrawingTool}
+                                   liveOhlc={liveOhlc}
+                                   timeframe={timeframe}
                                />
                            </>
                         )}
@@ -201,10 +225,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 </main>
                 <aside className="w-80 flex-shrink-0 hidden md:block">
                    <PracticeSidebar 
-                        instrument={displayedInstrument}
                         portfolio={portfolio}
-                        onPlaceOrder={handleOpenOrderDialog}
                         onPositionClick={handleOpenPositionManager}
+                        onResetPortfolio={handleResetPortfolio}
                    />
                 </aside>
             </div>

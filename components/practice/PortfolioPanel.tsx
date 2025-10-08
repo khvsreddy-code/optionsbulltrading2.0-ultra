@@ -1,13 +1,15 @@
 import React from 'react';
 import type { Portfolio, Position } from '../../types';
 import PortfolioDisplay from './PortfolioDisplay';
+import { RotateCcw } from '../common/Icons';
 
 interface PortfolioPanelProps {
   portfolio: Portfolio;
   onPositionClick: (position: Position) => void;
+  onResetPortfolio: () => void;
 }
 
-const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionClick }) => {
+const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionClick, onResetPortfolio }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-shrink-0 border-b border-[#2A2E39]">
@@ -39,6 +41,15 @@ const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionCl
         ) : (
           <p className="px-4 text-slate-400 text-sm">You have no open positions.</p>
         )}
+      </div>
+       <div className="flex-shrink-0 p-4 mt-auto border-t border-[#2A2E39]">
+         <button
+          onClick={onResetPortfolio}
+          className="w-full flex items-center justify-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md font-semibold text-sm transition button-press-feedback"
+        >
+          <RotateCcw size={16} className="mr-2" />
+          Reset Portfolio
+        </button>
       </div>
     </div>
   );
