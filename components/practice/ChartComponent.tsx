@@ -14,6 +14,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
     const [countdown, setCountdown] = useState('');
+    const [countdownPosition, setCountdownPosition] = useState<{ top: number; right: number; } | null>(null);
+
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -68,17 +70,61 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     useEffect(() => {
         if (candlestickSeriesRef.current && liveOhlc) {
             const series = candlestickSeriesRef.current;
-            const currentPrice = liveOhlc.close;
             series.applyOptions({
-                lastValueVisible: true, priceLineVisible: true,
+                lastValueVisible: true,
+                priceLineVisible: true,
                 priceFormat: {
-                    type: 'custom',
-                    formatter: (price: number) => price === currentPrice ? (countdown ? `${price.toFixed(2)} \u200B ${countdown}` : price.toFixed(2)) : price.toFixed(2),
+                    type: 'price',
+                    precision: 2,
                     minMove: 0.01,
                 },
             });
         }
-    }, [liveOhlc, countdown]);
+    }, [liveOhlc]);
+    
+    useEffect(() => {
+        const chart = chartRef.current;
+        if (!chart || !liveOhlc) {
+            setCountdownPosition(null);
+            return;
+        }
+
+        const updatePosition = () => {
+            if (!liveOhlc) return;
+            const priceScale = chart.priceScale('right');
+            if (priceScale.isEmpty()) return;
+
+            const price = liveOhlc.close;
+            const coordinate = priceScale.priceToCoordinate(price);
+
+            if (coordinate === null) {
+                setCountdownPosition(null);
+                return;
+            }
+            
+            const priceScaleWidth = priceScale.width();
+            const chartHeight = chartContainerRef.current?.clientHeight ?? 0;
+
+            if (coordinate >= 0 && coordinate <= chartHeight) {
+                 setCountdownPosition({
+                    top: coordinate,
+                    right: priceScaleWidth + 5,
+                });
+            } else {
+                setCountdownPosition(null);
+            }
+        };
+
+        const rafUpdatePosition = () => requestAnimationFrame(updatePosition);
+        
+        rafUpdatePosition();
+
+        const subscription = chart.timeScale().subscribeVisibleLogicalRangeChange(rafUpdatePosition);
+        
+        return () => {
+            chart.timeScale().unsubscribeVisibleLogicalRangeChange(subscription);
+        };
+    }, [liveOhlc]);
 
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
@@ -90,7 +136,23 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         }
     }, [initialData]);
 
-    return <div ref={chartContainerRef} className="absolute inset-0" />;
+    return (
+        <>
+            <div ref={chartContainerRef} className="absolute inset-0" />
+            {countdownPosition && countdown && (
+                <div
+                    style={{
+                        top: `${countdownPosition.top}px`,
+                        right: `${countdownPosition.right}px`,
+                        transform: 'translateY(12px)',
+                    }}
+                    className="absolute z-20 pointer-events-none text-xs bg-slate-700 text-slate-200 px-1.5 py-0.5 rounded"
+                >
+                    {countdown}
+                </div>
+            )}
+        </>
+    );
 });
 
 export default ChartComponent;
