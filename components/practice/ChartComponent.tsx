@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode, MouseEventParams, LineStyle, ILineSeriesApi } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode } from 'lightweight-charts';
 import type { CandleData } from '../../types';
 import type { Timeframe } from '../../services/marketSimulator';
 
@@ -9,13 +9,11 @@ interface ChartComponentProps {
   timeframe: Timeframe;
 }
 
-const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, liveOhlc, timeframe }, ref) => {
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, timeframe }, ref) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
     const [countdown, setCountdown] = useState('');
-    const [countdownPosition, setCountdownPosition] = useState<{ top: number; right: number; } | null>(null);
-
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -24,13 +22,18 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             });
         }
     }));
-
+    
     useEffect(() => {
-        if (timeframe === '1s') { setCountdown(''); return; }
+        if (timeframe === '1s') {
+            setCountdown('');
+            return;
+        }
+
         const timeframeMap: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
         const timeframeInSeconds = timeframeMap[timeframe];
         if (!timeframeInSeconds) return;
-        const update = () => {
+
+        const updateCountdown = () => {
             const nowSeconds = Date.now() / 1000;
             const barEndTime = Math.ceil(nowSeconds / timeframeInSeconds) * timeframeInSeconds;
             const remainingSeconds = Math.max(0, Math.floor(barEndTime - nowSeconds));
@@ -38,8 +41,9 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             const seconds = remainingSeconds % 60;
             setCountdown(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
         };
-        update();
-        const timerId = setInterval(update, 1000);
+
+        updateCountdown();
+        const timerId = setInterval(updateCountdown, 1000);
         return () => clearInterval(timerId);
     }, [timeframe]);
 
@@ -60,6 +64,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             upColor: '#1AAB7A', downColor: '#FF3D5F', borderDownColor: '#FF3D5F',
             borderUpColor: '#1AAB7A', wickDownColor: '#FF3D5F', wickUpColor: '#1AAB7A',
         });
+        candlestickSeriesRef.current.applyOptions({
+            lastValueVisible: true,
+            priceLineVisible: true,
+        });
+
         const resizeObserver = new ResizeObserver(entries => {
             if (entries[0]) chart.resize(entries[0].contentRect.width, entries[0].contentRect.height);
         });
@@ -68,63 +77,23 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }, []);
     
     useEffect(() => {
-        if (candlestickSeriesRef.current && liveOhlc) {
-            const series = candlestickSeriesRef.current;
-            series.applyOptions({
-                lastValueVisible: true,
-                priceLineVisible: true,
+        if (candlestickSeriesRef.current) {
+            candlestickSeriesRef.current.applyOptions({
                 priceFormat: {
                     type: 'price',
                     precision: 2,
                     minMove: 0.01,
+                    formatter: (price) => {
+                        const formattedPrice = price.toFixed(2);
+                        if (countdown) {
+                            return `${formattedPrice}  ${countdown}`;
+                        }
+                        return formattedPrice;
+                    },
                 },
             });
         }
-    }, [liveOhlc]);
-    
-    useEffect(() => {
-        const chart = chartRef.current;
-        if (!chart || !liveOhlc) {
-            setCountdownPosition(null);
-            return;
-        }
-
-        const updatePosition = () => {
-            if (!liveOhlc) return;
-            const priceScale = chart.priceScale('right');
-            if (priceScale.isEmpty()) return;
-
-            const price = liveOhlc.close;
-            const coordinate = priceScale.priceToCoordinate(price);
-
-            if (coordinate === null) {
-                setCountdownPosition(null);
-                return;
-            }
-            
-            const priceScaleWidth = priceScale.width();
-            const chartHeight = chartContainerRef.current?.clientHeight ?? 0;
-
-            if (coordinate >= 0 && coordinate <= chartHeight) {
-                 setCountdownPosition({
-                    top: coordinate,
-                    right: priceScaleWidth + 5,
-                });
-            } else {
-                setCountdownPosition(null);
-            }
-        };
-
-        const rafUpdatePosition = () => requestAnimationFrame(updatePosition);
-        
-        rafUpdatePosition();
-
-        const subscription = chart.timeScale().subscribeVisibleLogicalRangeChange(rafUpdatePosition);
-        
-        return () => {
-            chart.timeScale().unsubscribeVisibleLogicalRangeChange(subscription);
-        };
-    }, [liveOhlc]);
+    }, [countdown]);
 
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
@@ -137,21 +106,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }, [initialData]);
 
     return (
-        <>
-            <div ref={chartContainerRef} className="absolute inset-0" />
-            {countdownPosition && countdown && (
-                <div
-                    style={{
-                        top: `${countdownPosition.top}px`,
-                        right: `${countdownPosition.right}px`,
-                        transform: 'translateY(12px)',
-                    }}
-                    className="absolute z-20 pointer-events-none text-xs bg-slate-700 text-slate-200 px-1.5 py-0.5 rounded"
-                >
-                    {countdown}
-                </div>
-            )}
-        </>
+        <div ref={chartContainerRef} className="absolute inset-0" />
     );
 });
 
