@@ -41,16 +41,58 @@
 
     <style>
       body {
-        /* font-family is now handled by Tailwind config */
         -webkit-tap-highlight-color: transparent;
       }
-      @keyframes pulse-slow {
-        50% {
-          transform: scale(1.02);
+      
+      /* --- Framer-Inspired Animations --- */
+      @keyframes page-enter {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
-      .animate-pulse-slow {
-        animation: pulse-slow 4s ease-in-out infinite;
+      .animate-page-enter {
+        animation: page-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      
+      @keyframes reveal-in {
+        from {
+          opacity: 0;
+          transform: translateY(15px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .animate-reveal-in {
+        animation: reveal-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      }
+      
+      .button-press-feedback {
+        transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease;
+      }
+      .button-press-feedback:active {
+        transform: scale(0.95);
+      }
+      
+      /* Professional Card Style */
+      .pro-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      }
+      
+      .pro-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      }
+      
+      .dark .pro-card:hover {
+         box-shadow: 0 10px 25px rgba(0,0,0,0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+         border-color: rgba(255, 255, 255, 0.15);
       }
 
       /* Background animation for pricing view */
@@ -68,7 +110,6 @@
         width:100%;
         height:100%;
         display:block;
-        
       }
 
       .stars {
@@ -82,99 +123,21 @@
         z-index:-1;
       }
       
-      /* New animation keyframes */
+      /* Dialog/Modal animation */
       @keyframes fadeInUp {
         from {
           opacity: 0;
-          transform: translate3d(0, 20px, 0);
+          transform: translate3d(0, 20px, 0) scale(0.95);
         }
         to {
           opacity: 1;
-          transform: translate3d(0, 0, 0);
+          transform: translate3d(0, 0, 0) scale(1);
         }
       }
       .animate-fadeInUp {
-        animation: fadeInUp 0.5s ease-out forwards;
-        opacity: 0; /* Start hidden */
-      }
-      .button-press-feedback {
-        transition: transform 0.1s cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      .button-press-feedback:active {
-        transform: scale(0.95);
-      }
-      
-      /* Glowing border effect */
-      @keyframes spin-border {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
 
-      .glowing-border {
-        position: relative;
-        overflow: hidden; /* This is crucial for the effect */
-      }
-
-      .glowing-border::before {
-        content: '';
-        position: absolute;
-        /* Make the pseudo-element larger to create the moving border effect */
-        width: 150%;
-        height: 150%;
-        top: -25%;
-        left: -25%;
-        z-index: 0;
-        background: conic-gradient(
-          from 90deg at 50% 50%,
-          #ef4444, /* red-500 */
-          #4ade80, /* green-400 */
-          #ef4444  /* red-500 */
-        );
-        animation: spin-border 4s linear infinite;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-
-      .glowing-border:hover::before {
-        opacity: 1;
-      }
-
-      /* New pulsating glow effect for the card's content */
-      @keyframes pulse-glow {
-        0%, 100% {
-          box-shadow: 0 0 15px rgba(167, 139, 250, 0.3), 0 0 25px rgba(99, 102, 241, 0.2);
-        }
-        50% {
-          box-shadow: 0 0 25px rgba(167, 139, 250, 0.5), 0 0 40px rgba(99, 102, 241, 0.3);
-        }
-      }
-      .dark .glowing-border:hover .inner-card-content {
-        animation: pulse-glow 3s infinite ease-in-out;
-      }
-
-      /* Animated Gradient Backgrounds on Hover */
-      .gradient-bg {
-        background-size: 200% 200%;
-        background-position: 25% 50%; /* Start position */
-        transition: background-position 0.8s ease-in-out, transform 0.4s ease, box-shadow 0.4s ease;
-      }
-
-      .gradient-bg:hover {
-        background-position: 75% 50%; /* End position on hover */
-      }
-
-      .gradient-1 {
-        background-image: linear-gradient(45deg, #431929, #38255a, #2a2440);
-      }
-      .gradient-2 {
-        background-image: linear-gradient(45deg, #1b3a3a, #1a3c58, #2a2440);
-      }
-      .gradient-3 {
-        background-image: linear-gradient(45deg, #0f3d4a, #1a3c58, #2a2440);
-      }
-      .gradient-4 {
-        background-image: linear-gradient(45deg, #382043, #38255a, #2a2440);
-      }
     </style>
   </head>
   <body>

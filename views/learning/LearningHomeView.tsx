@@ -11,9 +11,13 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const getTargetPathForChapter = (chapterId: string): string => {
         if (chapterId === 'ch3') return '/learning/bullish';
         if (chapterId === 'ch4') return '/learning/bearish';
+        if (chapterId === 'ch5') return '/learning/indicators';
+        if (chapterId === 'ch6') return '/learning/fundamental';
         return '/learning'; // Fallback
     };
     
+    let itemDelay = 0;
+
     return (
         <div className="bg-[#111111] text-white min-h-screen font-sans p-4">
             <header className="flex items-center justify-between mb-6">
@@ -22,7 +26,7 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                 </button>
                 <div className="flex-1 text-center">
                     <h1 className="text-lg font-bold text-slate-200">The Stock Market Fundamentals</h1>
-                    <p className="text-sm text-slate-400">A Complete Learning Curriculum</p>
+                    <p className="text-sm text-slate-400">Your journey to market mastery starts here.</p>
                 </div>
                 <div className="w-8"></div>
             </header>
@@ -31,14 +35,15 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                 <div className="space-y-8">
                     {learningCurriculum.map((chapter) => (
                         <div key={chapter.id}>
-                            <h2 className="text-xl font-semibold text-slate-300 mb-4">{chapter.title}</h2>
+                            <h2 className="text-xl font-semibold text-slate-300 mb-4 animate-reveal-in" style={{ animationDelay: `${itemDelay += 50}ms` }}>{chapter.title}</h2>
                             {chapter.subChapters.length > 0 ? (
                                 <div className="space-y-3">
                                     {chapter.subChapters.map((subChapter) => (
                                         <button
                                             key={subChapter.id}
                                             onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-                                            className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback"
+                                            className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback animate-reveal-in"
+                                            style={{ animationDelay: `${itemDelay += 30}ms` }}
                                         >
                                             <p className="font-semibold text-slate-100">{subChapter.title}</p>
                                             <p className="text-sm text-slate-400 mt-1">{subChapter.readingTime}</p>
@@ -49,17 +54,18 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                                  <div className="space-y-3">
                                      <button
                                         onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
-                                        className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center"
+                                        className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center animate-reveal-in"
+                                        style={{ animationDelay: `${itemDelay += 30}ms` }}
                                     >
                                         <div>
-                                            <p className="font-semibold text-slate-100">View All Patterns</p>
+                                            <p className="font-semibold text-slate-100">View All Topics</p>
                                             <p className="text-sm text-slate-400 mt-1">Explore detailed explanations</p>
                                         </div>
                                         <ChevronRight size={20} className="text-slate-400" />
                                     </button>
                                  </div>
                             ) : (
-                                <div className="p-4 bg-[#1C1C1E] rounded-lg text-center">
+                                <div className="p-4 bg-[#1C1C1E] rounded-lg text-center animate-reveal-in" style={{ animationDelay: `${itemDelay += 30}ms` }}>
                                     <p className="text-slate-400">More lessons coming soon!</p>
                                 </div>
                             )}

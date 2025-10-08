@@ -7,7 +7,7 @@ interface TradeHistoryPanelProps {
 
 const TradeHistoryPanel: React.FC<TradeHistoryPanelProps> = ({ trades }) => {
   if (trades.length === 0) {
-      return <p className="p-4 text-center text-slate-400 text-sm">No completed trades in this session.</p>;
+      return <p className="p-4 text-center text-slate-400 text-sm">Your trade history will appear here. Learn from every move!</p>;
   }
 
   return (

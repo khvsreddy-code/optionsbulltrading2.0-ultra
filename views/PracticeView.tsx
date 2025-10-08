@@ -10,6 +10,7 @@ import PositionManagerDialog from '../components/practice/PositionManagerDialog'
 import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
 import ChartTradeButtons from '../components/practice/ChartTradeButtons';
 import BottomPanel from '../components/practice/BottomPanel';
+import WelcomeDialog from '../components/practice/WelcomeDialog';
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -31,6 +32,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
     const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool>('crosshair');
+    const [showWelcome, setShowWelcome] = useState(false);
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
@@ -62,6 +64,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             sim.stop();
         };
     }, []); // Empty dependency array ensures this runs only once
+
+    // Effect to show welcome message after loading
+    useEffect(() => {
+        if (!isLoading && !localStorage.getItem('hasSeenSimulatorWelcome')) {
+            const timer = setTimeout(() => {
+                setShowWelcome(true);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading]);
 
     // Effect to manage timeframe subscriptions
     useEffect(() => {
@@ -229,10 +241,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         }
     };
 
+    const handleCloseWelcome = () => {
+        setShowWelcome(false);
+        localStorage.setItem('hasSeenSimulatorWelcome', 'true');
+    };
+
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
     return (
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
+            <WelcomeDialog isOpen={showWelcome} onClose={handleCloseWelcome} />
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
             <div className="flex-grow flex flex-col overflow-hidden">

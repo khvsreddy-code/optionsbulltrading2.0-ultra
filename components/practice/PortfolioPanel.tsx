@@ -10,7 +10,7 @@ interface PortfolioPanelProps {
 
 const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionClick, onReversePosition }) => {
   if (portfolio.positions.length === 0) {
-    return <p className="p-4 text-center text-slate-400 text-sm">You have no open positions.</p>;
+    return <p className="p-4 text-center text-slate-400 text-sm">You're all set! Place a trade to see your live positions here.</p>;
   }
 
   return (

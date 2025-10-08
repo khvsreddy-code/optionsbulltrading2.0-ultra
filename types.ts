@@ -19,7 +19,8 @@ export type View =
   | 'bullishPatternsList'
   | 'bearishPatternsList'
   | 'patternDetail'
-  | 'technicalIndicatorsList';
+  | 'technicalIndicatorsList'
+  | 'fundamentalAnalysisList';
 
 // Financial data types
 export interface CandleData {

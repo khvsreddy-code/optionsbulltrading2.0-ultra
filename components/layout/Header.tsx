@@ -6,8 +6,17 @@ interface HeaderProps {
     user: SupabaseUser | null;
 }
 
+const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+};
+
+
 const Header: React.FC<HeaderProps> = ({ user }) => {
-    const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'User';
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Trader';
+    const greeting = getGreeting();
 
     return (
         <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm p-3 border-b border-gray-200 dark:border-slate-700">
@@ -15,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ user }) => {
                 {/* App Name */}
                 <div className="flex items-center overflow-hidden">
                     <span className="text-lg font-semibold text-gray-800 dark:text-slate-200 truncate">
-                        Welcome, {userName}
+                        {greeting}, {userName}
                     </span>
                 </div>
 

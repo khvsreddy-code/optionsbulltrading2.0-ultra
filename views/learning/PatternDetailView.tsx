@@ -2,6 +2,7 @@ import React from 'react';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
+import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
 import { ChevronRight } from '../../components/common/Icons';
 
 interface PatternDetailViewProps {
@@ -14,12 +15,14 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const foundInBullish = bullishPatterns.find(p => p.id === patternId);
     const foundInBearish = bearishPatterns.find(p => p.id === patternId);
     const foundInIndicators = technicalIndicators.find(p => p.id === patternId);
+    const foundInFundamentals = fundamentalAnalysisTopics.find(p => p.id === patternId);
 
-    const pattern = foundInBullish || foundInBearish || foundInIndicators;
+    const pattern = foundInBullish || foundInBearish || foundInIndicators || foundInFundamentals;
     
     const backTargetPath: string = foundInBullish ? '/learning/bullish'
                                   : foundInBearish ? '/learning/bearish'
                                   : foundInIndicators ? '/learning/indicators'
+                                  : foundInFundamentals ? '/learning/fundamental'
                                   : '/learning';
 
     if (!pattern) {

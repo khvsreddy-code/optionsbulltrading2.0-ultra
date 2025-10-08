@@ -17,7 +17,7 @@ export interface Chapter {
 export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
-    title: 'Chapter 1: The Basics of Stocks',
+    title: 'Module 1: Stock Market Basics',
     subChapters: [
       { 
         id: '1.1', 
@@ -25,6 +25,7 @@ export const learningCurriculum: Chapter[] = [
         readingTime: '1m 2s To Read',
         content: (
             <>
+                <p className="mb-4 text-slate-300 italic">Welcome to the first step of your trading journey! Understanding what a stock is forms the bedrock of everything that follows. Don't worry, we'll break it down in a simple way.</p>
                 <h3 className="text-2xl font-bold mb-4">Defining a share as fractional ownership in a company.</h3>
                 <p className="mb-4">A stock, also referred to as equity or a share, is the most fundamental unit of ownership in a public corporation. It is a financial instrument that represents a claim on the company's assets and earnings.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">The Analogy of the Family Business</h4>
@@ -212,18 +213,30 @@ export const learningCurriculum: Chapter[] = [
   },
   {
     id: 'ch2',
-    title: 'Chapter 2: Market Concepts',
+    title: 'Module 2: Market Concepts',
     subChapters: []
   },
   {
     id: 'ch3',
-    title: 'Chapter 3: Bullish Candlestick Patterns',
+    title: 'Module 3: Bullish Candlestick Patterns',
     isExternalLink: true, // This tells the UI to navigate to a different list view
     subChapters: []
   },
   {
     id: 'ch4',
-    title: 'Chapter 4: Bearish Candlestick Patterns',
+    title: 'Module 4: Bearish Candlestick Patterns',
+    isExternalLink: true,
+    subChapters: []
+  },
+  {
+    id: 'ch5',
+    title: 'Module 5: Technical Indicators',
+    isExternalLink: true,
+    subChapters: []
+  },
+  {
+    id: 'ch6',
+    title: 'Module 6: Fundamental Analysis',
     isExternalLink: true,
     subChapters: []
   },

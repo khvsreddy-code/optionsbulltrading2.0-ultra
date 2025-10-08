@@ -14,7 +14,7 @@ const IconLink: React.FC<IconLinkProps> = ({ title, icon: Icon, onClick, href })
             // The onClick handler is only applied if this is not an external link
             onClick={!href ? (onClick || (() => console.log(`Go to ${title}`))) : undefined}
         >
-            <div className="w-14 h-14 rounded-full shadow-md flex items-center justify-center mb-1 border-2 border-yellow-400 dark:border-yellow-500 bg-white dark:bg-slate-700 transition-transform duration-200 ease-in-out group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-blue-500/30 dark:group-hover:shadow-sky-400/40">
+            <div className="w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center mb-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700/50 transition-transform duration-200 ease-in-out group-hover:scale-105 group-hover:shadow-md group-hover:border-blue-500 dark:group-hover:border-blue-400">
                 <Icon size={28} className="text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-xs text-gray-600 dark:text-slate-300 font-medium leading-tight text-center mt-1">{title}</span>

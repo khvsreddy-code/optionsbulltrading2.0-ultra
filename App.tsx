@@ -24,6 +24,7 @@ import BullishPatternsListView from './views/learning/BullishPatternsListView';
 import BearishPatternsListView from './views/learning/BearishPatternsListView';
 import PatternDetailView from './views/learning/PatternDetailView';
 import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
+import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 
 
 // Auth components
@@ -38,7 +39,6 @@ const App: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isDrawerOpen, setDrawerOpen] = useState(false);
     
-    // --- NEW: Routing State Management ---
     const [location, setLocation] = useState(window.location.hash.slice(1) || '/home');
 
     const [theme, setTheme] = useState<Theme>(() => {
@@ -59,11 +59,10 @@ const App: React.FC = () => {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
     };
     
-    // --- NEW: Effect to handle browser history events ---
     useEffect(() => {
         const handleHashChange = () => {
             setLocation(window.location.hash.slice(1) || '/home');
-            window.scrollTo(0, 0); // Scroll to top on navigation
+            window.scrollTo(0, 0);
         };
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -90,20 +89,18 @@ const App: React.FC = () => {
             setSession(session);
             setUser(session?.user ?? null);
             if (_event === 'SIGNED_IN') {
-                handleNavigate('/home'); // Reset to home view on sign-in
+                handleNavigate('/home');
             }
         });
 
         return () => subscription.unsubscribe();
     }, []);
 
-    // --- NEW: Path-based navigation function ---
     const handleNavigate = (path: string) => {
         window.location.hash = path;
-        setDrawerOpen(false); // Close drawer on navigation
+        setDrawerOpen(false);
     };
     
-    // --- NEW: Derive view and params from the location state ---
     const parseLocation = () => {
         const parts = location.split('/').filter(Boolean);
         let view: View = 'home';
@@ -130,6 +127,7 @@ const App: React.FC = () => {
             } else if (parts[1] === 'bullish') view = 'bullishPatternsList';
             else if (parts[1] === 'bearish') view = 'bearishPatternsList';
             else if (parts[1] === 'indicators') view = 'technicalIndicatorsList';
+            else if (parts[1] === 'fundamental') view = 'fundamentalAnalysisList';
             else if (parts[1] === 'pattern' && parts[2]) {
                 view = 'patternDetail';
                 activePatternId = parts[2];
@@ -144,42 +142,51 @@ const App: React.FC = () => {
 
 
     const renderView = () => {
-        switch (view) {
-            case 'home':
-                return <HomeView onNavigate={handleNavigate} />;
-            case 'pricing':
-                return <PricingView onNavigate={handleNavigate} user={user} />;
-            case 'policiesList':
-                return <PoliciesListView onNavigate={handleNavigate} />;
-            case 'cancellation':
-                return <CancellationRefundPolicyView onNavigate={handleNavigate} />;
-            case 'terms':
-                return <TermsAndConditionsView onNavigate={handleNavigate} />;
-            case 'shipping':
-                return <ShippingPolicyView onNavigate={handleNavigate} />;
-            case 'privacy':
-                return <PrivacyPolicyView onNavigate={handleNavigate} />;
-            case 'contact':
-                return <ContactUsView onNavigate={handleNavigate} />;
-            case 'learningHome':
-                return <LearningHomeView onNavigate={handleNavigate} />;
-            case 'learningChapter':
-                return <LearningChapterView onNavigate={handleNavigate} chapterId={activeChapterId} />;
-            case 'bullishPatternsList':
-                return <BullishPatternsListView onNavigate={handleNavigate} />;
-            case 'bearishPatternsList':
-                return <BearishPatternsListView onNavigate={handleNavigate} />;
-            case 'technicalIndicatorsList':
-                return <TechnicalIndicatorsListView onNavigate={handleNavigate} />;
-            case 'patternDetail':
-                return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
-            case 'practice':
-                return <PracticeView onNavigate={handleNavigate} theme={theme} />;
-            case 'profile':
-                return <HomeView onNavigate={handleNavigate} />; // Placeholder for Profile view
-            default:
-                return <HomeView onNavigate={handleNavigate} />;
-        }
+        // --- NEW: Add animation wrapper with a key to trigger on change ---
+        return (
+            <div key={view} className="animate-page-enter">
+                {(() => {
+                    switch (view) {
+                        case 'home':
+                            return <HomeView onNavigate={handleNavigate} />;
+                        case 'pricing':
+                            return <PricingView onNavigate={handleNavigate} user={user} />;
+                        case 'policiesList':
+                            return <PoliciesListView onNavigate={handleNavigate} />;
+                        case 'cancellation':
+                            return <CancellationRefundPolicyView onNavigate={handleNavigate} />;
+                        case 'terms':
+                            return <TermsAndConditionsView onNavigate={handleNavigate} />;
+                        case 'shipping':
+                            return <ShippingPolicyView onNavigate={handleNavigate} />;
+                        case 'privacy':
+                            return <PrivacyPolicyView onNavigate={handleNavigate} />;
+                        case 'contact':
+                            return <ContactUsView onNavigate={handleNavigate} />;
+                        case 'learningHome':
+                            return <LearningHomeView onNavigate={handleNavigate} />;
+                        case 'learningChapter':
+                            return <LearningChapterView onNavigate={handleNavigate} chapterId={activeChapterId} />;
+                        case 'bullishPatternsList':
+                            return <BullishPatternsListView onNavigate={handleNavigate} />;
+                        case 'bearishPatternsList':
+                            return <BearishPatternsListView onNavigate={handleNavigate} />;
+                        case 'technicalIndicatorsList':
+                            return <TechnicalIndicatorsListView onNavigate={handleNavigate} />;
+                        case 'fundamentalAnalysisList':
+                            return <FundamentalAnalysisListView onNavigate={handleNavigate} />;
+                        case 'patternDetail':
+                            return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
+                        case 'practice':
+                            return <PracticeView onNavigate={handleNavigate} theme={theme} />;
+                        case 'profile':
+                            return <HomeView onNavigate={handleNavigate} />; // Placeholder for Profile view
+                        default:
+                            return <HomeView onNavigate={handleNavigate} />;
+                    }
+                })()}
+            </div>
+        );
     };
 
     if (loading) {
@@ -201,7 +208,7 @@ const App: React.FC = () => {
         );
     }
     
-    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'technicalIndicatorsList'];
+    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'technicalIndicatorsList', 'fundamentalAnalysisList'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }
@@ -218,13 +225,12 @@ const App: React.FC = () => {
             />
             <div className="flex flex-col min-h-screen">
                 <Header user={user} />
-                <main className="flex-grow pb-16">
+                <main className="flex-grow pb-20">
                     {renderView()}
                 </main>
                 <BottomNavBar
                     activeView={view}
                     onTabChange={handleNavigate}
-                    onMenuClick={() => setDrawerOpen(true)}
                 />
             </div>
         </div>
