@@ -21,6 +21,7 @@ import LearningHomeView from './views/learning/LearningHomeView';
 import LearningChapterView from './views/learning/LearningChapterView';
 import PracticeView from './views/PracticeView';
 import BullishPatternsListView from './views/learning/BullishPatternsListView';
+import BearishPatternsListView from './views/learning/BearishPatternsListView';
 import PatternDetailView from './views/learning/PatternDetailView';
 
 
@@ -136,6 +137,8 @@ const App: React.FC = () => {
                 return <LearningChapterView onNavigate={handleNavigate} chapterId={activeChapterId} />;
             case 'bullishPatternsList':
                 return <BullishPatternsListView onNavigate={handleNavigate} />;
+            case 'bearishPatternsList':
+                return <BearishPatternsListView onNavigate={handleNavigate} />;
             case 'patternDetail':
                 return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
             case 'practice':
@@ -167,7 +170,8 @@ const App: React.FC = () => {
     }
     
     // For certain views, we use a different layout without the standard header/navbar
-    if (view === 'learningHome' || view === 'learningChapter' || view === 'practice' || view === 'bullishPatternsList' || view === 'patternDetail') {
+    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail'];
+    if (noLayoutViews.includes(view)) {
         return renderView();
     }
 

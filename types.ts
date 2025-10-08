@@ -16,6 +16,7 @@ export type View =
   | 'practice'
   | 'profile'
   | 'bullishPatternsList'
+  | 'bearishPatternsList'
   | 'patternDetail';
 
 // Financial data types

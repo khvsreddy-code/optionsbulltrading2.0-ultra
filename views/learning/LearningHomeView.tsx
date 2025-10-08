@@ -8,6 +8,13 @@ interface LearningHomeViewProps {
 }
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
+    
+    const getTargetViewForChapter = (chapterId: string): View => {
+        if (chapterId === 'ch3') return 'bullishPatternsList';
+        if (chapterId === 'ch4') return 'bearishPatternsList';
+        return 'learningHome'; // Fallback
+    };
+    
     return (
         <div className="bg-[#111111] text-white min-h-screen font-sans p-4">
             <header className="flex items-center justify-between mb-6">
@@ -43,7 +50,7 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                             ) : chapter.isExternalLink ? (
                                  <div className="space-y-3">
                                      <button
-                                        onClick={() => onNavigate('bullishPatternsList')}
+                                        onClick={() => onNavigate(getTargetViewForChapter(chapter.id))}
                                         className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center"
                                     >
                                         <div>

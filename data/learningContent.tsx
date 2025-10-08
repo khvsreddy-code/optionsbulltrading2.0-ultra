@@ -221,4 +221,10 @@ export const learningCurriculum: Chapter[] = [
     isExternalLink: true, // This tells the UI to navigate to a different list view
     subChapters: []
   },
+  {
+    id: 'ch4',
+    title: 'Chapter 4: Bearish Candlestick Patterns',
+    isExternalLink: true,
+    subChapters: []
+  },
 ];

@@ -81,16 +81,12 @@ export class MarketSimulator {
 
         for (let i = 0; i < count; i++) {
             const open = lastClose;
-            let high = open;
-            let low = open;
-            let price = open;
-            // Simulate ticks within the historical candle for realism
-            for (let t = 0; t < this.TICKS_PER_TIMEFRAME; t++) {
-                price = this.generateNextPriceTick(price);
-                high = Math.max(high, price);
-                low = Math.min(low, price);
-            }
-            const close = price;
+            
+            // Simplified, fast generation for historical data
+            const change = (Math.random() - 0.5) * (open * 0.02); // Max 2% change per candle
+            const close = open + change;
+            const high = Math.max(open, close) + (Math.random() * open * 0.01); // Add some wick
+            const low = Math.min(open, close) - (Math.random() * open * 0.01); // Add some wick
             
             data.push({
                 time: startTime + (i * this.timeframeInSeconds),
