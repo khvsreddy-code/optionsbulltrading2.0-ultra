@@ -6,9 +6,10 @@ import anime from 'animejs';
 
 interface ProfileViewProps {
     user: SupabaseUser | null;
+    onNavigate: (path: string) => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
     const [loading, setLoading] = useState(false);
     const [userName, setUserName] = useState(user?.user_metadata?.full_name || 'Trader');
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=7065F0&color=fff`);
@@ -130,7 +131,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
                     <h3 className="font-bold text-primary">Free Plan</h3>
                     <p className="text-sm text-primary/80">Access to basic learning modules.</p>
                 </div>
-                <button className="px-4 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback text-sm">
+                <button 
+                    onClick={() => onNavigate('/pricing')}
+                    className="px-4 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback text-sm">
                     Upgrade to Premium
                 </button>
             </div>

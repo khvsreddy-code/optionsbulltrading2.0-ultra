@@ -13,8 +13,8 @@ const IconLink: React.FC<IconLinkProps> = ({ title, icon: Icon, onClick, href })
             className="flex flex-col items-center cursor-pointer group button-press-feedback" 
             onClick={!href ? onClick : undefined}
         >
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2 border-2 border-border bg-card transition-colors duration-200 group-hover:border-primary">
-                <Icon size={28} className="text-primary" />
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-2 bg-primary-light transition-all duration-300 ease-in-out group-hover:bg-primary group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-primary/30">
+                <Icon size={28} className="text-primary transition-colors duration-300 group-hover:text-white" />
             </div>
             <span className="text-sm text-text-secondary font-medium text-center">{title}</span>
         </div>

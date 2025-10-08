@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, BookOpen, Clock } from '../components/common/Icons';
+import { Telegram, GraduationCap, Stopwatch } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import anime from 'animejs';
 
@@ -137,8 +137,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 <div className="grid grid-cols-4 gap-4">
                     <IconLink title="Premium" href="https://t.me/optionsbulltrading" icon={Telegram} />
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
-                    <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={BookOpen} />
-                    <IconLink title="Simulator" onClick={() => onNavigate('/practice')} icon={Clock} />
+                    <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
+                    <IconLink title="Simulator" onClick={() => onNavigate('/practice')} icon={Stopwatch} />
                 </div>
             </div>
             

@@ -40,8 +40,7 @@ export const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
 export const Sun = createIcon(<><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m4.93 19.07 1.41-1.41" /><path d="m17.66 6.34 1.41-1.41" /></>);
 export const SignOut = createIcon(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>);
 export const Moon = createIcon(<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />);
-export const Telegram = createIcon(<path d="m15 10-4 4 6 6 4-16-18 7 4 2 2 6 3-4" />);
-export const Clock = createIcon(<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>);
+export const Telegram = createIcon(<><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></>);
 export const X = createIcon(<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>);
 export const Briefcase = createIcon(<><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>);
 export const Search = createIcon(<><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>);
@@ -59,6 +58,9 @@ export const Plus = createIcon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1
 export const Minus = createIcon(<line x1="5" y1="12" x2="19" y2="12" />);
 export const Swap = createIcon(<><path d="m3 17 4-4-4-4"/><path d="M7 13h14"/><path d="m21 7-4 4 4 4"/><path d="M17 11H3"/></>);
 export const Home = createIcon(<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>);
+export const GraduationCap = createIcon(<><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.084a1 1 0 0 0 0 1.838l8.57 3.908a2 2 0 0 0 1.66 0l8.59-3.908Z"/><path d="M6 12v4c0 1.66 4 3 6 3s6-1.34 6-3v-4"/></>);
+export const Stopwatch = createIcon(<><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 7 5"/><path d="M19 3 17 5"/><path d="M12 3v-1"/></>);
+
 
 // --- New Icons for Fundamental Analysis ---
 export const DollarSign = createIcon(<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>);

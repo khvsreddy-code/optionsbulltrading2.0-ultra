@@ -157,7 +157,7 @@ const App: React.FC = () => {
                         case 'practice':
                             return <PracticeView onNavigate={handleNavigate} theme={'dark'} />; // Keep simulator dark
                         case 'profile':
-                            return <ProfileView user={user} />;
+                            return <ProfileView user={user} onNavigate={handleNavigate} />;
                         default:
                             return <HomeView onNavigate={handleNavigate} user={user} />;
                     }
