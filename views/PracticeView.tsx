@@ -158,6 +158,33 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, closeOrder, executionPrice));
     };
     
+    const handleReversePosition = (position: Position) => {
+        if (!position) return;
+    
+        const instrument = instruments.find(i => i.instrument_key === position.instrument.instrument_key);
+        if (!instrument) return;
+    
+        // The order quantity to reverse is double the absolute position quantity.
+        // This closes the current position and opens an equal one on the opposite side.
+        const reverseQuantity = Math.abs(position.quantity) * 2;
+        
+        // Determine the correct side for the reversing order.
+        const reverseSide: OrderSide = position.quantity > 0 ? 'SELL' : 'BUY';
+    
+        const reverseOrder: Order = {
+            id: `ord_reverse_${Date.now()}`,
+            instrument: instrument,
+            type: 'MARKET',
+            side: reverseSide,
+            quantity: reverseQuantity,
+            status: 'OPEN',
+            createdAt: Date.now() / 1000,
+        };
+    
+        const executionPrice = instrument.last_price;
+        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, reverseOrder, executionPrice));
+    };
+
     const handleResetPortfolio = () => {
         if (window.confirm('Are you sure you want to reset your portfolio? This action cannot be undone.')) {
             setPortfolio(createInitialPortfolio());
@@ -252,6 +279,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                    <PracticeSidebar 
                         portfolio={portfolio}
                         onPositionClick={handleOpenPositionManager}
+                        onReversePosition={handleReversePosition}
                         onResetPortfolio={handleResetPortfolio}
                         onManageFunds={handleManageFunds}
                    />

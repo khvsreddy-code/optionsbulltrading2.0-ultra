@@ -8,11 +8,12 @@ import type { Portfolio, Position } from '../../types';
 interface PracticeSidebarProps {
   portfolio: Portfolio;
   onPositionClick: (position: Position) => void;
+  onReversePosition: (position: Position) => void;
   onResetPortfolio: () => void;
   onManageFunds: () => void;
 }
 
-const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPositionClick, onResetPortfolio, onManageFunds }) => {
+const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPositionClick, onReversePosition, onResetPortfolio, onManageFunds }) => {
     const [activeTab, setActiveTab] = useState<'positions' | 'history'>('positions');
     
     return (
@@ -46,6 +47,7 @@ const PracticeSidebar: React.FC<PracticeSidebarProps> = ({ portfolio, onPosition
                     <PortfolioPanel 
                         portfolio={portfolio} 
                         onPositionClick={onPositionClick}
+                        onReversePosition={onReversePosition}
                     />
                 )}
                 {activeTab === 'history' && (

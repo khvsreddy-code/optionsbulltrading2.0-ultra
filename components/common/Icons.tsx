@@ -58,6 +58,7 @@ export const Zap = createIcon(<polygon points="13 2 3 14 12 14 11 22 21 10 12 10
 // FIX: Add Plus and Minus icons.
 export const Plus = createIcon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
 export const Minus = createIcon(<line x1="5" y1="12" x2="19" y2="12" />);
+export const Swap = createIcon(<><path d="m3 17 4-4-4-4"/><path d="M7 13h14"/><path d="m21 7-4 4 4 4"/><path d="M17 11H3"/></>);
 
 // --- Drawing Toolbar Icons ---
 export const Crosshair = createIcon(<><circle cx="12" cy="12" r="10" /><path d="M22 12h-4" /><path d="M12 6V2" /><path d="M6 12H2" /><path d="M12 22v-4" /></>);
