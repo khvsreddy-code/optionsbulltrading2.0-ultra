@@ -32,7 +32,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    chartRef.current = createChart(chartContainerRef.current, {
+    const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
       layout: {
@@ -65,8 +65,9 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         },
       },
     });
+    chartRef.current = chart;
 
-    candlestickSeriesRef.current = chartRef.current.addCandlestickSeries({
+    candlestickSeriesRef.current = chart.addCandlestickSeries({
         upColor: '#1AAB7A',
         downColor: '#FF3D5F',
         borderDownColor: '#FF3D5F',
@@ -74,19 +75,25 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         wickDownColor: '#FF3D5F',
         wickUpColor: '#1AAB7A',
     });
-
-    const handleResize = () => {
-      if (chartRef.current && chartContainerRef.current) {
-        chartRef.current.resize(chartContainerRef.current.clientWidth, chartContainerRef.current.clientHeight);
+    
+    // Modern, robust way to handle chart resizing. It observes the container
+    // element and automatically resizes the chart whenever the container's
+    // dimensions change.
+    const resizeObserver = new ResizeObserver(entries => {
+      if (entries.length === 0 || entries[0].target !== chartContainerRef.current) {
+        return;
       }
-    };
-    window.addEventListener('resize', handleResize);
+      const { width, height } = entries[0].contentRect;
+      chart.resize(width, height);
+    });
+
+    resizeObserver.observe(chartContainerRef.current);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      if (chartRef.current) {
-        chartRef.current.remove();
-      }
+      resizeObserver.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      candlestickSeriesRef.current = null;
     };
   }, []); // Create chart only once
 
