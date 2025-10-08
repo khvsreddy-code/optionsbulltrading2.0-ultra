@@ -1,7 +1,7 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, BookOpen, CandlestickChart, Clock } from '../components/common/Icons';
+import { Telegram, BookOpen, Clock } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 
 interface HomeViewProps {
@@ -12,10 +12,10 @@ interface HomeViewProps {
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
     const mainCards = [
-        { title: "Daily Chart Analysis", image: "https://plus.unsplash.com/premium_photo-1681487814165-018814c29141?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
-        { title: "Upcoming Stock Events", image: "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
-        { title: "Telegram Subscriptions", image: "https://images.unsplash.com/photo-1611606063065-ee7946f0787a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" },
-        { title: "Courses", image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }
+        { title: "Daily Chart Analysis", iconUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-stocks-growth-3d-fluency-96.png", bgColor: "bg-blue-600" },
+        { title: "Upcoming Stock Events", iconUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-calendar-3d-fluency-96.png", bgColor: "bg-indigo-600" },
+        { title: "Telegram Subscriptions", iconUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-telegram-3d-fluency-96.png", bgColor: "bg-sky-500" },
+        { title: "Courses", iconUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-education-3d-fluency-96.png", bgColor: "bg-purple-600" }
     ];
 
     const getTargetPathForChapter = (chapterId: string): string => {
@@ -43,8 +43,9 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 <h2 className="text-xl font-bold text-text-main mb-4">What are you looking for?</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {mainCards.map(card => (
-                        <div key={card.title} className="pro-card p-4 h-40 flex items-end" style={{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,0.7), transparent), url(${card.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                            <h3 className="text-white font-bold text-lg">{card.title}</h3>
+                        <div key={card.title} className={`p-4 h-36 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow ${card.bgColor}`}>
+                            <img src={card.iconUrl} alt="" className="absolute w-24 h-24 -right-4 -bottom-4 opacity-70 transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
+                            <h3 className="font-bold text-lg z-10">{card.title}</h3>
                         </div>
                     ))}
                 </div>
@@ -58,10 +59,10 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                         <div
                             key={chapter.id}
                             onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
-                            className="learning-card cursor-pointer"
-                            style={{ backgroundImage: `url(${chapter.image})` }}
+                            className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow ${chapter.bgColor || 'bg-slate-700'}`}
                         >
-                            <h3 className="font-bold text-lg">{chapter.title.split(': ')[1] || chapter.title}</h3>
+                            <img src={chapter.image} alt="" className="absolute w-28 h-28 -right-5 -bottom-5 opacity-50 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
+                            <h3 className="font-bold text-lg z-10">{chapter.title.split(': ')[1] || chapter.title}</h3>
                         </div>
                     ))}
                 </div>

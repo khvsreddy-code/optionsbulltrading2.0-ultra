@@ -37,10 +37,10 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                              <div
                                 key={basicsModule.id}
                                 onClick={() => onNavigate('/learning')}
-                                className="learning-card cursor-pointer mb-4"
-                                style={{ backgroundImage: `url(${basicsModule.image})`, aspectRatio: '16/9' }}
+                                className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow mb-4 ${basicsModule.bgColor || 'bg-slate-700'}`}
                             >
-                                <h3 className="font-bold text-xl">{basicsModule.title.split(': ')[1]}</h3>
+                                <img src={basicsModule.image} alt="" className="absolute w-32 h-32 -right-5 -bottom-5 opacity-50 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
+                                <h3 className="font-bold text-xl z-10">{basicsModule.title.split(': ')[1]}</h3>
                             </div>
                             <div className="space-y-3">
                                 {basicsModule.subChapters.map((subChapter) => (
@@ -66,10 +66,10 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                              <div
                                 key={chapter.id}
                                 onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
-                                className="learning-card cursor-pointer"
-                                style={{ backgroundImage: `url(${chapter.image})` }}
+                                className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group shadow-lg hover:shadow-xl transition-shadow ${chapter.bgColor || 'bg-slate-700'}`}
                             >
-                                <h3 className="font-bold text-lg">{chapter.title.split(': ')[1]}</h3>
+                                <img src={chapter.image} alt="" className="absolute w-28 h-28 -right-5 -bottom-5 opacity-50 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />
+                                <h3 className="font-bold text-lg z-10">{chapter.title.split(': ')[1]}</h3>
                             </div>
                         ))}
                     </div>

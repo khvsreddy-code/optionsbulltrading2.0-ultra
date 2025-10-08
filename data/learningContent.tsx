@@ -10,7 +10,8 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
-  image?: string; // NEW: Image for the card
+  image?: string; // Icon URL
+  bgColor?: string; // Background color class
   isExternalLink?: boolean; 
   subChapters: SubChapter[];
 }
@@ -19,7 +20,8 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
     title: 'Module 1: Basics',
-    image: 'https://images.unsplash.com/photo-1642049924522-f2a33e84d3b8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-investment-3d-fluency-96.png',
+    bgColor: 'bg-cyan-600',
     subChapters: [
       { 
         id: '1.1', 
@@ -48,28 +50,32 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-candlestick-chart-3d-fluency-96.png',
+    bgColor: 'bg-green-600',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-stock-decline-3d-fluency-96.png',
+    bgColor: 'bg-red-600',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
-    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-graph-report-3d-fluency-96.png',
+    bgColor: 'bg-slate-700',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
-    image: 'https://images.unsplash.com/photo-1664575599736-c5197c684128?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3d-renders/icons8-bank-building-3d-fluency-96.png',
+    bgColor: 'bg-orange-600',
     isExternalLink: true,
     subChapters: []
   },
