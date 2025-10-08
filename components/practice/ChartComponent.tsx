@@ -33,34 +33,32 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }
   }));
 
-  // Countdown Timer Logic
+  // Robust Countdown Timer Logic
   useEffect(() => {
-    if (!liveOhlc || timeframe === '1s') {
+    if (timeframe === '1s') {
         setCountdown('');
         return;
     }
 
-    const timeframeMap: Record<Timeframe, number | undefined> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
+    const timeframeMap: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
     const timeframeInSeconds = timeframeMap[timeframe];
     if (!timeframeInSeconds) return;
-    
-    const closeTime = liveOhlc.time + timeframeInSeconds;
 
-    const timerId = setInterval(() => {
+    const update = () => {
         const nowSeconds = Date.now() / 1000;
-        const remainingSeconds = Math.max(0, Math.floor(closeTime - nowSeconds));
-        
-        if (remainingSeconds <= 0) {
-             setCountdown('00:00');
-        } else {
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
-            setCountdown(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
-        }
-    }, 1000);
+        // Calculate the end time of the current bar based on the system clock
+        const barEndTime = Math.ceil(nowSeconds / timeframeInSeconds) * timeframeInSeconds;
+        const remainingSeconds = Math.max(0, Math.floor(barEndTime - nowSeconds));
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        setCountdown(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+    };
+
+    update(); // Initial call to set the time immediately
+    const timerId = setInterval(update, 1000);
 
     return () => clearInterval(timerId);
-  }, [liveOhlc, timeframe]);
+  }, [timeframe]);
 
   // Main Chart Initialization
   useEffect(() => {
@@ -88,17 +86,15 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
       crosshair: {
         mode: CrosshairMode.Normal,
       },
-      // --- ADDED FOR ZOOM AND PAN ---
       handleScroll: {
         mouseWheel: true,
-        pressedMouseMove: true, // Panning
+        pressedMouseMove: true,
       },
       handleScale: {
-        axisPressedMouseMove: true, // Scaling by dragging axes
-        mouseWheel: true, // Zooming
-        pinch: true, // Pinch-to-zoom on touch devices
+        axisPressedMouseMove: true,
+        mouseWheel: true,
+        pinch: true,
       },
-      // --- END OF ADDITION ---
     });
     chartRef.current = chart;
 
@@ -149,8 +145,20 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }
   }, [liveOhlc, countdown]);
 
+  // Effect for managing crosshair mode based on active tool
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
 
-  // Effect to handle drawing tool logic
+    if (activeTool === 'crosshair' || !activeTool) {
+        chart.applyOptions({ crosshair: { mode: CrosshairMode.Normal } });
+    } else if (activeTool === 'horizontal') {
+        // Use magnet mode for precision when drawing
+        chart.applyOptions({ crosshair: { mode: CrosshairMode.Magnet } });
+    }
+  }, [activeTool]);
+
+  // Effect to handle drawing tool logic (clicks and clearing)
   useEffect(() => {
     const chart = chartRef.current;
     const series = candlestickSeriesRef.current;
@@ -159,13 +167,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     if (activeTool === 'trash') {
         drawnLinesRef.current.forEach(line => series.removePriceLine(line));
         drawnLinesRef.current = [];
-        return; // Don't subscribe to click, just clear and exit
+        return;
     }
 
     const handleClick = (param: MouseEventParams) => {
         if (!param.point || !param.seriesPrices.size || !series) return;
-        const priceData = param.seriesPrices.get(series);
-        if (!priceData) return;
         
         const price = series.coordinateToPrice(param.point.y);
         if (price === null) return;
@@ -183,8 +189,13 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         }
     };
     
-    chart.subscribeClick(handleClick);
-    return () => chart.unsubscribeClick(handleClick);
+    if (activeTool === 'horizontal') {
+        chart.subscribeClick(handleClick);
+    }
+    
+    return () => {
+        chart.unsubscribeClick(handleClick);
+    };
   }, [activeTool]);
 
   // Effect for initializing data
