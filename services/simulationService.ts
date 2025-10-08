@@ -49,6 +49,7 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
                 averagePrice: executionPrice,
                 lastPrice: executionPrice,
                 pnl: 0,
+                pnlPercent: 0,
             });
         }
     } else { // SELL
@@ -87,8 +88,10 @@ export const updatePortfolioValue = (portfolio: Portfolio, livePrices?: { [instr
 
     newPortfolio.positions.forEach((pos: Position) => {
         const currentPrice = livePrices && livePrices[pos.instrument.instrument_key] !== undefined ? livePrices[pos.instrument.instrument_key] : pos.lastPrice;
+        const investedValue = pos.averagePrice * pos.quantity;
         pos.lastPrice = currentPrice;
         pos.pnl = (currentPrice - pos.averagePrice) * pos.quantity;
+        pos.pnlPercent = investedValue > 0 ? (pos.pnl / investedValue) * 100 : 0;
         positionsValue += currentPrice * pos.quantity;
     });
 

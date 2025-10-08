@@ -10,14 +10,14 @@ interface DrawingToolbarProps {
 
 const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onToolSelect }) => {
   const tools = [
-    { id: 'crosshair', label: 'Crosshair', icon: Crosshair, enabled: true },
-    { id: 'trendline', label: 'Trend Line', icon: TrendLine, enabled: false },
-    { id: 'horizontal', label: 'Horizontal Line', icon: HorizontalLine, enabled: true },
-    { id: 'fib', label: 'Fib Retracement', icon: FibRetracement, enabled: false },
-    { id: 'brush', label: 'Brush', icon: Brush, enabled: false },
-    { id: 'text', label: 'Text', icon: TextIcon, enabled: false },
-    { id: 'eraser', label: 'Eraser', icon: Eraser, enabled: false },
-    { id: 'trash', label: 'Delete Drawings', icon: Trash, enabled: true },
+    { id: 'crosshair', icon: Crosshair, enabled: true, description: 'Show crosshair pointer' },
+    { id: 'trendline', icon: TrendLine, enabled: false, description: 'Draw a trend line' },
+    { id: 'horizontal', icon: HorizontalLine, enabled: true, description: 'Draw a horizontal line' },
+    { id: 'fib', icon: FibRetracement, enabled: false, description: 'Draw Fibonacci Retracement' },
+    { id: 'brush', icon: Brush, enabled: false, description: 'Freeform drawing' },
+    { id: 'text', icon: TextIcon, enabled: false, description: 'Add text annotation' },
+    { id: 'eraser', icon: Eraser, enabled: false, description: 'Erase individual drawings' },
+    { id: 'trash', icon: Trash, enabled: true, description: 'Delete all drawings' },
   ];
 
   return (
@@ -26,7 +26,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onToolSelec
         <div key={tool.id} className="relative group flex items-center">
             <button
               onClick={() => tool.enabled && onToolSelect(tool.id as DrawingTool)}
-              aria-label={tool.label}
+              aria-label={tool.description}
               disabled={!tool.enabled}
               className={`p-2 rounded-md transition-colors ${
                 activeTool === tool.id
@@ -42,7 +42,7 @@ const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onToolSelec
               className="absolute left-full ml-3 w-max bg-slate-900 text-white text-xs font-semibold rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg border border-slate-700"
               role="tooltip"
             >
-              {tool.label} {!tool.enabled && <span className="text-yellow-400 font-normal">(Soon)</span>}
+              {tool.description} {!tool.enabled && <span className="text-yellow-400 font-normal"> (Coming Soon)</span>}
             </div>
         </div>
       ))}

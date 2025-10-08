@@ -7,7 +7,6 @@ import SimulatorHeader from '../components/practice/SimulatorHeader';
 import ChartHeader from '../components/practice/ChartHeader';
 import ChartComponent from '../components/practice/ChartComponent';
 import PracticeSidebar from '../components/practice/PracticeSidebar';
-import OrderDialog from '../components/practice/OrderDialog';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
 import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
 import ChartTradeButtons from '../components/practice/ChartTradeButtons';
@@ -28,8 +27,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [liveOhlc, setLiveOhlc] = useState<CandleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
-    const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-    const [orderSide, setOrderSide] = useState<OrderSide>('BUY');
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
@@ -113,7 +110,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
 
     const handlePlaceOrder = (side: OrderSide, quantity: number) => {
-        if (!selectedInstrument) return;
+        if (!selectedInstrument || quantity <= 0) return;
         
         const currentInstrument = instruments.find(i => i.instrument_key === selectedInstrument.instrument_key);
         if (!currentInstrument) return;
@@ -132,11 +129,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, newOrder, executionPrice));
     };
 
-    const handleOpenOrderDialog = (side: OrderSide) => {
-        setOrderSide(side);
-        setIsOrderDialogOpen(true);
-    };
-    
     const handleOpenPositionManager = (position: Position) => {
         setSelectedPosition(position);
         setIsPositionManagerOpen(true);
@@ -146,18 +138,24 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const instrument = instruments.find(i => i.instrument_key === instrumentKey);
         if (!instrument) return;
         
-        const sellOrder: Order = {
+        const positionToClose = portfolio.positions.find(p => p.instrument.instrument_key === instrumentKey);
+        if (!positionToClose) return;
+
+        // Determine the correct side for closing the position
+        const closingSide: OrderSide = 'SELL';
+        
+        const closeOrder: Order = {
             id: `ord_close_${Date.now()}`,
             instrument: instrument,
             type: 'MARKET',
-            side: 'SELL',
+            side: closingSide,
             quantity: quantity,
             status: 'OPEN',
             createdAt: Date.now() / 1000,
         };
         
         const executionPrice = instrument.last_price;
-        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, sellOrder, executionPrice));
+        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, closeOrder, executionPrice));
     };
     
     const handleResetPortfolio = () => {
@@ -209,7 +207,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                                />
                                <ChartTradeButtons
                                    instrument={displayedInstrument}
-                                   onPlaceOrder={handleOpenOrderDialog}
+                                   onPlaceOrder={handlePlaceOrder}
                                />
                                <ChartComponent 
                                    ref={chartComponentRef}
@@ -232,14 +230,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 </aside>
             </div>
             
-            <OrderDialog 
-                instrument={displayedInstrument}
-                isOpen={isOrderDialogOpen}
-                onClose={() => setIsOrderDialogOpen(false)}
-                onPlaceOrder={handlePlaceOrder}
-                initialSide={orderSide}
-            />
-
             <PositionManagerDialog
                 position={selectedPosition}
                 isOpen={isPositionManagerOpen}

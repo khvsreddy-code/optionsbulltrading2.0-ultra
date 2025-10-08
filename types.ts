@@ -70,6 +70,7 @@ export interface Position {
   averagePrice: number;
   lastPrice: number;
   pnl: number;
+  pnlPercent: number;
 }
 
 export interface Portfolio {

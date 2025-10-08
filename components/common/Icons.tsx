@@ -55,6 +55,9 @@ export const Play = createIcon(<polygon points="5 3 19 12 5 21 5 3" />);
 export const Pause = createIcon(<><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></>);
 export const RotateCcw = createIcon(<><path d="M3 2v6h6" /><path d="M3 13a9 9 0 1 0 3-7.7L3 8" /></>);
 export const Zap = createIcon(<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />);
+// FIX: Add Plus and Minus icons.
+export const Plus = createIcon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
+export const Minus = createIcon(<line x1="5" y1="12" x2="19" y2="12" />);
 
 // --- Drawing Toolbar Icons ---
 export const Crosshair = createIcon(<><circle cx="12" cy="12" r="10" /><path d="M22 12h-4" /><path d="M12 6V2" /><path d="M6 12H2" /><path d="M12 22v-4" /></>);

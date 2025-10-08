@@ -1,56 +1,67 @@
 import React from 'react';
 import type { Portfolio, Position } from '../../types';
-import PortfolioDisplay from './PortfolioDisplay';
-import { RotateCcw } from '../common/Icons';
+import { X } from '../common/Icons';
 
 interface PortfolioPanelProps {
   portfolio: Portfolio;
   onPositionClick: (position: Position) => void;
-  onResetPortfolio: () => void;
 }
 
-const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionClick, onResetPortfolio }) => {
+const PortfolioPanel: React.FC<PortfolioPanelProps> = ({ portfolio, onPositionClick }) => {
+  if (portfolio.positions.length === 0) {
+    return <p className="p-4 text-center text-slate-400 text-sm">You have no open positions.</p>;
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 border-b border-[#2A2E39]">
-        <PortfolioDisplay portfolio={portfolio} />
+    <div className="flex flex-col">
+      {/* Table Header */}
+      <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-700/50 bg-slate-800/20 sticky top-0">
+        <span className="col-span-3">Symbol</span>
+        <span className="col-span-2 text-right">Qty</span>
+        <span className="col-span-3 text-right">Avg. Price</span>
+        <span className="col-span-3 text-right">P&L (₹)</span>
+        <span className="col-span-1 text-right"></span>
       </div>
-      <div className="flex-grow overflow-y-auto">
-        <h3 className="p-4 text-md font-semibold text-white">Positions ({portfolio.positions.length})</h3>
-        {portfolio.positions.length > 0 ? (
-          <ul>
-            {portfolio.positions.map(pos => (
-              <li key={pos.instrument.instrument_key} className="border-b border-slate-800 last:border-b-0">
-                <button onClick={() => onPositionClick(pos)} className="w-full text-left p-4 hover:bg-slate-700/50">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-bold text-white">{pos.instrument.tradingsymbol}</p>
-                      <p className="text-sm text-slate-400">Qty: {pos.quantity}</p>
-                    </div>
-                    <div>
-                      <p className={`font-semibold text-right ${pos.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {pos.pnl >= 0 ? '+' : ''}₹{pos.pnl.toFixed(2)}
-                      </p>
-                      <p className="text-sm text-slate-400 text-right">LTP: ₹{pos.lastPrice.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="px-4 text-slate-400 text-sm">You have no open positions.</p>
-        )}
-      </div>
-       <div className="flex-shrink-0 p-4 mt-auto border-t border-[#2A2E39]">
-         <button
-          onClick={onResetPortfolio}
-          className="w-full flex items-center justify-center p-2 bg-slate-700 hover:bg-slate-600 rounded-md font-semibold text-sm transition button-press-feedback"
-        >
-          <RotateCcw size={16} className="mr-2" />
-          Reset Portfolio
-        </button>
-      </div>
+      
+      {/* Positions List */}
+      <ul className="divide-y divide-slate-700/50">
+        {portfolio.positions.map(pos => {
+          const pnlColor = pos.pnl >= 0 ? 'text-green-500' : 'text-red-500';
+
+          return (
+            <li key={pos.instrument.instrument_key} className="hover:bg-slate-700/30">
+              <div className="grid grid-cols-12 gap-2 items-center px-3 py-2.5 text-sm">
+                <div className="col-span-3 font-bold text-white truncate">
+                  {pos.instrument.tradingsymbol}
+                </div>
+                <div className="col-span-2 text-right font-mono text-white">
+                  {pos.quantity}
+                </div>
+                <div className="col-span-3 text-right font-mono text-slate-300">
+                  {pos.averagePrice.toFixed(2)}
+                </div>
+                <div className="col-span-3 text-right">
+                   <p className={`font-mono font-semibold ${pnlColor}`}>
+                        {pos.pnl >= 0 ? '+' : ''}{pos.pnl.toFixed(2)}
+                   </p>
+                   <p className={`font-mono text-xs ${pnlColor}`}>
+                        ({pos.pnlPercent.toFixed(2)}%)
+                   </p>
+                </div>
+                <div className="col-span-1 flex items-center justify-end">
+                   <button 
+                        onClick={() => onPositionClick(pos)}
+                        className="p-1 rounded-full text-slate-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                        aria-label={`Close position for ${pos.instrument.tradingsymbol}`}
+                    >
+                       <X size={14} />
+                   </button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 };

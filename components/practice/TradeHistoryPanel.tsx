@@ -6,33 +6,29 @@ interface TradeHistoryPanelProps {
 }
 
 const TradeHistoryPanel: React.FC<TradeHistoryPanelProps> = ({ orders }) => {
+  if (orders.length === 0) {
+      return <p className="p-4 text-center text-slate-400 text-sm">No trades have been executed in this session.</p>;
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      <h3 className="p-4 text-md font-semibold text-white border-b border-[#2A2E39]">Trade History ({orders.length})</h3>
-      <div className="flex-grow overflow-y-auto">
-        {orders.length > 0 ? (
-          <ul>
-            {orders.map(order => (
-              <li key={order.id} className="p-4 border-b border-slate-800 last:border-b-0">
-                <div className="flex justify-between items-center text-sm">
-                  <div>
-                    <p className={`font-bold ${order.side === 'BUY' ? 'text-green-500' : 'text-red-500'}`}>
-                      {order.side} {order.instrument.tradingsymbol}
+    <div className="flex flex-col">
+       <ul className="divide-y divide-slate-700/50">
+          {orders.map(order => (
+            <li key={order.id} className="px-3 py-2.5">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex-1">
+                    <p className="font-semibold text-white">{order.instrument.tradingsymbol}</p>
+                    <p className={`text-xs font-bold ${order.side === 'BUY' ? 'text-green-500' : 'text-red-500'}`}>
+                        {order.side} {order.quantity} @ {order.executedPrice?.toFixed(2)}
                     </p>
-                    <p className="text-slate-400">Qty: {order.quantity}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-white">@ ₹{order.executedPrice?.toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">{new Date(order.executedAt! * 1000).toLocaleString()}</p>
-                  </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="p-4 text-slate-400 text-sm">No trades executed yet.</p>
-        )}
-      </div>
+                <div className="text-right">
+                    <p className="text-xs text-slate-400">{new Date(order.executedAt! * 1000).toLocaleTimeString()}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+       </ul>
     </div>
   );
 };

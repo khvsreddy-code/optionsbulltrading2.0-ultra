@@ -12,7 +12,7 @@ const PortfolioDisplay: React.FC<PortfolioDisplayProps> = ({ portfolio }) => {
     return (
         <div className="p-4 space-y-4">
             <div>
-                <h3 className="text-sm font-medium text-slate-400">Total Value</h3>
+                <h3 className="text-sm font-medium text-slate-400">Total Equity</h3>
                 <p className="text-2xl font-bold text-white">₹{portfolio.totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -21,11 +21,7 @@ const PortfolioDisplay: React.FC<PortfolioDisplayProps> = ({ portfolio }) => {
                     <p className="text-white font-semibold">₹{portfolio.cash.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                 </div>
                 <div>
-                    <h4 className="text-slate-400">Invested</h4>
-                    <p className="text-white font-semibold">₹{(portfolio.totalValue - portfolio.cash).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                </div>
-                 <div>
-                    <h4 className="text-slate-400">Today's P&L</h4>
+                    <h4 className="text-slate-400">Total P&L</h4>
                     <p className={`font-semibold ${pnlColor}`}>{totalPnl >= 0 ? '+' : ''}₹{totalPnl.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                 </div>
             </div>
