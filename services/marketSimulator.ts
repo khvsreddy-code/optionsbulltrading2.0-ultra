@@ -20,7 +20,7 @@ export class MarketSimulator {
     // Constants for timing control
     private readonly TICKS_PER_SECOND = 20; // 50ms internal tick interval
     private readonly TICKS_PER_TIMEFRAME: number;
-    private readonly TICKS_PER_10_SECONDS: number;
+    private readonly TICKS_PER_UPDATE_INTERVAL: number;
 
     // Simplified state for a more stable financial model
     private drift: number = 0;
@@ -30,7 +30,7 @@ export class MarketSimulator {
         this.timeframeInSeconds = this.parseTimeframe(timeframe);
         
         this.TICKS_PER_TIMEFRAME = this.timeframeInSeconds * this.TICKS_PER_SECOND;
-        this.TICKS_PER_10_SECONDS = 10 * this.TICKS_PER_SECOND; // 200 ticks for 10s
+        this.TICKS_PER_UPDATE_INTERVAL = 1 * this.TICKS_PER_SECOND; // 20 ticks for a 1s update
     }
     
     private parseTimeframe(tf: Timeframe): number {
@@ -43,31 +43,28 @@ export class MarketSimulator {
     }
 
     public async start(initialDataPoints = 300): Promise<CandleData[]> {
-        return new Promise(resolve => {
-            // Yield to event loop to allow UI to update (e.g., show spinner) before heavy calculation
-            setTimeout(() => {
-                const historicalData = this.generateHistoricalData(initialDataPoints);
-                
-                if (this.tickIntervalId) clearInterval(this.tickIntervalId);
+        const historicalData = await this.generateHistoricalData(initialDataPoints);
+        
+        if (this.tickIntervalId) {
+            clearInterval(this.tickIntervalId);
+        }
 
-                const lastHistoricalCandle = historicalData[historicalData.length - 1];
-                this.lastPrice = lastHistoricalCandle.close;
-                
-                this.currentCandle = {
-                    time: lastHistoricalCandle.time + this.timeframeInSeconds,
-                    open: lastHistoricalCandle.close,
-                    high: lastHistoricalCandle.close,
-                    low: lastHistoricalCandle.close,
-                    close: lastHistoricalCandle.close,
-                };
-                this.tickCounter = 0;
-                
-                // Start the internal generation loop
-                this.tickIntervalId = setInterval(() => this.tick(), 1000 / this.TICKS_PER_SECOND);
+        const lastHistoricalCandle = historicalData[historicalData.length - 1];
+        this.lastPrice = lastHistoricalCandle.close;
+        
+        this.currentCandle = {
+            time: lastHistoricalCandle.time + this.timeframeInSeconds,
+            open: lastHistoricalCandle.close,
+            high: lastHistoricalCandle.close,
+            low: lastHistoricalCandle.close,
+            close: lastHistoricalCandle.close,
+        };
+        this.tickCounter = 0;
+        
+        // Start the internal generation loop
+        this.tickIntervalId = setInterval(() => this.tick(), 1000 / this.TICKS_PER_SECOND);
 
-                resolve(historicalData);
-            }, 0);
-        });
+        return historicalData;
     }
 
     public stop(): void {
@@ -77,33 +74,43 @@ export class MarketSimulator {
         }
     }
     
-    private generateHistoricalData(count: number): CandleData[] {
-        const data: CandleData[] = [];
-        let lastClose = this.lastPrice;
-        const now = Math.floor(Date.now() / 1000);
-        const alignedNow = now - (now % this.timeframeInSeconds);
-        const startTime = alignedNow - (count * this.timeframeInSeconds);
+    private generateHistoricalData(count: number): Promise<CandleData[]> {
+        return new Promise(resolve => {
+            const data: CandleData[] = [];
+            let lastClose = this.lastPrice;
+            const now = Math.floor(Date.now() / 1000);
+            const alignedNow = now - (now % this.timeframeInSeconds);
+            const startTime = alignedNow - (count * this.timeframeInSeconds);
+            
+            let i = 0;
+            const processChunk = () => {
+                const batchSize = 50; // Process in non-blocking batches
+                for (let j = 0; j < batchSize && i < count; j++, i++) {
+                    const open = lastClose;
+                    const change = (Math.random() - 0.5) * (open * 0.02); // Max 2% change
+                    const close = open + change;
+                    const high = Math.max(open, close) + (Math.random() * open * 0.01);
+                    const low = Math.min(open, close) - (Math.random() * open * 0.01);
+                    data.push({
+                        time: startTime + (i * this.timeframeInSeconds),
+                        open,
+                        high,
+                        low,
+                        close,
+                    });
+                    lastClose = close;
+                }
 
-        for (let i = 0; i < count; i++) {
-            const open = lastClose;
+                if (i < count) {
+                    setTimeout(processChunk, 0); // Yield to event loop before next chunk
+                } else {
+                    this.lastPrice = lastClose;
+                    resolve(data);
+                }
+            };
             
-            // Simplified, fast generation for historical data
-            const change = (Math.random() - 0.5) * (open * 0.02); // Max 2% change per candle
-            const close = open + change;
-            const high = Math.max(open, close) + (Math.random() * open * 0.01); // Add some wick
-            const low = Math.min(open, close) - (Math.random() * open * 0.01); // Add some wick
-            
-            data.push({
-                time: startTime + (i * this.timeframeInSeconds),
-                open,
-                high,
-                low,
-                close,
-            });
-            lastClose = close;
-        }
-        this.lastPrice = lastClose;
-        return data;
+            processChunk();
+        });
     }
     
     private tick() {
@@ -134,9 +141,9 @@ export class MarketSimulator {
         }
 
         // --- Interim Update Check (only for timeframes > 1s) ---
-        // Implements the user's request for realistic 10-second updates.
+        // Implements the user's request for realistic 1-second updates.
         if (this.timeframeInSeconds > 1) {
-            if (this.tickCounter > 0 && this.tickCounter % this.TICKS_PER_10_SECONDS === 0) {
+            if (this.tickCounter > 0 && this.tickCounter % this.TICKS_PER_UPDATE_INTERVAL === 0) {
                 // Send a copy of the in-progress candle for display
                 this.onTickCallback({ ...this.currentCandle }, true);
             }

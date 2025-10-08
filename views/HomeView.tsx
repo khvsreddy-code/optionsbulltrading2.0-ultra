@@ -84,7 +84,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <IconLink 
                         title="Free Telegram Group" 
                         icon={Telegram} 
-                        href="https.t.me/optionsbulltradingtelugu"
+                        href="https://t.me/optionsbulltradingtelugu"
                     />
                     <IconLink 
                         title="Stock Market Library" 
