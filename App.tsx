@@ -19,8 +19,9 @@ import PrivacyPolicyView from './views/policies/PrivacyPolicyView';
 import ContactUsView from './views/policies/ContactUsView';
 import LearningHomeView from './views/learning/LearningHomeView';
 import LearningChapterView from './views/learning/LearningChapterView';
-// FIX: Corrected import path for PracticeView.
 import PracticeView from './views/PracticeView';
+import BullishPatternsListView from './views/learning/BullishPatternsListView';
+import PatternDetailView from './views/learning/PatternDetailView';
 
 
 // Auth components
@@ -36,6 +37,7 @@ const App: React.FC = () => {
     const [view, setView] = useState<View>('home');
     const [isDrawerOpen, setDrawerOpen] = useState(false);
     const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+    const [activePatternId, setActivePatternId] = useState<string | null>(null);
     const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('theme');
         // Default to dark theme for the new look
@@ -93,12 +95,18 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-    const handleNavigate = (newView: View, params?: { chapterId?: string }) => {
+    const handleNavigate = (newView: View, params?: { chapterId?: string; patternId?: string }) => {
         setView(newView);
         if (newView === 'learningChapter' && params?.chapterId) {
             setActiveChapterId(params.chapterId);
         } else if (newView !== 'learningChapter') {
             setActiveChapterId(null);
+        }
+
+        if (newView === 'patternDetail' && params?.patternId) {
+            setActivePatternId(params.patternId);
+        } else if (newView !== 'patternDetail') {
+            setActivePatternId(null);
         }
         window.scrollTo(0, 0); // Scroll to top on navigation
         setDrawerOpen(false); // Close drawer on navigation
@@ -126,6 +134,10 @@ const App: React.FC = () => {
                 return <LearningHomeView onNavigate={handleNavigate} />;
             case 'learningChapter':
                 return <LearningChapterView onNavigate={handleNavigate} chapterId={activeChapterId} />;
+            case 'bullishPatternsList':
+                return <BullishPatternsListView onNavigate={handleNavigate} />;
+            case 'patternDetail':
+                return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
             case 'practice':
                 return <PracticeView onNavigate={handleNavigate} theme={theme} />;
             case 'profile':
@@ -155,7 +167,7 @@ const App: React.FC = () => {
     }
     
     // For certain views, we use a different layout without the standard header/navbar
-    if (view === 'learningHome' || view === 'learningChapter' || view === 'practice') {
+    if (view === 'learningHome' || view === 'learningChapter' || view === 'practice' || view === 'bullishPatternsList' || view === 'patternDetail') {
         return renderView();
     }
 

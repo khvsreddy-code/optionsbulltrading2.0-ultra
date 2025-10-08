@@ -1,16 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, LineWidth } from 'lightweight-charts';
 import type { CandleData } from '../../types';
 
 interface ChartComponentProps {
-  data: CandleData[];
+  initialData: CandleData[];
 }
 
-const ChartComponent: React.FC<ChartComponentProps> = ({ data }) => {
+// forwardRef allows the parent component (PracticeView) to get a ref to this component's instance
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData }, ref) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-  const lastAppliedTimestampRef = useRef<UTCTimestamp | null>(null);
+  
+  // Expose a function to the parent component
+  useImperativeHandle(ref, () => ({
+    updateCandle(candle: CandleData) {
+      if (candlestickSeriesRef.current) {
+        candlestickSeriesRef.current.update({
+          time: candle.time as UTCTimestamp,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+        });
+      }
+    }
+  }));
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -49,7 +64,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ data }) => {
       },
     });
 
-    candlestickSeriesRef.current = (chartRef.current as any).addCandlestickSeries({
+    candlestickSeriesRef.current = chartRef.current.addCandlestickSeries({
         upColor: '#1AAB7A',
         downColor: '#FF3D5F',
         borderDownColor: '#FF3D5F',
@@ -73,41 +88,21 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ data }) => {
     };
   }, []); // Create chart only once
 
-  // Effect for updating data
+  // Effect for initializing data
   useEffect(() => {
-    if (!candlestickSeriesRef.current || !data) return;
-
-    if (data.length === 0) {
-        candlestickSeriesRef.current.setData([]);
-        lastAppliedTimestampRef.current = null;
-        return;
-    }
-
-    const candlestickData: BarData[] = data.map(candle => ({
-      time: candle.time as UTCTimestamp,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-    }));
-    
-    const lastCandle = candlestickData[candlestickData.length - 1];
-    
-    // FIX: Correctly determine if this is an update to the last candle or a new candle.
-    if (lastCandle.time === lastAppliedTimestampRef.current) {
-        // This is an update to the last candle, use the efficient `update` method.
-        candlestickSeriesRef.current.update(lastCandle);
-    } else {
-        // This is a new candle or a full historical data load, use `setData`.
+    if (candlestickSeriesRef.current && initialData && initialData.length > 0) {
+        const candlestickData: BarData[] = initialData.map(candle => ({
+            time: candle.time as UTCTimestamp,
+            open: candle.open,
+            high: candle.high,
+            low: candle.low,
+            close: candle.close,
+        }));
         candlestickSeriesRef.current.setData(candlestickData);
     }
-    
-    // FIX: Correctly cast the 'time' property of the last candle to 'UTCTimestamp' before assigning it to the ref. This resolves the TypeScript error where the broader 'Time' type (which can be a string) was not assignable to the stricter 'UTCTimestamp' (number) type expected by the ref.
-    lastAppliedTimestampRef.current = lastCandle.time as UTCTimestamp;
-    
-  }, [data]);
+  }, [initialData]);
 
   return <div ref={chartContainerRef} className="w-full h-full" />;
-};
+});
 
 export default ChartComponent;

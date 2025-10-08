@@ -4,7 +4,7 @@ import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight } from '../../components/common/Icons';
 
 interface LearningHomeViewProps {
-    onNavigate: (view: View, params?: { chapterId: string }) => void;
+    onNavigate: (view: View, params?: { chapterId?: string }) => void;
 }
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
@@ -40,6 +40,19 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                                         </button>
                                     ))}
                                 </div>
+                            ) : chapter.isExternalLink ? (
+                                 <div className="space-y-3">
+                                     <button
+                                        onClick={() => onNavigate('bullishPatternsList')}
+                                        className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center"
+                                    >
+                                        <div>
+                                            <p className="font-semibold text-slate-100">View All Patterns</p>
+                                            <p className="text-sm text-slate-400 mt-1">Explore detailed explanations</p>
+                                        </div>
+                                        <ChevronRight size={20} className="text-slate-400" />
+                                    </button>
+                                 </div>
                             ) : (
                                 <div className="p-4 bg-[#1C1C1E] rounded-lg text-center">
                                     <p className="text-slate-400">More lessons coming soon!</p>

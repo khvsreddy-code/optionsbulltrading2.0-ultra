@@ -9,17 +9,21 @@ import ChartComponent from '../components/practice/ChartComponent';
 import PracticeSidebar from '../components/practice/PracticeSidebar';
 import OrderDialog from '../components/practice/OrderDialog';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
-import { IPriceLine } from 'lightweight-charts';
 
 interface PracticeViewProps {
   onNavigate: (view: View) => void;
   theme: 'light' | 'dark';
 }
 
+// Define the type for the ChartComponent's imperative handle
+interface ChartComponentHandle {
+    updateCandle: (candle: CandleData) => void;
+}
+
 const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [instruments, setInstruments] = useState<Instrument[]>(curatedStocks);
     const [selectedInstrument, setSelectedInstrument] = useState<Instrument | null>(null);
-    const [chartData, setChartData] = useState<CandleData[]>([]);
+    const [initialChartData, setInitialChartData] = useState<CandleData[]>([]);
     const [liveOhlc, setLiveOhlc] = useState<CandleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
@@ -27,10 +31,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [orderSide, setOrderSide] = useState<OrderSide>('BUY');
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-    const [drawings, setDrawings] = useState<IPriceLine[]>([]);
     const [timeframe, setTimeframe] = useState<Timeframe>('1s');
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
+    const chartComponentRef = useRef<ChartComponentHandle>(null);
 
     const updatePrices = useCallback((lastPrice: number, instrumentKey: string) => {
         const livePrices = { [instrumentKey]: lastPrice };
@@ -52,28 +56,27 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     }, [instruments]);
 
 
+    const handleNewCandle = useCallback((candle: CandleData) => {
+        setLiveOhlc(candle);
+        chartComponentRef.current?.updateCandle(candle);
+        if(selectedInstrument) {
+           updatePrices(candle.close, selectedInstrument.instrument_key);
+        }
+    }, [selectedInstrument, updatePrices]);
+
+
     useEffect(() => {
         if (!selectedInstrument) return;
 
         setIsLoading(true);
-        setChartData([]); 
+        setInitialChartData([]);
 
-        const handleNewCandle = (candle: CandleData, isUpdate: boolean) => {
-            setLiveOhlc(candle); // Update live OHLC for the header
-            if (isUpdate) {
-                setChartData(prevData => {
-                    if (prevData.length === 0) return [candle]; 
-                    return [...prevData.slice(0, -1), candle];
-                });
-            } else {
-                setChartData(prevData => [...prevData, candle]);
-            }
-            updatePrices(candle.close, selectedInstrument.instrument_key);
-        };
+        // Stop any existing simulator
+        simulatorRef.current?.stop();
         
         simulatorRef.current = new MarketSimulator(handleNewCandle, timeframe);
         const initialData = simulatorRef.current.start();
-        setChartData(initialData);
+        setInitialChartData(initialData);
         
         if (initialData.length > 0) {
             const lastCandle = initialData[initialData.length - 1];
@@ -87,7 +90,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             simulatorRef.current?.stop();
         };
 
-    }, [selectedInstrument, timeframe, updatePrices]);
+    }, [selectedInstrument, timeframe, handleNewCandle, updatePrices]);
 
     const handlePlaceOrder = (side: OrderSide, quantity: number) => {
         if (!selectedInstrument) return;
@@ -134,15 +137,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, sellOrder, executionPrice));
     };
 
-    const handleAddDrawing = (drawing: IPriceLine) => {
-        setDrawings(prev => [...prev, drawing]);
-    };
-
-    const handleClearDrawings = (series: any) => {
-        drawings.forEach(line => series.removePriceLine(line));
-        setDrawings([]);
-    };
-
     return (
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
@@ -159,7 +153,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         liveOhlc={liveOhlc}
                     />
                     <div className="flex-grow relative">
-                        {isLoading || chartData.length === 0 ? (
+                        {isLoading ? (
                              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-30">
                                 <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -168,8 +162,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                              </div>
                         ) : (
                            <ChartComponent 
+                                ref={chartComponentRef}
                                 key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
-                                data={chartData} 
+                                initialData={initialChartData} 
                            />
                         )}
                     </div>

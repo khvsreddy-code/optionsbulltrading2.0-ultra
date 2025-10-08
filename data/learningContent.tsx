@@ -10,6 +10,7 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
+  isExternalLink?: boolean; // To handle navigation to a different view
   subChapters: SubChapter[];
 }
 
@@ -212,6 +213,12 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch2',
     title: 'Chapter 2: Market Concepts',
+    subChapters: []
+  },
+  {
+    id: 'ch3',
+    title: 'Chapter 3: Bullish Candlestick Patterns',
+    isExternalLink: true, // This tells the UI to navigate to a different list view
     subChapters: []
   },
 ];

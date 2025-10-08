@@ -14,7 +14,9 @@ export type View =
   | 'learningHome'
   | 'learningChapter'
   | 'practice'
-  | 'profile';
+  | 'profile'
+  | 'bullishPatternsList'
+  | 'patternDetail';
 
 // Financial data types
 export interface CandleData {

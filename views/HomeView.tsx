@@ -80,7 +80,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     // Data for the new Learning Library section with corrected, working image URLs.
     const learningItems = [
         { title: "Basics", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_5q6l4w5q6l4w5q6l.png", spanFull: true, onClick: () => onNavigate('learningHome') },
-        { title: "Bullish\nCandlesticks", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_bcsd0zbcsd0zbcsd%20(1).png", spanFull: false },
+        { title: "Bullish\nCandlesticks", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_bcsd0zbcsd0zbcsd%20(1).png", spanFull: false, onClick: () => onNavigate('bullishPatternsList') },
         { title: "Bearish\nCandlesticks", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_9awzps9awzps9awz.png", spanFull: false },
         { title: "Technical\nIndicators", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_7exfoa7exfoa7exf.png", spanFull: false },
         { title: "Fundamental\nAnalysis", imageUrl: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_3j8efh3j8efh3j8e.png", spanFull: false },
