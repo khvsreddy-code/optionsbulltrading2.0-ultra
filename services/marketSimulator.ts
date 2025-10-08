@@ -61,7 +61,7 @@ export class MarketSimulator {
         }
     }
 
-    public async start(initialDataPoints = 300): Promise<CandleData[]> {
+    public async start(initialDataPoints = 500): Promise<CandleData[]> {
         if (this.tickIntervalId) this.stop();
 
         const historicalData = await this.generateHistoricalData(initialDataPoints);
@@ -171,10 +171,11 @@ export class MarketSimulator {
             const alignedNow = now - (now % this.timeframeInSeconds);
             const startTime = alignedNow - (count * this.timeframeInSeconds);
             
-            // Define a fixed number of ticks to generate for each historical candle.
-            // This ensures consistent and fast performance regardless of the timeframe,
-            // fixing the "stuck loading" bug on longer timeframes.
-            const HISTORICAL_TICKS_PER_CANDLE = 100;
+            // --- OPTIMIZATION ---
+            // Drastically reduce the number of ticks simulated for each historical candle.
+            // This fixes the performance bottleneck and "stuck loading" screen on longer
+            // timeframes while still generating realistic-looking candles.
+            const HISTORICAL_TICKS_PER_CANDLE = 20;
             
             for (let i = 0; i < count; i++) {
                 const open = lastClose;
