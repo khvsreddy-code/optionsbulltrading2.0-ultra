@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import anime from 'animejs';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
@@ -11,7 +12,20 @@ interface PatternDetailViewProps {
 }
 
 const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patternId }) => {
-    
+    const mainRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        if (mainRef.current) {
+            anime({
+                targets: mainRef.current,
+                opacity: [0, 1],
+                translateY: [15, 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+        }
+    }, [patternId]);
+
     const allContent = [
         ...bullishPatterns, 
         ...bearishPatterns, 
@@ -52,7 +66,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{pattern.title}</h1>
             </header>
 
-            <main className="p-4">
+            <main ref={mainRef} className="p-4">
                 <div className="prose max-w-none text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold">
                     {pattern.content}
                 </div>

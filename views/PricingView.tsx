@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
+import anime from 'animejs';
 
 declare global {
   interface Window {
@@ -26,6 +27,20 @@ const plans = [
 ];
 
 const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
+    const viewRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (viewRef.current) {
+            anime({
+                targets: viewRef.current.querySelectorAll('.anim-child'),
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: anime.stagger(150),
+                duration: 700,
+                easing: 'easeOutCubic'
+            });
+        }
+    }, []);
     
     const handleSubscribe = (plan: { title: string; price: number }) => {
         if (!user) {
@@ -67,16 +82,16 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     };
 
     return (
-        <div className="relative text-text-main min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+        <div ref={viewRef} className="relative text-text-main min-h-screen flex flex-col items-center justify-center p-4 bg-background">
             <button 
                 onClick={() => onNavigate('/home')}
-                className="absolute top-4 left-4 z-20 text-text-secondary font-semibold text-sm hover:underline"
+                className="absolute top-4 left-4 z-20 text-text-secondary font-semibold text-sm hover:underline anim-child"
             >
                 &lt; Back to Home
             </button>
 
             <div className="relative z-10 max-w-4xl mx-auto text-center">
-                <header>
+                <header className="anim-child">
                     <h1 className="text-4xl md:text-5xl font-bold leading-tight text-text-main">Plans for every level of ambition</h1>
                     <p className="text-lg text-text-secondary mt-2">Start your journey to becoming a pro trader.</p>
                 </header>
@@ -84,7 +99,9 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                 <main className="mt-12 w-full">
                     <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-2xl mx-auto">
                         {plans.map(plan => (
-                            <PricingCard key={plan.title} plan={plan} onSubscribe={handleSubscribe} />
+                            <div className="anim-child w-full" key={plan.title}>
+                                <PricingCard plan={plan} onSubscribe={handleSubscribe} />
+                            </div>
                         ))}
                     </div>
                 </main>

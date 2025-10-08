@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight } from '../../components/common/Icons';
 
@@ -8,6 +9,19 @@ interface LearningChapterViewProps {
 }
 
 const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, chapterId }) => {
+    const mainRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        if (mainRef.current) {
+            anime({
+                targets: mainRef.current,
+                opacity: [0, 1],
+                translateY: [15, 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+        }
+    }, [chapterId]);
     
     const subChapter = learningCurriculum
         .flatMap(chapter => chapter.subChapters)
@@ -37,7 +51,7 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{subChapter.title}</h1>
             </header>
 
-            <main className="p-4">
+            <main ref={mainRef} className="p-4">
                  <div className="prose max-w-none prose-p:text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold prose-table:bg-card prose-th:text-text-main prose-tr:border-border prose-td:text-text-secondary">
                     {subChapter.content}
                 </div>

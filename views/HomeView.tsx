@@ -1,27 +1,119 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, BookOpen, Clock } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
+import anime from 'animejs';
 
 interface HomeViewProps {
     onNavigate: (path: string) => void;
     user: SupabaseUser | null;
 }
 
-const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string}> = ({ title, image, onClick, className = '' }) => (
-    <div
-        onClick={onClick}
-        className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
-    >
-        <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
-        <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{title}</h3>
-    </div>
-);
+const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string}> = ({ title, image, onClick, className = '' }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const cardEl = cardRef.current;
+        if (!cardEl) return;
+
+        const handleMouseEnter = () => {
+            anime.remove(cardEl);
+            anime({
+                targets: cardEl,
+                translateY: -8,
+                scale: 1.05,
+                rotate: '2deg',
+                boxShadow: '0 12px 20px rgba(0,0,0,0.1), 0 5px 8px rgba(0,0,0,0.08)',
+                duration: 400,
+                easing: 'easeOutElastic(1, .8)'
+            });
+        };
+
+        const handleMouseLeave = () => {
+            anime.remove(cardEl);
+            anime({
+                targets: cardEl,
+                translateY: 0,
+                scale: 1,
+                rotate: 0,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                duration: 250,
+                easing: 'easeOutQuad'
+            });
+        };
+
+        cardEl.addEventListener('mouseenter', handleMouseEnter);
+        cardEl.addEventListener('mouseleave', handleMouseLeave);
+
+        return () => {
+            cardEl.removeEventListener('mouseenter', handleMouseEnter);
+            cardEl.removeEventListener('mouseleave', handleMouseLeave);
+        };
+    }, []);
+
+    return (
+        <div
+            ref={cardRef}
+            onClick={onClick}
+            className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
+        >
+            <img src={image} alt={title} className="w-full h-full object-contain" />
+        </div>
+    );
+};
 
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
+    const homeViewRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const container = homeViewRef.current;
+        if (container) {
+            const quickLinks = container.querySelector('.quick-links');
+            const paperTrading = container.querySelector('.paper-trading-card');
+            const sectionHeaders = container.querySelectorAll('.section-header');
+            const mainCards = container.querySelectorAll('.main-card-item');
+            const libraryCards = container.querySelectorAll('.library-card-item');
+
+            anime.timeline({
+                easing: 'easeOutExpo',
+                duration: 700
+            })
+            .add({
+                targets: quickLinks,
+                opacity: [0, 1],
+                translateY: [-20, 0],
+            })
+            .add({
+                targets: paperTrading,
+                opacity: [0, 1],
+                scale: [0.95, 1],
+            }, '-=500')
+            .add({
+                targets: sectionHeaders[0],
+                opacity: [0, 1],
+                translateX: [-20, 0],
+            }, '-=500')
+            .add({
+                targets: mainCards,
+                opacity: [0, 1],
+                scale: [0.8, 1],
+                delay: anime.stagger(100),
+            }, '-=500')
+            .add({
+                targets: sectionHeaders[1],
+                opacity: [0, 1],
+                translateX: [-20, 0],
+            }, '-=900')
+            .add({
+                targets: libraryCards,
+                opacity: [0, 1],
+                scale: [0.8, 1],
+                delay: anime.stagger(100),
+            }, '-=700');
+        }
+    }, []);
 
     const mainCards = [
         { title: "Daily Chart Analysis", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png" },
@@ -39,9 +131,9 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     };
 
     return (
-        <div className="p-4 space-y-8">
+        <div ref={homeViewRef} className="p-4 space-y-8">
             {/* Quick Links */}
-            <div className="pro-card p-4">
+            <div className="pro-card p-4 quick-links">
                 <div className="grid grid-cols-4 gap-4">
                     <IconLink title="Premium" href="https://t.me/optionsbulltrading" icon={Telegram} />
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
@@ -51,41 +143,45 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             </div>
             
             {/* NEW Paper Trading Hero Card */}
-            <ImageCard 
-                title="Paper Trading"
-                image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png"
-                onClick={() => onNavigate('/practice')}
-                className="w-full aspect-[16/9]"
-            />
+            <div className="paper-trading-card">
+              <ImageCard 
+                  title="Paper Trading"
+                  image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png"
+                  onClick={() => onNavigate('/practice')}
+                  className="w-full aspect-[16/9]"
+              />
+            </div>
 
             {/* Main Content Cards */}
             <div>
-                <h2 className="text-xl font-bold text-text-main mb-4">What are you looking for?</h2>
+                <h2 className="text-xl font-bold text-text-main mb-4 section-header">What are you looking for?</h2>
                 <div className="grid grid-cols-2 gap-4">
                     {mainCards.map(card => (
-                        <ImageCard
-                            key={card.title}
-                            title={card.title}
-                            image={card.image}
-                            onClick={() => {}} // Placeholder onClick
-                            className="h-32"
-                        />
+                        <div className="main-card-item" key={card.title}>
+                          <ImageCard
+                              title={card.title}
+                              image={card.image}
+                              onClick={() => {}} // Placeholder onClick
+                              className="h-32"
+                          />
+                        </div>
                     ))}
                 </div>
             </div>
 
             {/* Learning Library Section */}
             <div>
-                <h2 className="text-xl font-bold text-text-main mb-4">Learning Library</h2>
+                <h2 className="text-xl font-bold text-text-main mb-4 section-header">Learning Library</h2>
                 <div className="grid grid-cols-2 gap-4">
                     {learningCurriculum.map(chapter => (
-                        <ImageCard
-                            key={chapter.id}
-                            title={chapter.title.split(': ')[1] || chapter.title}
-                            image={chapter.image}
-                            onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
-                            className="h-32"
-                        />
+                        <div className="library-card-item" key={chapter.id}>
+                          <ImageCard
+                              title={chapter.title.split(': ')[1] || chapter.title}
+                              image={chapter.image}
+                              onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
+                              className="h-32"
+                          />
+                        </div>
                     ))}
                 </div>
             </div>

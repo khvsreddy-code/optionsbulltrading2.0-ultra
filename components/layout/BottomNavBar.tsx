@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import anime from 'animejs';
 import { Home, BookOpen, Swap, Briefcase, User } from '../common/Icons';
 import type { View } from '../../types';
 
@@ -23,16 +24,51 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
         '/profile': ['profile'],
     };
 
+    const prevActiveViewRef = useRef<View>(activeView);
+    const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    useEffect(() => {
+        navItems.forEach((item, index) => {
+            const wasActive = activeViewsMap[item.path]?.includes(prevActiveViewRef.current);
+            const isActive = activeViewsMap[item.path]?.includes(activeView);
+            const targetEl = itemRefs.current[index];
+
+            if (targetEl && !wasActive && isActive) {
+                const icon = targetEl.querySelector('svg');
+
+                if (item.isCentral) { // Main button animation
+                    anime({
+                        targets: targetEl.querySelector('div'),
+                        scale: [0.9, 1.1, 1],
+                        duration: 500,
+                        easing: 'easeOutElastic(1, .8)'
+                    });
+                } else if (icon) { // Tab icon animation
+                    anime.remove(icon);
+                    anime({
+                        targets: icon,
+                        scale: [0.8, 1.25, 1],
+                        translateY: [0, -5, 0],
+                        duration: 400,
+                        easing: 'easeOutCubic'
+                    });
+                }
+            }
+        });
+        prevActiveViewRef.current = activeView;
+    }, [activeView]);
+
     return (
         <footer className="fixed bottom-0 left-0 right-0 z-30 h-20 bg-card border-t border-border">
              <div className="relative h-full w-full flex justify-around items-center">
-                {navItems.map((item) => {
+                {navItems.map((item, index) => {
                     const isActive = activeViewsMap[item.path]?.includes(activeView);
                     
                     if (item.isCentral) {
                         return (
                              <div 
                                 key={item.label}
+                                ref={el => itemRefs.current[index] = el}
                                 className="-mt-10 z-20"
                                 onClick={() => item.path && onTabChange(item.path)}
                             >
@@ -46,6 +82,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
                     return (
                         <div 
                             key={item.label}
+                            ref={el => itemRefs.current[index] = el}
                             className="flex flex-col items-center justify-center h-full w-full cursor-pointer transition-transform duration-150 ease-in-out transform active:scale-90"
                             onClick={() => item.path && onTabChange(item.path)}
                             aria-label={item.label}

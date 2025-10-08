@@ -121,7 +121,7 @@ const App: React.FC = () => {
 
     const renderView = () => {
         return (
-            <div key={view} className="animate-page-enter">
+            <div key={view}>
                 {(() => {
                     switch (view) {
                         case 'home':

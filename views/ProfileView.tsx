@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
+import anime from 'animejs';
 
 interface ProfileViewProps {
     user: SupabaseUser | null;
@@ -12,6 +13,45 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
     const [userName, setUserName] = useState(user?.user_metadata?.full_name || 'Trader');
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=7065F0&color=fff`);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const viewRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (viewRef.current) {
+            const profileHeader = viewRef.current.querySelector('.profile-header-anim');
+            const subCard = viewRef.current.querySelector('.sub-card-anim');
+            const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
+            const logoutBtn = viewRef.current.querySelector('.logout-btn-anim');
+
+            anime.timeline({
+                easing: 'easeOutExpo',
+            })
+            .add({
+                targets: profileHeader,
+                opacity: [0, 1],
+                translateY: [-30, 0],
+                duration: 600,
+            })
+            .add({
+                targets: subCard,
+                opacity: [0, 1],
+                scale: [0.9, 1],
+                duration: 500,
+            }, '-=300')
+            .add({
+                targets: menuItems,
+                opacity: [0, 1],
+                translateX: [-20, 0],
+                delay: anime.stagger(100),
+                duration: 400,
+            }, '-=200')
+             .add({
+                targets: logoutBtn,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 500,
+            }, '-=200');
+        }
+    }, []);
 
     const handleNameChange = async () => {
         const newName = prompt("Enter your new name:", userName);
@@ -51,9 +91,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
     };
 
     return (
-        <div className="p-4 space-y-8">
+        <div ref={viewRef} className="p-4 space-y-8">
             {/* Profile Header */}
-            <div className="flex flex-col items-center space-y-3">
+            <div className="flex flex-col items-center space-y-3 profile-header-anim">
                 <div className="relative">
                     <img
                         src={avatarUrl}
@@ -85,7 +125,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
             </div>
             
             {/* Subscription Card */}
-            <div className="pro-card p-5 flex items-center justify-between bg-primary-light">
+            <div className="pro-card p-5 flex items-center justify-between bg-primary-light sub-card-anim">
                 <div>
                     <h3 className="font-bold text-primary">Free Plan</h3>
                     <p className="text-sm text-primary/80">Access to basic learning modules.</p>
@@ -97,13 +137,13 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
 
             {/* Menu List */}
             <div className="space-y-2">
-                <ProfileMenuItem icon={Star} label="My Subscriptions" />
-                <ProfileMenuItem icon={Shield} label="Privacy Policy" />
-                <ProfileMenuItem icon={FileText} label="Terms & Conditions" />
+                <ProfileMenuItem icon={Star} label="My Subscriptions" className="profile-menu-item-anim" />
+                <ProfileMenuItem icon={Shield} label="Privacy Policy" className="profile-menu-item-anim" />
+                <ProfileMenuItem icon={FileText} label="Terms & Conditions" className="profile-menu-item-anim" />
             </div>
             
             {/* Logout Button */}
-            <div>
+            <div className="logout-btn-anim">
                  <button 
                     onClick={signOutUser}
                     className="w-full flex items-center justify-center p-3 space-x-2 text-red-500 font-semibold rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
@@ -124,8 +164,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user }) => {
     );
 };
 
-const ProfileMenuItem: React.FC<{icon: React.FC<any>, label: string, onClick?: () => void}> = ({ icon: Icon, label, onClick }) => (
-    <button onClick={onClick} className="w-full flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:bg-background transition-colors">
+const ProfileMenuItem: React.FC<{icon: React.FC<any>, label: string, onClick?: () => void, className?: string}> = ({ icon: Icon, label, onClick, className }) => (
+    <button onClick={onClick} className={`w-full flex items-center justify-between p-4 bg-card rounded-lg border border-border hover:bg-background transition-colors ${className || ''}`}>
         <div className="flex items-center space-x-3">
             <Icon size={20} className="text-text-secondary" />
             <span className="font-semibold text-text-main">{label}</span>
