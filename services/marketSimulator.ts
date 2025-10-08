@@ -3,107 +3,72 @@ import type { CandleData } from '../types';
 export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
 /**
- * An ultra-realistic market simulator based on a sophisticated stochastic model.
- * This engine now ensures a CONSISTENT historical view across all timeframes
- * by generating a single, high-resolution base history and aggregating it on demand.
+ * An ultra-realistic market simulator re-architected to run as a continuous background service.
+ * This engine ensures all timeframes are always in sync and updated in real-time,
+ * providing a seamless and correlated experience, just like a real market feed.
  *
- * Key features inspired by the hyper-realistic plan:
- * 1.  **Single Source of Truth:** Generates a base 1-second historical dataset ONCE and caches it.
- *     All other timeframes (1m, 5m, etc.) are aggregated from this consistent base data,
- *     fixing the data desynchronization bug.
- * 2.  **Dynamic Volatility Core:** Implements a GARCH-like process to create realistic
- *     volatility clustering.
- * 3.  **End-of-Period Auction Simulation:** Volatility is spiked in the final 5 seconds of
- *     minute-based timeframes to mimic closing auction effects.
- * 4.  **Realistic Candle Aggregation:**
- *     - Minute timeframes: Provides real-time, streaming updates every second.
- *     - 1-second timeframe: Provides a finalized candle only after the interval is complete.
+ * Key Architectural Changes:
+ * 1.  **Continuous Background Processing:** A single `tick()` interval runs non-stop,
+ *     generating the underlying price data regardless of the currently viewed chart.
+ * 2.  **Concurrent Timeframe Aggregation:** The state for ALL timeframes (1s, 1m, 5m, etc.)
+ *     is maintained and updated simultaneously on every tick.
+ * 3.  **Subscription Model:** The UI subscribes to the specific timeframe it needs,
+ *     allowing it to switch views without interrupting the underlying simulation.
  */
 export class MarketSimulator {
-    private onTickCallback: (candle: CandleData, isUpdate: boolean) => void;
-    private timeframe: Timeframe;
-    private timeframeInSeconds: number;
-    private tickIntervalId: ReturnType<typeof setInterval> | null = null;
-
-    // --- Core Simulation State ---
+    private subscribers: Map<Timeframe, Set<(candle: CandleData, isUpdate: boolean) => void>> = new Map();
+    private readonly allTimeframes: Timeframe[] = ['1s', '1m', '5m', '15m', '30m', '45m'];
+    private timeframeSecondsMap: Map<Timeframe, number> = new Map();
+    
     private lastPrice: number = 65000;
     private drift: number = 0;
-    
-    // --- Dynamic Volatility State (emulates GARCH/volatility clustering) ---
     private volatility: number = 0.4;
     private meanVolatility: number = 0.4;
     private volatilityOfVolatility: number = 2.0;
     private volatilityReversionSpeed: number = 5.0;
 
-    // --- High-Frequency Internal State ---
     private readonly INTERNAL_TICK_MS = 50;
     private internalTickCounter: number = 0;
     private currentSecondCandle: CandleData | null = null;
+    
+    private liveTimeframeCandles: Map<Timeframe, CandleData> = new Map();
+    private secondsWithinTimeframe: Map<Timeframe, number> = new Map();
 
-    // --- Timeframe-Specific State ---
-    private currentTimeframeCandle: CandleData | null = null;
-    private secondsWithinCurrentTimeframe: number = 0;
+    private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
-    // --- STATIC CACHE FOR CONSISTENT HISTORY ---
     private static base1sHistoricalData: CandleData[] | null = null;
-    private static isGeneratingHistory = false;
+    private static historicalDataCache: Map<Timeframe, CandleData[]> = new Map();
+    private static isHistoryReady = false;
 
-    constructor(onTick: (candle: CandleData, isUpdate: boolean) => void, timeframe: Timeframe) {
-        this.onTickCallback = onTick;
-        this.timeframe = timeframe;
-        this.timeframeInSeconds = this.parseTimeframe(timeframe);
+    constructor() {
+        this.allTimeframes.forEach(tf => {
+            const seconds = this.parseTimeframe(tf);
+            this.timeframeSecondsMap.set(tf, seconds);
+            this.subscribers.set(tf, new Set());
+        });
     }
 
     private parseTimeframe(tf: Timeframe): number {
-        switch (tf) {
-            case '1s': return 1;
-            case '1m': return 60;
-            case '5m': return 300;
-            case '15m': return 900;
-            case '30m': return 1800;
-            case '45m': return 2700;
-            default: return 1;
-        }
+        return { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 }[tf];
     }
 
-    public async start(): Promise<CandleData[]> {
+    public async start(): Promise<void> {
         if (this.tickIntervalId) this.stop();
 
-        // Generate base history ONLY ONCE and cache it statically.
-        if (!MarketSimulator.base1sHistoricalData && !MarketSimulator.isGeneratingHistory) {
-            MarketSimulator.isGeneratingHistory = true;
-            // Generate a deep history (e.g., 3 hours) to ensure enough data for all timeframes
-            MarketSimulator.base1sHistoricalData = this.generateBase1sHistoricalData(10800); 
-            MarketSimulator.isGeneratingHistory = false;
-        } else if (MarketSimulator.isGeneratingHistory) {
-            // If another instance is generating, wait for it to finish.
-            await new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (!MarketSimulator.isGeneratingHistory) {
-                        clearInterval(interval);
-                        resolve(null);
-                    }
-                }, 100);
+        if (!MarketSimulator.isHistoryReady) {
+            MarketSimulator.base1sHistoricalData = this.generateBase1sHistoricalData(10800);
+            this.allTimeframes.forEach(tf => {
+                const aggregated = this.aggregateHistoricalData(MarketSimulator.base1sHistoricalData!, this.timeframeSecondsMap.get(tf)!);
+                MarketSimulator.historicalDataCache.set(tf, aggregated);
             });
+            MarketSimulator.isHistoryReady = true;
         }
-
-        const aggregatedHistoricalData = this.aggregateHistoricalData(
-            MarketSimulator.base1sHistoricalData!,
-            this.timeframeInSeconds
-        );
-
-        if (aggregatedHistoricalData.length === 0) {
-            return [];
-        }
-
-        const lastHistoricalCandle = aggregatedHistoricalData[aggregatedHistoricalData.length - 1];
-        // The *true* last price must come from the non-aggregated 1s data for a smooth start.
+        
         this.lastPrice = MarketSimulator.base1sHistoricalData![MarketSimulator.base1sHistoricalData!.length - 1].close;
+        const lastTime = MarketSimulator.base1sHistoricalData![MarketSimulator.base1sHistoricalData!.length - 1].time;
+        this.initializeLiveCandles(lastTime);
 
-        this.initializeLiveCandles(lastHistoricalCandle.time);
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
-
-        return aggregatedHistoricalData;
     }
 
     public stop(): void {
@@ -113,34 +78,48 @@ export class MarketSimulator {
         }
     }
 
-    private initializeLiveCandles(lastTime: number) {
-        const nextTimeframeStartTime = lastTime + this.timeframeInSeconds;
+    public subscribe(timeframe: Timeframe, callback: (candle: CandleData, isUpdate: boolean) => void): () => void {
+        this.subscribers.get(timeframe)?.add(callback);
+        return () => {
+            this.subscribers.get(timeframe)?.delete(callback);
+        };
+    }
 
+    public getHistoricalData(timeframe: Timeframe): CandleData[] {
+        return MarketSimulator.historicalDataCache.get(timeframe) || [];
+    }
+    
+    public getLatestCandle(timeframe: Timeframe): CandleData | undefined {
+        const history = this.getHistoricalData(timeframe);
+        return this.liveTimeframeCandles.get(timeframe) ?? history[history.length - 1];
+    }
+
+    private initializeLiveCandles(lastTime: number): void {
         this.currentSecondCandle = {
             time: lastTime + 1,
             open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
         };
         this.internalTickCounter = 0;
 
-        this.currentTimeframeCandle = {
-            time: nextTimeframeStartTime,
-            open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-        };
-        this.secondsWithinCurrentTimeframe = 0;
+        this.allTimeframes.forEach(tf => {
+            const timeframeInSeconds = this.timeframeSecondsMap.get(tf)!;
+            const history = this.getHistoricalData(tf);
+            const lastHistoricalCandle = history[history.length - 1];
+            const nextTimeframeStartTime = lastHistoricalCandle.time + timeframeInSeconds;
+
+            this.liveTimeframeCandles.set(tf, {
+                time: nextTimeframeStartTime,
+                open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
+            });
+            this.secondsWithinTimeframe.set(tf, 0);
+        });
     }
 
     private tick(): void {
-        if (!this.currentSecondCandle || !this.currentTimeframeCandle) return;
+        if (!this.currentSecondCandle) return;
 
-        let temporaryVolatility = this.volatility;
-        if (this.timeframeInSeconds >= 60) {
-            const secondsRemaining = this.timeframeInSeconds - (this.secondsWithinCurrentTimeframe % this.timeframeInSeconds);
-            if (secondsRemaining <= 5 && secondsRemaining > 0) {
-                temporaryVolatility *= 2.5;
-            }
-        }
-        
-        this.lastPrice = this.generateNextPriceTick(this.lastPrice, temporaryVolatility);
+        const currentVolatility = this.calculateCurrentVolatility();
+        this.lastPrice = this.generateNextPriceTick(this.lastPrice, currentVolatility);
         
         this.currentSecondCandle.high = Math.max(this.currentSecondCandle.high, this.lastPrice);
         this.currentSecondCandle.low = Math.min(this.currentSecondCandle.low, this.lastPrice);
@@ -152,42 +131,69 @@ export class MarketSimulator {
             this.processSecondCompletion();
         }
     }
-    
+
     private processSecondCompletion(): void {
         const finalizedSecondCandle = { ...this.currentSecondCandle! };
-        
-        if (this.timeframe === '1s') {
-            this.onTickCallback(finalizedSecondCandle, false);
-        }
 
-        if (this.timeframeInSeconds > 1) {
-            this.updateTimeframeCandle(finalizedSecondCandle);
-        }
+        // Update all timeframes with the completed 1s candle
+        this.allTimeframes.forEach(tf => {
+            this.updateTimeframeCandle(tf, finalizedSecondCandle);
+        });
 
+        // Reset for the next second
         this.currentSecondCandle = {
             time: this.currentSecondCandle!.time + 1,
             open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
         };
         this.internalTickCounter = 0;
     }
-    
-    private updateTimeframeCandle(secondCandle: CandleData): void {
-        const tfCandle = this.currentTimeframeCandle!;
+
+    private updateTimeframeCandle(timeframe: Timeframe, secondCandle: CandleData): void {
+        const timeframeInSeconds = this.timeframeSecondsMap.get(timeframe)!;
+        let currentSeconds = this.secondsWithinTimeframe.get(timeframe)!;
+        
+        if (timeframe === '1s') {
+            this.liveTimeframeCandles.set('1s', secondCandle);
+            this.notifySubscribers('1s', secondCandle, false);
+            return;
+        }
+
+        const tfCandle = this.liveTimeframeCandles.get(timeframe)!;
         tfCandle.high = Math.max(tfCandle.high, secondCandle.high);
         tfCandle.low = Math.min(tfCandle.low, secondCandle.low);
         tfCandle.close = secondCandle.close;
-        this.secondsWithinCurrentTimeframe++;
+        currentSeconds++;
+        this.secondsWithinTimeframe.set(timeframe, currentSeconds);
 
-        const isTimeframeComplete = this.secondsWithinCurrentTimeframe >= this.timeframeInSeconds;
-        this.onTickCallback({ ...tfCandle }, !isTimeframeComplete);
+        const isTimeframeComplete = currentSeconds >= timeframeInSeconds;
+        this.notifySubscribers(timeframe, { ...tfCandle }, !isTimeframeComplete);
 
         if (isTimeframeComplete) {
-            this.currentTimeframeCandle = {
-                time: tfCandle.time + this.timeframeInSeconds,
+            this.liveTimeframeCandles.set(timeframe, {
+                time: tfCandle.time + timeframeInSeconds,
                 open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-            };
-            this.secondsWithinCurrentTimeframe = 0;
+            });
+            this.secondsWithinTimeframe.set(timeframe, 0);
         }
+    }
+
+    private notifySubscribers(timeframe: Timeframe, candle: CandleData, isUpdate: boolean): void {
+        this.subscribers.get(timeframe)?.forEach(callback => callback(candle, isUpdate));
+    }
+    
+    private calculateCurrentVolatility(): number {
+        let tempVolatility = this.volatility;
+        // Check for end-of-period auction effect for all relevant timeframes
+        this.allTimeframes.forEach(tf => {
+            const timeframeInSeconds = this.timeframeSecondsMap.get(tf)!;
+            if (timeframeInSeconds >= 60) { // Only for 1m and above
+                const secondsRemaining = timeframeInSeconds - (this.secondsWithinTimeframe.get(tf)! % timeframeInSeconds);
+                if (secondsRemaining <= 5 && secondsRemaining > 0) {
+                    tempVolatility *= 1.5; // Use a slightly smaller multiplier to avoid excessive spikes when combined
+                }
+            }
+        });
+        return tempVolatility;
     }
 
     private generateBase1sHistoricalData(count: number): CandleData[] {
