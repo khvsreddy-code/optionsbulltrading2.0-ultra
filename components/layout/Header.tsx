@@ -1,42 +1,37 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Bell, User } from '../common/Icons';
+import { Bell } from '../common/Icons';
 
 interface HeaderProps {
     user: SupabaseUser | null;
+    onNavigate: (path: string) => void;
 }
 
-const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-};
-
-
-const Header: React.FC<HeaderProps> = ({ user }) => {
-    const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Trader';
-    const greeting = getGreeting();
+const Header: React.FC<HeaderProps> = ({ user, onNavigate }) => {
+    const userName = user?.user_metadata?.full_name || 'Trader';
+    const userAvatar = user?.user_metadata?.avatar_url;
 
     return (
-        <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 shadow-sm p-3 border-b border-gray-200 dark:border-slate-700">
+        <header className="bg-background p-4">
             <div className="flex items-center justify-between">
-                {/* App Name */}
-                <div className="flex items-center overflow-hidden">
-                    <span className="text-lg font-semibold text-gray-800 dark:text-slate-200 truncate">
-                        {greeting}, {userName}
-                    </span>
-                </div>
-
-                {/* Icons */}
-                <div className="flex items-center space-x-4">
-                    <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
-                        <Bell size={22} className="text-gray-600 dark:text-slate-400" />
+                <div className="flex items-center space-x-3">
+                    <button onClick={() => onNavigate('/profile')}>
+                        <img 
+                            src={userAvatar || `https://ui-avatars.com/api/?name=${userName}&background=7065F0&color=fff`} 
+                            alt="User Avatar" 
+                            className="w-10 h-10 rounded-full"
+                        />
                     </button>
-                    <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700">
-                        <User size={22} className="text-gray-600 dark:text-slate-400" />
-                    </button>
+                    <div>
+                        <p className="text-sm text-text-secondary">Welcome back</p>
+                        <p className="font-bold text-text-main text-lg">{userName}</p>
+                    </div>
                 </div>
+                
+                <button className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white border border-border-color">
+                    <Bell size={20} className="text-text-secondary" />
+                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
             </div>
         </header>
     );

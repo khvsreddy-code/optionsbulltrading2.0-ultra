@@ -1,103 +1,102 @@
-import React from 'react';
-import IconLink from '../components/home/IconLink';
-import { Telegram, BookOpen, Clock, ChevronRight, Zap, Star } from '../components/common/Icons';
+import React, { useState } from 'react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { ChevronRight, TrendingUp } from '../components/common/Icons';
+import { curatedStocks } from '../data/curatedStocks';
+import Sparkline from '../components/home/Sparkline';
 
 interface HomeViewProps {
     onNavigate: (path: string) => void;
+    user: SupabaseUser | null;
 }
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
+    const [activeTab, setActiveTab] = useState('Stocks');
+
+    const assetCards = curatedStocks.slice(0, 2);
+    const assetList = curatedStocks.slice(0, 4);
 
     return (
-        <div className="bg-sky-50 dark:bg-slate-900 font-sans p-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-                {/* Hero Card: Market Simulator */}
-                <div style={{ animationDelay: '100ms' }} className="animate-reveal-in col-span-1 md:col-span-4 bg-white dark:bg-slate-800 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between pro-card border border-transparent dark:border-slate-700">
-                    <div className="flex-1 mb-4 md:mb-0 md:mr-6">
-                        <div className="flex items-center mb-2">
-                            <Zap size={20} className="text-blue-500 dark:text-blue-400 mr-2"/>
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Market Simulator</h2>
+        <div className="p-4 space-y-6">
+            {/* Portfolio Summary Card */}
+            <div className="pro-card p-5">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm text-text-secondary">My portfolio</p>
+                        <p className="text-3xl font-bold text-text-main mt-1">₹1,00,021.31</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm text-text-secondary">Profit</p>
+                        <div className="flex items-center mt-1 text-green-500 font-semibold">
+                            <TrendingUp size={16} className="mr-1" />
+                            <span>+0.18%</span>
                         </div>
-                        <p className="text-gray-600 dark:text-slate-400">
-                            Practice trading with real-time simulated data. Hone your skills and test strategies in a risk-free environment.
-                        </p>
-                    </div>
-                    <button 
-                        onClick={() => onNavigate('/practice')}
-                        className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl button-press-feedback hover:bg-blue-700 transition flex items-center justify-center">
-                        Start Practicing <ChevronRight size={18} className="ml-2" />
-                    </button>
-                </div>
-
-                {/* Quick Actions */}
-                <div style={{ animationDelay: '200ms' }} className="animate-reveal-in col-span-1 md:col-span-4 p-4 bg-white dark:bg-slate-800 rounded-3xl pro-card border border-transparent dark:border-slate-700">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <IconLink 
-                            title="Premium Plans" 
-                            icon={Star} 
-                            onClick={() => onNavigate('/pricing')} 
-                        />
-                        <IconLink 
-                            title="Free Telegram" 
-                            icon={Telegram} 
-                            href="https://t.me/optionsbulltradingtelugu"
-                        />
-                        <IconLink 
-                            title="Learning Library" 
-                            icon={BookOpen}
-                            onClick={() => onNavigate('/learning')} 
-                        />
-                        <IconLink 
-                            title="Daily Analysis" 
-                            icon={Clock} 
-                        />
+                         <p className="text-sm text-text-secondary font-semibold">+₹21.31</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Learning Library Card */}
-                <div style={{ animationDelay: '300ms' }} className="animate-reveal-in col-span-1 md:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 pro-card border border-transparent dark:border-slate-700">
-                     <h2 className="text-xl font-bold text-gray-800 dark:text-slate-200 mb-4">Master the Markets</h2>
-                     <div className="space-y-3">
-                         <button onClick={() => onNavigate('/learning')} className="w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                             <span className="font-semibold text-gray-700 dark:text-slate-200">The Basics of Stocks</span>
-                             <ChevronRight size={18} className="text-slate-400"/>
-                         </button>
-                         <button onClick={() => onNavigate('/learning/bullish')} className="w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                             <span className="font-semibold text-gray-700 dark:text-slate-200">Bullish Candlesticks</span>
-                             <ChevronRight size={18} className="text-slate-400"/>
-                         </button>
-                          <button onClick={() => onNavigate('/learning/bearish')} className="w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                             <span className="font-semibold text-gray-700 dark:text-slate-200">Bearish Candlesticks</span>
-                             <ChevronRight size={18} className="text-slate-400"/>
-                         </button>
-                         <button onClick={() => onNavigate('/learning/indicators')} className="w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                             <span className="font-semibold text-gray-700 dark:text-slate-200">Technical Indicators</span>
-                             <ChevronRight size={18} className="text-slate-400"/>
-                         </button>
-                          <button onClick={() => onNavigate('/learning/fundamental')} className="w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                             <span className="font-semibold text-gray-700 dark:text-slate-200">Fundamental Analysis</span>
-                             <ChevronRight size={18} className="text-slate-400"/>
-                         </button>
-                     </div>
+            {/* My Assets Section */}
+            <div>
+                <h2 className="text-xl font-bold text-text-main mb-3">My Assets</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    {assetCards.map(asset => (
+                        <div key={asset.instrument_key} className="pro-card p-4">
+                            <div className="flex items-center space-x-2 mb-3">
+                                <div className="w-8 h-8 flex items-center justify-center bg-primary-light rounded-full">
+                                    <asset.icon size={18} className="text-primary" />
+                                </div>
+                                <span className="font-bold text-text-main">{asset.tradingsymbol}</span>
+                            </div>
+                            <div className="h-10 -mx-2">
+                                <Sparkline />
+                            </div>
+                            <div className="mt-3">
+                                <p className="font-bold text-text-main">₹{asset.instrument_key.includes('BTC') ? '63,920.34' : '2,885.50'}</p>
+                                <p className="text-sm text-green-500 font-semibold">+2.37%</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Tabbed Asset List */}
+            <div>
+                <div className="flex items-center space-x-4 border-b border-border-color mb-4">
+                    {['Stocks', 'Mutual funds', 'Gold'].map(tab => (
+                        <button 
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`py-2 font-semibold transition-colors ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-text-secondary'}`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Upcoming Events Card */}
-                 <div style={{ animationDelay: '400ms' }} className="animate-reveal-in col-span-1 md:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 flex flex-col pro-card border border-transparent dark:border-slate-700">
-                     <div className="relative h-40 w-full rounded-2xl overflow-hidden mb-4">
-                         <img src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/5694a6db-f12e-4b08-9e39-81b9de02700e.jpg" alt="Stock Events" className="w-full h-full object-cover"/>
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                         <h3 className="absolute bottom-3 left-3 text-white text-xl font-bold">Upcoming Stock Events</h3>
-                     </div>
-                     <p className="text-gray-600 dark:text-slate-400 flex-grow">
-                         Stay ahead of the market with insights on upcoming earnings reports, economic data releases, and major corporate events.
-                     </p>
-                      <button className="mt-4 w-full text-left p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex justify-between items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition button-press-feedback">
-                         <span className="font-semibold text-gray-700 dark:text-slate-200">View Calendar</span>
-                         <ChevronRight size={18} className="text-slate-400"/>
-                     </button>
-                 </div>
+                <div className="space-y-3">
+                    {assetList.map(asset => (
+                        <div key={asset.instrument_key} className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-100">
+                             <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 flex items-center justify-center bg-primary-light rounded-full">
+                                    <asset.icon size={20} className="text-primary" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-text-main">{asset.tradingsymbol}</p>
+                                    <p className="text-sm text-text-secondary">{asset.name.split(' ')[0]}</p>
+                                </div>
+                            </div>
+                            <div className="w-20 h-8 -mx-2">
+                                <Sparkline isPositive={Math.random() > 0.5}/>
+                            </div>
+                            <div className="text-right">
+                                <p className="font-bold text-text-main">₹{asset.instrument_key.includes('BTC') ? '63,920.34' : '2,885.50'}</p>
+                                <p className={`text-sm font-semibold ${Math.random() > 0.5 ? 'text-green-500' : 'text-red-500'}`}>
+                                    {Math.random() > 0.5 ? '+' : '-'}{ (1 + Math.random() * 2).toFixed(2) }%
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

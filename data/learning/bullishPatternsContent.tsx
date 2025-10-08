@@ -4,6 +4,7 @@ export interface Pattern {
   id: string;
   title: string;
   emoji: string;
+  icon?: React.FC<any>;
   content: React.ReactNode;
 }
 

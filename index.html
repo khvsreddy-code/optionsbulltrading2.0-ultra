@@ -21,12 +21,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class', // This is the fix!
         theme: {
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
+            colors: {
+              'primary': '#7065F0',
+              'primary-light': '#E9E7FF',
+              'background': '#F7F7FD',
+            }
           }
         }
       }
@@ -40,59 +44,70 @@
      crossorigin="anonymous"></script>
 
     <style>
+      :root {
+        --background: #F7F7FD;
+        --card-bg: #FFFFFF;
+        --primary: #7065F0;
+        --primary-light: #E9E7FF;
+        --text-main: #0D0C22;
+        --text-secondary: #6E6D7A;
+        --border-color: #EFEFF5;
+        --shadow-color: rgba(112, 101, 240, 0.1);
+      }
+
       body {
         -webkit-tap-highlight-color: transparent;
+        background-color: var(--background);
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
       }
       
-      /* --- Framer-Inspired Animations --- */
+      .pro-card {
+        background-color: var(--card-bg);
+        border-radius: 1.5rem; /* 24px */
+        box-shadow: 0 4px 15px var(--shadow-color);
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      .pro-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px var(--shadow-color);
+      }
+      
+      .button-press-feedback {
+        transition: transform 0.1s ease-out;
+      }
+      .button-press-feedback:active {
+        transform: scale(0.96);
+      }
+
+      /* Page transition animation */
       @keyframes page-enter {
         from {
           opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-page-enter {
-        animation: page-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-      }
-      
-      @keyframes reveal-in {
-        from {
-          opacity: 0;
-          transform: translateY(15px) scale(0.98);
+          transform: translateY(8px) scale(0.99);
         }
         to {
           opacity: 1;
           transform: translateY(0) scale(1);
         }
       }
-      .animate-reveal-in {
-        animation: reveal-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      .animate-page-enter {
+        animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
       
-      .button-press-feedback {
-        transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease;
+      /* Dialog/Modal animation */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 20px, 0) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
       }
-      .button-press-feedback:active {
-        transform: scale(0.95);
-      }
-      
-      /* Professional Card Style */
-      .pro-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-      }
-      
-      .pro-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-      }
-      
-      .dark .pro-card:hover {
-         box-shadow: 0 10px 25px rgba(0,0,0,0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-         border-color: rgba(255, 255, 255, 0.15);
+      .animate-fadeInUp {
+        animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
 
       /* Background animation for pricing view */
@@ -121,21 +136,6 @@
         background:transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=) repeat top center;
         animation:move-twinkle-back 200s linear infinite;
         z-index:-1;
-      }
-      
-      /* Dialog/Modal animation */
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translate3d(0, 20px, 0) scale(0.95);
-        }
-        to {
-          opacity: 1;
-          transform: translate3d(0, 0, 0) scale(1);
-        }
-      }
-      .animate-fadeInUp {
-        animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
       }
 
     </style>

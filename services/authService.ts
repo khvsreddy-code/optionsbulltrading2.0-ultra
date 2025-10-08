@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import type { User } from '@supabase/supabase-js';
 
 /**
  * Initiates the Google Sign-In process using a popup window.
@@ -36,4 +37,38 @@ export async function signOutUser() {
     console.error("Sign out error:", error);
     alert(`Error signing out: ${error.message}`);
   }
+}
+
+/**
+ * Updates the user's profile metadata in Supabase Auth.
+ */
+export async function updateUserProfile(userId: string, data: { [key: string]: any }) {
+    const { data: user, error } = await supabase.auth.updateUser({ data });
+    return { user, error };
+}
+
+
+/**
+ * Uploads a new avatar image to Supabase Storage.
+ */
+export async function uploadAvatar(userId: string, file: File) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    const { error: uploadError } = await supabase
+      .storage
+      .from('app images') // Ensure this bucket exists and has correct policies
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+        return { publicURL: null, error: uploadError };
+    }
+
+    const { data } = supabase
+      .storage
+      .from('app images')
+      .getPublicUrl(filePath);
+      
+    return { publicURL: data.publicUrl, error: null };
 }

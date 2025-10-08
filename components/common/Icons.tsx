@@ -55,10 +55,22 @@ export const Play = createIcon(<polygon points="5 3 19 12 5 21 5 3" />);
 export const Pause = createIcon(<><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></>);
 export const RotateCcw = createIcon(<><path d="M3 2v6h6" /><path d="M3 13a9 9 0 1 0 3-7.7L3 8" /></>);
 export const Zap = createIcon(<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />);
-// FIX: Add Plus and Minus icons.
 export const Plus = createIcon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>);
 export const Minus = createIcon(<line x1="5" y1="12" x2="19" y2="12" />);
 export const Swap = createIcon(<><path d="m3 17 4-4-4-4"/><path d="M7 13h14"/><path d="m21 7-4 4 4 4"/><path d="M17 11H3"/></>);
+export const Home = createIcon(<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>);
+
+// --- New Icons for Fundamental Analysis ---
+export const DollarSign = createIcon(<><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></>);
+export const TrendingUp = createIcon(<><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>);
+export const BarChart2 = createIcon(<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>);
+export const Users = createIcon(<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>);
+export const Scale = createIcon(<><path d="m16 16 3-8 3 8c-2 1-4 1-6 0"/><path d="m2 16 3-8 3 8c-2 1-4 1-6 0"/><path d="M12 3v18"/><path d="M3 7h18"/><path d="M3 12h18"/></>);
+export const Globe = createIcon(<><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>);
+export const GitPullRequest = createIcon(<><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></>);
+export const Sliders = createIcon(<><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></>);
+export const Dna = createIcon(<><path d="M12 3a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/><path d="M12 17a2 2 0 1 0 0 4 2 2 0 1 0 0-4"/><path d="M6.3 7.8A12.3 12.3 0 0 1 12 10c2.4 0 4.6-.7 6.4-1.8"/><path d="M17.7 16.2A12.3 12.3 0 0 0 12 14c-2.4 0-4.6.7-6.4 1.8"/><path d="m7.1 12.8 1-5.6"/><path d="m15.9 5.6-1 5.6"/></>);
+
 
 // --- Drawing Toolbar Icons ---
 export const Crosshair = createIcon(<><circle cx="12" cy="12" r="10" /><path d="M22 12h-4" /><path d="M12 6V2" /><path d="M6 12H2" /><path d="M12 22v-4" /></>);

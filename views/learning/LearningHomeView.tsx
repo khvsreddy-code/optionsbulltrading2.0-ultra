@@ -16,17 +16,15 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
         return '/learning'; // Fallback
     };
     
-    let itemDelay = 0;
-
     return (
-        <div className="bg-[#111111] text-white min-h-screen font-sans p-4">
+        <div className="bg-background min-h-screen font-sans p-4">
             <header className="flex items-center justify-between mb-6">
-                 <button onClick={() => onNavigate('/home')} className="p-2 -ml-2" aria-label="Go back to home">
+                 <button onClick={() => onNavigate('/home')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to home">
                     <ChevronRight size={24} className="transform rotate-180" />
                 </button>
                 <div className="flex-1 text-center">
-                    <h1 className="text-lg font-bold text-slate-200">The Stock Market Fundamentals</h1>
-                    <p className="text-sm text-slate-400">Your journey to market mastery starts here.</p>
+                    <h1 className="text-lg font-bold text-text-main">The Stock Market Fundamentals</h1>
+                    <p className="text-sm text-text-secondary">Your journey to market mastery starts here.</p>
                 </div>
                 <div className="w-8"></div>
             </header>
@@ -35,18 +33,17 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                 <div className="space-y-8">
                     {learningCurriculum.map((chapter) => (
                         <div key={chapter.id}>
-                            <h2 className="text-xl font-semibold text-slate-300 mb-4 animate-reveal-in" style={{ animationDelay: `${itemDelay += 50}ms` }}>{chapter.title}</h2>
+                            <h2 className="text-xl font-semibold text-text-main mb-4">{chapter.title}</h2>
                             {chapter.subChapters.length > 0 ? (
                                 <div className="space-y-3">
                                     {chapter.subChapters.map((subChapter) => (
                                         <button
                                             key={subChapter.id}
                                             onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-                                            className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback animate-reveal-in"
-                                            style={{ animationDelay: `${itemDelay += 30}ms` }}
+                                            className="w-full text-left p-4 bg-white rounded-lg transition-colors hover:bg-gray-50 button-press-feedback border border-border-color"
                                         >
-                                            <p className="font-semibold text-slate-100">{subChapter.title}</p>
-                                            <p className="text-sm text-slate-400 mt-1">{subChapter.readingTime}</p>
+                                            <p className="font-semibold text-text-main">{subChapter.title}</p>
+                                            <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
                                         </button>
                                     ))}
                                 </div>
@@ -54,19 +51,18 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                                  <div className="space-y-3">
                                      <button
                                         onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
-                                        className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center animate-reveal-in"
-                                        style={{ animationDelay: `${itemDelay += 30}ms` }}
+                                        className="w-full text-left p-4 bg-white rounded-lg transition-colors hover:bg-gray-50 button-press-feedback flex justify-between items-center border border-border-color"
                                     >
                                         <div>
-                                            <p className="font-semibold text-slate-100">View All Topics</p>
-                                            <p className="text-sm text-slate-400 mt-1">Explore detailed explanations</p>
+                                            <p className="font-semibold text-text-main">View All Topics</p>
+                                            <p className="text-sm text-text-secondary mt-1">Explore detailed explanations</p>
                                         </div>
-                                        <ChevronRight size={20} className="text-slate-400" />
+                                        <ChevronRight size={20} className="text-text-secondary" />
                                     </button>
                                  </div>
                             ) : (
-                                <div className="p-4 bg-[#1C1C1E] rounded-lg text-center animate-reveal-in" style={{ animationDelay: `${itemDelay += 30}ms` }}>
-                                    <p className="text-slate-400">More lessons coming soon!</p>
+                                <div className="p-4 bg-white rounded-lg text-center border border-border-color">
+                                    <p className="text-text-secondary">More lessons coming soon!</p>
                                 </div>
                             )}
                         </div>

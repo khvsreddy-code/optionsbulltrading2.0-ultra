@@ -8,14 +8,14 @@ interface FundamentalAnalysisListViewProps {
 
 const FundamentalAnalysisListView: React.FC<FundamentalAnalysisListViewProps> = ({ onNavigate }) => {
     return (
-        <div className="bg-[#111111] text-white min-h-screen font-sans p-4">
+        <div className="bg-background text-text-main min-h-screen font-sans p-4">
             <header className="flex items-center justify-between mb-6">
-                 <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2" aria-label="Go back to curriculum">
+                 <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to curriculum">
                     <ChevronRight size={24} className="transform rotate-180" />
                 </button>
                 <div className="flex-1 text-center">
-                    <h1 className="text-lg font-bold text-slate-200">Fundamental Analysis Library</h1>
-                    <p className="text-sm text-slate-400">Select a topic to learn more</p>
+                    <h1 className="text-lg font-bold text-text-main">Fundamental Analysis Library</h1>
+                    <p className="text-sm text-text-secondary">Select a topic to learn more</p>
                 </div>
                 <div className="w-8"></div>
             </header>
@@ -26,10 +26,17 @@ const FundamentalAnalysisListView: React.FC<FundamentalAnalysisListViewProps> = 
                         <button
                             key={topic.id}
                             onClick={() => onNavigate(`/learning/pattern/${topic.id}`)}
-                            className="w-full text-left p-4 bg-[#1C1C1E] rounded-lg transition-colors hover:bg-[#2C2C2E] button-press-feedback flex justify-between items-center"
+                            className="w-full text-left p-4 bg-white rounded-lg transition-colors hover:bg-gray-50 button-press-feedback flex items-center justify-between border border-border-color"
                         >
-                            <p className="font-semibold text-slate-100">{topic.emoji} {topic.title}</p>
-                            <ChevronRight size={20} className="text-slate-400" />
+                            <div className="flex items-center space-x-4">
+                                {topic.icon && (
+                                    <div className="w-10 h-10 flex items-center justify-center bg-primary-light rounded-lg">
+                                        <topic.icon size={22} className="text-primary" />
+                                    </div>
+                                )}
+                                <span className="font-semibold text-text-main">{topic.title}</span>
+                            </div>
+                            <ChevronRight size={20} className="text-text-secondary" />
                         </button>
                     ))}
                 </div>

@@ -1,5 +1,4 @@
 import React from 'react';
-import OptionsbullLogo from '../common/OptionsbullLogo';
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -7,20 +6,35 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 antialiased flex flex-col justify-center items-center p-4 space-y-6">
+        <div className="min-h-screen bg-background antialiased flex flex-col justify-center items-center p-6 text-center">
             
-            <OptionsbullLogo />
-
-            <div className="w-full max-w-md mx-auto text-center">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100">
-                    Welcome to
-                    <span className="block">Optionsbulltrading</span>
-                </h1>
-                <p className="text-md text-gray-600 dark:text-slate-400 mt-2 mb-6">
-                    Your journey to financial mastery starts here.
-                </p>
+            {/* Centered Content */}
+            <div className="flex flex-col items-center">
                 
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-[1.75rem] shadow-xl dark:shadow-none w-full">
+                {/* App Title and Subtitle */}
+                <div className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold text-text-main">OptionsBullTrading</h1>
+                    <p className="text-lg text-text-secondary mt-1">everything you need to be a trader</p>
+                </div>
+
+                {/* Illustration */}
+                <div className="mb-8">
+                    <img 
+                        src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png" 
+                        alt="Optionsbulltrading Logo"
+                        className="w-48 h-48 rounded-full object-cover shadow-lg"
+                    />
+                </div>
+
+                {/* Text and Button Content */}
+                <div className="w-full max-w-md mx-auto">
+                    <h2 className="text-2xl font-bold text-text-main">
+                        Your Modern Stock Market Journey
+                    </h2>
+                    <p className="text-md text-text-secondary mt-2 mb-8">
+                        Elevate Your Trading Beyond Expectations
+                    </p>
+                    
                     {children}
                 </div>
             </div>
