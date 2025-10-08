@@ -14,13 +14,6 @@ interface ChartHeaderProps {
   liveOhlc: CandleData | null;
 }
 
-const InfoPill: React.FC<{ label: string; value: string; colorClass?: string }> = ({ label, value, colorClass = 'text-slate-300' }) => (
-    <div className="text-xs">
-        <span className="text-slate-500 mr-1.5">{label}</span>
-        <span className={colorClass}>{value}</span>
-    </div>
-);
-
 const ChartHeader: React.FC<ChartHeaderProps> = ({
   instruments,
   selectedInstrument,
@@ -34,7 +27,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   const open = liveOhlc?.open ?? 0;
   const change = price - open;
   const changePercent = open === 0 ? 0 : (change / open) * 100;
-  const priceColor = change >= 0 ? 'text-[#1AAB7A]' : 'text-[#FF3D5F]';
+  const priceColor = change >= 0 ? 'text-green-500' : 'text-red-500';
   
   useEffect(() => {
     if (!liveOhlc || selectedTimeframe === '1s') {
@@ -71,33 +64,43 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
 
 
   return (
-    <div className="flex-shrink-0 bg-[#131722] border-b border-[#2A2E39]">
-        <div className="flex items-center space-x-4 p-2">
-            <StockSelector
-                instruments={instruments}
-                onSelect={onSelectInstrument}
-                selectedInstrument={selectedInstrument}
-            />
-            <TimeframeSelector
-                selectedTimeframe={selectedTimeframe}
-                onSelectTimeframe={onSelectTimeframe}
-            />
-            {countdown && (
-                <div className="flex items-center space-x-1.5 text-sm font-mono text-yellow-400 hidden lg:flex" title="Time until bar close">
-                    <Clock size={16} />
-                    <span>{countdown}</span>
-                </div>
-            )}
-        </div>
+    <div className="flex-shrink-0 bg-[#131722] border-b border-[#2A2E39] p-2 flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
+      <div className="flex items-center space-x-3">
+        <StockSelector
+            instruments={instruments}
+            onSelect={onSelectInstrument}
+            selectedInstrument={selectedInstrument}
+        />
         {liveOhlc && (
-             <div className="flex items-center space-x-4 px-3 pb-2">
-                <InfoPill label="O" value={liveOhlc.open.toFixed(2)} />
-                <InfoPill label="H" value={liveOhlc.high.toFixed(2)} />
-                <InfoPill label="L" value={liveOhlc.low.toFixed(2)} />
-                <InfoPill label="C" value={liveOhlc.close.toFixed(2)} colorClass={priceColor} />
-                <InfoPill label="Chg" value={`${change >= 0 ? '+' : ''}${change.toFixed(2)} (${changePercent.toFixed(2)}%)`} colorClass={priceColor} />
+          <div className="hidden sm:flex items-baseline space-x-2">
+              <span className={`text-lg font-mono font-bold ${priceColor}`}>{price.toFixed(2)}</span>
+              <span className={`text-sm font-semibold ${priceColor}`}>
+                  {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePercent.toFixed(2)}%)
+              </span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center space-x-3">
+        {liveOhlc && (
+            <div className="hidden md:flex items-center space-x-3 text-xs text-slate-400 font-mono">
+                <span>O:{liveOhlc.open.toFixed(2)}</span>
+                <span>H:{liveOhlc.high.toFixed(2)}</span>
+                <span>L:{liveOhlc.low.toFixed(2)}</span>
+                <span className={priceColor}>C:{liveOhlc.close.toFixed(2)}</span>
             </div>
         )}
+        <TimeframeSelector
+            selectedTimeframe={selectedTimeframe}
+            onSelectTimeframe={onSelectTimeframe}
+        />
+        {countdown && (
+            <div className="flex items-center space-x-1.5 text-sm font-mono text-yellow-400 hidden lg:flex" title="Time until bar close">
+                <Clock size={16} />
+                <span>{countdown}</span>
+            </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -17,23 +17,20 @@ const StockSelector: React.FC<StockSelectorProps> = ({ instruments, onSelect, se
   };
 
   return (
-    <div className="relative w-full max-w-xs">
+    <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-2 bg-transparent rounded-lg text-left hover:bg-slate-800"
+        className="flex items-center justify-between p-2 bg-transparent rounded-lg text-left hover:bg-slate-800"
       >
         <div className="flex items-center">
-            {selectedInstrument && <selectedInstrument.icon size={24} className="mr-3 text-white" />}
-            <div>
-                <span className="text-white font-semibold text-lg">{selectedInstrument?.tradingsymbol}</span>
-                <span className="text-slate-400 text-xs ml-2">{selectedInstrument?.name}</span>
-            </div>
+            {selectedInstrument && <selectedInstrument.icon size={22} className="mr-2 text-white" />}
+            <span className="text-white font-semibold text-lg">{selectedInstrument?.tradingsymbol}</span>
         </div>
-        <ChevronDown size={20} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={20} className={`text-slate-400 transition-transform ml-2 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-[#1C2127] border border-[#2A2E39] rounded-lg shadow-xl">
+        <div className="absolute z-50 w-72 mt-1 bg-[#1C2127] border border-[#2A2E39] rounded-lg shadow-xl">
           <ul className="max-h-72 overflow-y-auto p-1">
             {instruments.map(instrument => {
               const isCrypto = instrument.instrument_type === 'CRYPTO';

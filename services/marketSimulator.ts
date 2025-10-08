@@ -36,15 +36,16 @@ export class MarketSimulator {
 
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
-    private static base1sHistoricalData: CandleData[] | null = null;
-    private static historicalDataCache: Map<Timeframe, CandleData[]> = new Map();
-    private static isHistoryReady = false;
+    private base1sHistoricalData: CandleData[] | null = null;
+    private historicalDataCache: Map<Timeframe, CandleData[]> = new Map();
+    private isHistoryReady = false;
 
     constructor() {
         this.allTimeframes.forEach(tf => {
             const seconds = this.parseTimeframe(tf);
             this.timeframeSecondsMap.set(tf, seconds);
             this.subscribers.set(tf, new Set());
+            this.historicalDataCache.set(tf, []);
         });
     }
 
@@ -55,17 +56,17 @@ export class MarketSimulator {
     public async start(): Promise<void> {
         if (this.tickIntervalId) this.stop();
 
-        if (!MarketSimulator.isHistoryReady) {
-            MarketSimulator.base1sHistoricalData = this.generateBase1sHistoricalData(10800);
+        if (!this.isHistoryReady) {
+            this.base1sHistoricalData = this.generateBase1sHistoricalData(10800);
             this.allTimeframes.forEach(tf => {
-                const aggregated = this.aggregateHistoricalData(MarketSimulator.base1sHistoricalData!, this.timeframeSecondsMap.get(tf)!);
-                MarketSimulator.historicalDataCache.set(tf, aggregated);
+                const aggregated = this.aggregateHistoricalData(this.base1sHistoricalData!, this.timeframeSecondsMap.get(tf)!);
+                this.historicalDataCache.set(tf, aggregated);
             });
-            MarketSimulator.isHistoryReady = true;
+            this.isHistoryReady = true;
         }
         
-        this.lastPrice = MarketSimulator.base1sHistoricalData![MarketSimulator.base1sHistoricalData!.length - 1].close;
-        const lastTime = MarketSimulator.base1sHistoricalData![MarketSimulator.base1sHistoricalData!.length - 1].time;
+        this.lastPrice = this.base1sHistoricalData![this.base1sHistoricalData!.length - 1].close;
+        const lastTime = this.base1sHistoricalData![this.base1sHistoricalData!.length - 1].time;
         this.initializeLiveCandles(lastTime);
 
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
@@ -86,7 +87,8 @@ export class MarketSimulator {
     }
 
     public getHistoricalData(timeframe: Timeframe): CandleData[] {
-        return MarketSimulator.historicalDataCache.get(timeframe) || [];
+        // Return a copy to prevent the UI from accidentally mutating the simulator's state
+        return [...(this.historicalDataCache.get(timeframe) || [])];
     }
     
     public getLatestCandle(timeframe: Timeframe): CandleData | undefined {
@@ -104,8 +106,8 @@ export class MarketSimulator {
         this.allTimeframes.forEach(tf => {
             const timeframeInSeconds = this.timeframeSecondsMap.get(tf)!;
             const history = this.getHistoricalData(tf);
-            const lastHistoricalCandle = history[history.length - 1];
-            const nextTimeframeStartTime = lastHistoricalCandle.time + timeframeInSeconds;
+            const lastHistoricalCandle = history.length > 0 ? history[history.length - 1] : null;
+            const nextTimeframeStartTime = lastHistoricalCandle ? lastHistoricalCandle.time + timeframeInSeconds : (Math.floor(Date.now() / 1000 / timeframeInSeconds) * timeframeInSeconds);
 
             this.liveTimeframeCandles.set(tf, {
                 time: nextTimeframeStartTime,
@@ -150,15 +152,23 @@ export class MarketSimulator {
 
     private updateTimeframeCandle(timeframe: Timeframe, secondCandle: CandleData): void {
         const timeframeInSeconds = this.timeframeSecondsMap.get(timeframe)!;
-        let currentSeconds = this.secondsWithinTimeframe.get(timeframe)!;
         
+        // Special handling for 1s timeframe, which completes every second
         if (timeframe === '1s') {
+            const history = this.historicalDataCache.get('1s');
+            if (history) {
+                history.push(secondCandle);
+                if (history.length > 1000) history.shift();
+            }
             this.liveTimeframeCandles.set('1s', secondCandle);
             this.notifySubscribers('1s', secondCandle, false);
             return;
         }
 
+        // Logic for aggregating into larger timeframes (1m, 5m, etc.)
         const tfCandle = this.liveTimeframeCandles.get(timeframe)!;
+        let currentSeconds = this.secondsWithinTimeframe.get(timeframe)!;
+        
         tfCandle.high = Math.max(tfCandle.high, secondCandle.high);
         tfCandle.low = Math.min(tfCandle.low, secondCandle.low);
         tfCandle.close = secondCandle.close;
@@ -169,6 +179,14 @@ export class MarketSimulator {
         this.notifySubscribers(timeframe, { ...tfCandle }, !isTimeframeComplete);
 
         if (isTimeframeComplete) {
+            // The candle for this timeframe is now complete. Add it to the history.
+            const history = this.historicalDataCache.get(timeframe);
+            if (history) {
+                history.push({ ...tfCandle });
+                if (history.length > 1000) history.shift();
+            }
+
+            // Start a new live candle for the next period.
             this.liveTimeframeCandles.set(timeframe, {
                 time: tfCandle.time + timeframeInSeconds,
                 open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
