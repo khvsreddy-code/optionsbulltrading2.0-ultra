@@ -1,6 +1,6 @@
 import type { CandleData } from '../types';
 
-export type Timeframe = '1s' | '1m' | '5m';
+export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
 /**
  * An ultra-realistic market simulator based on a sophisticated stochastic model.
@@ -15,7 +15,7 @@ export type Timeframe = '1s' | '1m' | '5m';
  * 3.  **High-Frequency Tick Generation:** Runs on a 50ms internal clock to generate
  *     a high-fidelity stream of tick data, which is the single source of truth.
  * 4.  **Realistic Candle Aggregation:**
- *     - Minute timeframes (1m, 5m): Provides real-time, streaming updates every second.
+ *     - Minute timeframes (1m, 5m, etc.): Provides real-time, streaming updates every second.
  *     - 1-second timeframe: Provides a finalized candle only after the interval is complete.
  */
 export class MarketSimulator {
@@ -54,6 +54,9 @@ export class MarketSimulator {
             case '1s': return 1;
             case '1m': return 60;
             case '5m': return 300;
+            case '15m': return 900;
+            case '30m': return 1800;
+            case '45m': return 2700;
             default: return 1;
         }
     }
@@ -79,17 +82,17 @@ export class MarketSimulator {
     }
 
     private initializeLiveCandles(lastTime: number) {
-        const nextSecondTime = lastTime + 1;
-        const nextTimeframeTime = lastTime - (lastTime % this.timeframeInSeconds) + this.timeframeInSeconds;
+        // The new live candle starts right after the last historical one ends.
+        const nextTimeframeStartTime = lastTime + this.timeframeInSeconds;
 
         this.currentSecondCandle = {
-            time: nextSecondTime,
+            time: nextTimeframeStartTime, // The first second starts at the same time as the timeframe.
             open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
         };
         this.internalTickCounter = 0;
 
         this.currentTimeframeCandle = {
-            time: nextTimeframeTime,
+            time: nextTimeframeStartTime,
             open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
         };
         this.secondsWithinCurrentTimeframe = 0;
@@ -168,12 +171,20 @@ export class MarketSimulator {
             const alignedNow = now - (now % this.timeframeInSeconds);
             const startTime = alignedNow - (count * this.timeframeInSeconds);
             
+            // Define a fixed number of ticks to generate for each historical candle.
+            // This ensures consistent and fast performance regardless of the timeframe,
+            // fixing the "stuck loading" bug on longer timeframes.
+            const HISTORICAL_TICKS_PER_CANDLE = 100;
+            
             for (let i = 0; i < count; i++) {
                 const open = lastClose;
                 let high = open;
                 let low = open;
                 let close = open;
-                for (let j = 0; j < (1000 / this.INTERNAL_TICK_MS) * this.timeframeInSeconds; j++) {
+
+                // The inner loop now has a fixed, smaller number of iterations.
+                for (let j = 0; j < HISTORICAL_TICKS_PER_CANDLE; j++) {
+                    // We still use the complex tick generator to get realistic candle shapes.
                     const tickPrice = this.generateNextPriceTick(close, this.volatility);
                     high = Math.max(high, tickPrice);
                     low = Math.min(low, tickPrice);

@@ -6,7 +6,7 @@ interface TimeframeSelectorProps {
   onSelectTimeframe: (timeframe: Timeframe) => void;
 }
 
-const TIMEFRAMES: Timeframe[] = ['1s', '1m', '5m'];
+const TIMEFRAMES: Timeframe[] = ['1s', '1m', '5m', '15m', '30m', '45m'];
 
 const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({ selectedTimeframe, onSelectTimeframe }) => {
   return (
