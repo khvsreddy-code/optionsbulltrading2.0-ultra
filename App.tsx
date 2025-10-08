@@ -23,6 +23,7 @@ import PracticeView from './views/PracticeView';
 import BullishPatternsListView from './views/learning/BullishPatternsListView';
 import BearishPatternsListView from './views/learning/BearishPatternsListView';
 import PatternDetailView from './views/learning/PatternDetailView';
+import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
 
 
 // Auth components
@@ -128,6 +129,7 @@ const App: React.FC = () => {
                 activeChapterId = parts[2];
             } else if (parts[1] === 'bullish') view = 'bullishPatternsList';
             else if (parts[1] === 'bearish') view = 'bearishPatternsList';
+            else if (parts[1] === 'indicators') view = 'technicalIndicatorsList';
             else if (parts[1] === 'pattern' && parts[2]) {
                 view = 'patternDetail';
                 activePatternId = parts[2];
@@ -167,6 +169,8 @@ const App: React.FC = () => {
                 return <BullishPatternsListView onNavigate={handleNavigate} />;
             case 'bearishPatternsList':
                 return <BearishPatternsListView onNavigate={handleNavigate} />;
+            case 'technicalIndicatorsList':
+                return <TechnicalIndicatorsListView onNavigate={handleNavigate} />;
             case 'patternDetail':
                 return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
             case 'practice':
@@ -197,7 +201,7 @@ const App: React.FC = () => {
         );
     }
     
-    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact'];
+    const noLayoutViews: View[] = ['learningHome', 'learningChapter', 'practice', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'technicalIndicatorsList'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }

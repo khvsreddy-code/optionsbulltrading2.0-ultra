@@ -1,6 +1,7 @@
 import React from 'react';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
+import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
 import { ChevronRight } from '../../components/common/Icons';
 
 interface PatternDetailViewProps {
@@ -11,14 +12,21 @@ interface PatternDetailViewProps {
 const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patternId }) => {
     
     const foundInBullish = bullishPatterns.find(p => p.id === patternId);
-    const pattern = foundInBullish || bearishPatterns.find(p => p.id === patternId);
-    const backTargetPath: string = foundInBullish ? '/learning/bullish' : '/learning/bearish';
+    const foundInBearish = bearishPatterns.find(p => p.id === patternId);
+    const foundInIndicators = technicalIndicators.find(p => p.id === patternId);
+
+    const pattern = foundInBullish || foundInBearish || foundInIndicators;
+    
+    const backTargetPath: string = foundInBullish ? '/learning/bullish'
+                                  : foundInBearish ? '/learning/bearish'
+                                  : foundInIndicators ? '/learning/indicators'
+                                  : '/learning';
 
     if (!pattern) {
         return (
             <div className="bg-[#111111] text-white min-h-screen font-sans p-4 flex flex-col items-center justify-center">
-                 <h1 className="text-xl font-bold text-red-500 mb-4">Pattern Not Found</h1>
-                 <p className="text-slate-400 mb-6">The requested pattern could not be found.</p>
+                 <h1 className="text-xl font-bold text-red-500 mb-4">Content Not Found</h1>
+                 <p className="text-slate-400 mb-6">The requested learning module could not be found.</p>
                  <button 
                     onClick={() => onNavigate('/learning')}
                     className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg"
