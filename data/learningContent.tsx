@@ -1,5 +1,4 @@
 import React from 'react';
-import { Zap, TrendingUp, TrendingDown, Sliders, BarChart2 } from '../components/common/Icons';
 
 export interface SubChapter {
   id: string;
@@ -11,8 +10,7 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
-  icon: React.FC<any>; // Icon component
-  bgColor?: string; // Background color class
+  image: string; // Replaced icon and bgColor with a single image URL
   isExternalLink?: boolean; 
   subChapters: SubChapter[];
 }
@@ -21,8 +19,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
     title: 'Module 1: Basics',
-    icon: Zap,
-    bgColor: 'bg-cyan-600',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png',
     subChapters: [
       { 
         id: '1.1', 
@@ -51,32 +48,28 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    icon: TrendingUp,
-    bgColor: 'bg-green-600',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullish%20candlestickpatterns.jpg',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
-    icon: TrendingDown,
-    bgColor: 'bg-red-600',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
-    icon: Sliders,
-    bgColor: 'bg-slate-700',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
-    icon: BarChart2,
-    bgColor: 'bg-orange-600',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png',
     isExternalLink: true,
     subChapters: []
   },

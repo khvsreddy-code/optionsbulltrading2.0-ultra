@@ -6,6 +6,18 @@ interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
 }
 
+const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string}> = ({ title, image, onClick, className = '' }) => (
+    <div
+        onClick={onClick}
+        className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
+    >
+        <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
+        <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{title}</h3>
+    </div>
+);
+
+
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     
     const getTargetPathForChapter = (chapterId: string): string => {
@@ -34,20 +46,12 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                     {/* Render Basics Module Separately */}
                     {basicsModule && (
                         <div>
-                            {(() => {
-                                const Icon = basicsModule.icon;
-                                return (
-                                    <div
-                                        key={basicsModule.id}
-                                        onClick={() => onNavigate('/learning')}
-                                        className={`p-6 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group pro-card mb-4 ${basicsModule.bgColor || 'bg-slate-700'}`}
-                                        style={{ height: '160px' }}
-                                    >
-                                        <Icon size={72} className="absolute -right-4 -bottom-4 opacity-20 transform group-hover:scale-110 transition-transform duration-300" />
-                                        <h3 className="font-bold text-xl z-10">{basicsModule.title.split(': ')[1]}</h3>
-                                    </div>
-                                );
-                            })()}
+                            <ImageCard
+                                title={basicsModule.title.split(': ')[1] || basicsModule.title}
+                                image={basicsModule.image}
+                                onClick={() => onNavigate('/learning')}
+                                className="w-full h-40 mb-4"
+                            />
                             <div className="space-y-3">
                                 {basicsModule.subChapters.map((subChapter) => (
                                     <button
@@ -67,20 +71,16 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                     )}
                     
                     {/* Render Other Modules as a Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                        {otherModules.map((chapter) => {
-                            const Icon = chapter.icon;
-                            return (
-                                <div
-                                    key={chapter.id}
-                                    onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
-                                    className={`p-4 h-40 rounded-2xl flex flex-col justify-end relative overflow-hidden text-white cursor-pointer group pro-card ${chapter.bgColor || 'bg-slate-700'}`}
-                                >
-                                    <Icon size={64} className="absolute -right-3 -bottom-3 opacity-20 transform group-hover:scale-110 transition-transform duration-300" />
-                                    <h3 className="font-bold text-lg z-10">{chapter.title.split(': ')[1]}</h3>
-                                </div>
-                            )
-                        })}
+                     <div className="grid grid-cols-2 gap-4">
+                        {otherModules.map((chapter) => (
+                            <ImageCard
+                                key={chapter.id}
+                                title={chapter.title.split(': ')[1] || chapter.title}
+                                image={chapter.image}
+                                onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
+                                className="h-32"
+                            />
+                        ))}
                     </div>
                 </div>
             </main>
