@@ -6,10 +6,10 @@ import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../s
 import SimulatorHeader from '../components/practice/SimulatorHeader';
 import ChartHeader from '../components/practice/ChartHeader';
 import ChartComponent from '../components/practice/ChartComponent';
-import PracticeSidebar from '../components/practice/PracticeSidebar';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
 import DrawingToolbar, { DrawingTool } from '../components/practice/DrawingToolbar';
 import ChartTradeButtons from '../components/practice/ChartTradeButtons';
+import BottomPanel from '../components/practice/BottomPanel';
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -235,8 +235,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
-            <div className="flex-grow flex overflow-hidden">
-                <main className="flex-1 flex flex-col">
+            <div className="flex-grow flex flex-col overflow-hidden">
+                <main className="flex-grow flex flex-col relative">
                     <ChartHeader
                         instruments={instruments}
                         onSelectInstrument={setSelectedInstrument}
@@ -275,15 +275,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         )}
                     </div>
                 </main>
-                <aside className="w-80 flex-shrink-0 hidden md:block">
-                   <PracticeSidebar 
-                        portfolio={portfolio}
-                        onPositionClick={handleOpenPositionManager}
-                        onReversePosition={handleReversePosition}
-                        onResetPortfolio={handleResetPortfolio}
-                        onManageFunds={handleManageFunds}
-                   />
-                </aside>
+                <BottomPanel
+                    portfolio={portfolio}
+                    onPositionClick={handleOpenPositionManager}
+                    onReversePosition={handleReversePosition}
+                    onResetPortfolio={handleResetPortfolio}
+                    onManageFunds={handleManageFunds}
+                />
             </div>
             
             <PositionManagerDialog

@@ -11,31 +11,39 @@ const PortfolioDisplay: React.FC<PortfolioDisplayProps> = ({ portfolio, onManage
     const totalPnl = portfolio.positions.reduce((acc, pos) => acc + pos.pnl, 0);
     const pnlColor = totalPnl >= 0 ? 'text-green-500' : 'text-red-500';
 
+    const StatItem: React.FC<{ label: string; value: string; color?: string; isCurrency?: boolean }> = ({ label, value, color, isCurrency = true }) => (
+        <div className="flex items-baseline">
+            <span className="text-xs text-slate-400 mr-2">{label}</span>
+            <span className={`font-semibold font-mono ${color || 'text-white'}`}>
+                {isCurrency && '₹'}{value}
+            </span>
+        </div>
+    );
+
     return (
-        <div className="p-4 space-y-4">
-            <div>
-                <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-slate-400">Total Equity</h3>
-                    <button 
-                        onClick={onManageFunds} 
-                        className="p-1.5 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
-                        aria-label="Manage portfolio funds"
-                    >
-                        <Pencil size={14} />
-                    </button>
-                </div>
-                <p className="text-2xl font-bold text-white">₹{portfolio.totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+        <div className="flex items-center space-x-4">
+             <div className="flex items-center">
+                <StatItem 
+                    label="Equity" 
+                    value={portfolio.totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})} 
+                />
+                 <button 
+                    onClick={onManageFunds} 
+                    className="ml-2 p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                    aria-label="Manage portfolio funds"
+                >
+                    <Pencil size={12} />
+                </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <h4 className="text-slate-400">Available Cash</h4>
-                    <p className="text-white font-semibold">₹{portfolio.cash.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                </div>
-                <div>
-                    <h4 className="text-slate-400">Total P&L</h4>
-                    <p className={`font-semibold ${pnlColor}`}>{totalPnl >= 0 ? '+' : ''}₹{totalPnl.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                </div>
-            </div>
+            <StatItem 
+                label="Cash" 
+                value={portfolio.cash.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})} 
+            />
+            <StatItem 
+                label="P&L" 
+                value={(totalPnl >= 0 ? '+' : '') + totalPnl.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                color={pnlColor}
+            />
         </div>
     );
 };
