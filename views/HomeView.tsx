@@ -58,7 +58,7 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
             onClick={onClick}
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={title} className="w-full h-full object-contain" />
+            <img src={image} alt={title} className="w-full h-full object-cover" />
         </div>
     );
 };
@@ -162,7 +162,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                               title={card.title}
                               image={card.image}
                               onClick={() => {}} // Placeholder onClick
-                              className="h-32"
+                              className="aspect-video"
                           />
                         </div>
                     ))}
@@ -179,7 +179,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                               title={chapter.title.split(': ')[1] || chapter.title}
                               image={chapter.image}
                               onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
-                              className="h-32"
+                              className="aspect-video"
                           />
                         </div>
                     ))}
