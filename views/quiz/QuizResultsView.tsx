@@ -125,19 +125,21 @@ const QuizResultsView: React.FC<QuizResultsViewProps> = ({ onNavigate }) => {
                                     {q.options.map(opt => {
                                         const isUserChoice = userAnswer === opt;
                                         const isCorrectAnswer = q.correctAnswer === opt;
-                                        let stateClass = 'border-border';
-                                        
+                                        let stateClass = 'bg-background border-border text-text-secondary';
+                                        let icon = <div className="w-[18px] mr-3 flex-shrink-0" />; // Placeholder for alignment
+
                                         if (isCorrectAnswer) {
-                                            stateClass = 'border-primary bg-primary-light text-primary';
+                                            stateClass = 'bg-primary-light border-primary text-primary';
+                                            icon = <CheckCircle size={18} className="mr-3 flex-shrink-0 text-primary" />;
                                         }
                                         if (isUserChoice && !isCorrect) {
-                                            stateClass = 'border-red-500 bg-red-500/10 text-red-500';
+                                            stateClass = 'bg-red-500/10 border-red-500 text-red-500';
+                                            icon = <X size={18} className="mr-3 flex-shrink-0 text-red-500" />;
                                         }
 
                                         return (
-                                            <div key={opt} className={`p-3 rounded-md border-2 ${stateClass} flex items-center`}>
-                                                {isCorrectAnswer && <CheckCircle size={16} className="mr-2 flex-shrink-0" />}
-                                                {isUserChoice && !isCorrect && <X size={16} className="mr-2 flex-shrink-0" />}
+                                            <div key={opt} className={`p-3 rounded-lg border-2 ${stateClass} flex items-center transition-colors`}>
+                                                {icon}
                                                 <span className="font-semibold">{opt}</span>
                                             </div>
                                         );
