@@ -12,6 +12,7 @@ interface PortfolioLoadResult {
  * Loads the user's portfolio from Supabase.
  * If no portfolio exists, creates and saves an initial one.
  * @returns {Promise<PortfolioLoadResult>} The user's portfolio and the last updated timestamp.
+ * @throws Will throw an error if the database call fails.
  */
 export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
     try {
@@ -30,7 +31,7 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
 
         if (error && error.code !== 'PGRST116') { // PGRST116 means no row was found
             console.error('Error loading portfolio:', error);
-            throw error;
+            throw error; // Propagate the error
         }
 
         if (data && data.portfolio_data) {
@@ -49,14 +50,14 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
             
             if (insertError) {
                 console.error('Error creating initial portfolio:', insertError);
-                throw insertError;
+                throw insertError; // Propagate the error
             }
             return { portfolio: initialPortfolio, lastUpdated: new Date().toISOString() };
         }
     } catch (e) {
         console.error('An unexpected error occurred in loadPortfolio:', e);
-        // Fallback to a new portfolio in case of any error to prevent app crash
-        return { portfolio: createInitialPortfolio(), lastUpdated: new Date().toISOString() };
+        // Re-throw a user-friendly error so the UI can handle it
+        throw new Error("Failed to load your portfolio from the database. Please check your connection and refresh.");
     }
 };
 

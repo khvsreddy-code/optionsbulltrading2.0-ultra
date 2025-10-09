@@ -96,9 +96,6 @@ const getAggregatedContent = (topic: QuizTopic): string => {
     return fullText.replace(/\s+/g, ' ').trim();
 };
 
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const quizSchema = {
   type: Type.ARRAY,
   items: {
@@ -124,8 +121,25 @@ const quizSchema = {
   },
 };
 
+// Singleton pattern to ensure the AI client is initialized only once and when needed.
+let aiClient: GoogleGenAI | null = null;
+const getAiClient = (): GoogleGenAI => {
+    if (aiClient) {
+        return aiClient;
+    }
+    if (!process.env.API_KEY) {
+        console.error("Gemini API key is not configured.");
+        throw new Error("The AI Quiz feature is not available at this time. Please contact support.");
+    }
+    aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return aiClient;
+};
+
+
 export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> => {
     try {
+        const ai = getAiClient();
+
         const topicName = quizTopics.find(t => t.id === topic)?.name || 'Stock Market Trading';
         const numberOfQuestions = topic === 'all' ? 50 : 15;
 

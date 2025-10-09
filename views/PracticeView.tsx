@@ -36,6 +36,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
     const [showWelcome, setShowWelcome] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
@@ -44,17 +45,19 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
     
-    // Effect to save portfolio on change (debounced)
+    // Debounced effect to save portfolio on continuous P&L updates from ticks
     useEffect(() => {
-        if (isPortfolioLoading) return; // Don't save during initial load or while it's still loading
+        if (isPortfolioLoading) return; // Don't save during initial load
 
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
-
+        
+        // This debounced save handles the frequent P&L updates from price ticks,
+        // preventing excessive writes to the database. Transactional saves (trades) are handled immediately.
         saveTimeoutRef.current = window.setTimeout(() => {
             savePortfolio(portfolio);
-        }, 1500); // Debounce save by 1.5 seconds
+        }, 2000); 
 
         return () => {
             if (saveTimeoutRef.current) {
@@ -66,58 +69,60 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     // Main initialization effect for loading data and starting the simulation
     useEffect(() => {
         const initializeSimulatorAndPortfolio = async () => {
-            setIsLoading(true);
-            setIsPortfolioLoading(true);
+            try {
+                setIsLoading(true);
+                setIsPortfolioLoading(true);
+                setError(null);
 
-            // 1. Load portfolio from Supabase
-            const loadedData = await loadPortfolio();
-            let loadedPortfolio = loadedData.portfolio;
-            const lastUpdated = new Date(loadedData.lastUpdated);
-            
-            // 2. Calculate time offline for catch-up simulation
-            const secondsOffline = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
-            const catchUpSeconds = secondsOffline > 5 ? secondsOffline : 0;
-
-            // 3. Initialize simulator with catch-up duration
-            const sim = new MarketSimulator();
-            simulatorRef.current = sim;
-            await sim.start(catchUpSeconds);
-
-            // 4. Get the latest state from the caught-up simulator
-            const initialData = sim.getHistoricalData(timeframe);
-            setInitialChartData(initialData);
-            
-            const latestCandle = sim.getLatestCandle(timeframe);
-            const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
-            setSelectedInstrument(initialInstrument);
-
-            // 5. Update the loaded portfolio with the latest price to reflect offline P&L changes
-            if (latestCandle) {
-                const livePrices: { [key: string]: number } = {};
-                loadedPortfolio.positions.forEach(pos => {
-                     if (pos.instrument.instrument_key === initialInstrument.instrument_key) {
-                        livePrices[pos.instrument.instrument_key] = latestCandle.close;
-                    }
-                });
+                const loadedData = await loadPortfolio();
+                let loadedPortfolio = loadedData.portfolio;
+                const lastUpdated = new Date(loadedData.lastUpdated);
                 
-                loadedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
-                setLiveOhlc(latestCandle);
-                 setInstruments(prev => prev.map(inst =>
-                    inst.instrument_key === initialInstrument.instrument_key
-                        ? { ...inst, last_price: latestCandle.close }
-                        : inst
-                ));
+                const secondsOffline = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
+                const catchUpSeconds = secondsOffline > 5 ? secondsOffline : 0;
+
+                const sim = new MarketSimulator();
+                simulatorRef.current = sim;
+                await sim.start(catchUpSeconds);
+
+                const initialData = sim.getHistoricalData(timeframe);
+                setInitialChartData(initialData);
+                
+                const latestCandle = sim.getLatestCandle(timeframe);
+                const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
+                setSelectedInstrument(initialInstrument);
+
+                if (latestCandle) {
+                    const livePrices: { [key: string]: number } = {};
+                    loadedPortfolio.positions.forEach(pos => {
+                         if (pos.instrument.instrument_key === initialInstrument.instrument_key) {
+                            livePrices[pos.instrument.instrument_key] = latestCandle.close;
+                        }
+                    });
+                    
+                    loadedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
+                    setLiveOhlc(latestCandle);
+                     setInstruments(prev => prev.map(inst =>
+                        inst.instrument_key === initialInstrument.instrument_key
+                            ? { ...inst, last_price: latestCandle.close }
+                            : inst
+                    ));
+                }
+                
+                setPortfolio(loadedPortfolio);
+                setIsPortfolioLoading(false);
+                setIsLoading(false);
+
+            } catch (err) {
+                console.error(err);
+                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                setIsLoading(false);
+                setIsPortfolioLoading(false);
             }
-            
-            // 6. Set the final state and enable live updates
-            setPortfolio(loadedPortfolio);
-            setIsPortfolioLoading(false);
-            setIsLoading(false);
         };
 
         initializeSimulatorAndPortfolio();
 
-        // Show welcome message on first visit
         if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
             const timer = setTimeout(() => setShowWelcome(true), 500);
             return () => clearTimeout(timer);
@@ -129,13 +134,12 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 clearTimeout(saveTimeoutRef.current);
             }
         };
-    }, []); // Main initialization runs only once on mount
+    }, []); 
 
 
     // Effect to manage timeframe subscriptions
     useEffect(() => {
-        // Guard against running during initial load
-        if (isLoading || isPortfolioLoading) return;
+        if (isLoading || isPortfolioLoading || error) return;
 
         const simulator = simulatorRef.current;
         if (!simulator) return;
@@ -158,7 +162,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         : inst
                 ));
                 setPortfolio(prevPortfolio => updatePortfolioValue(
-                    prevPortfolio, // No need for deep copy, state update handles it
+                    prevPortfolio,
                     livePrices
                 ));
             }
@@ -167,7 +171,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const unsubscribe = simulator.subscribe(timeframe, handleTick);
 
         return () => unsubscribe();
-    }, [timeframe, isLoading, isPortfolioLoading, selectedInstrument]);
+    }, [timeframe, isLoading, isPortfolioLoading, selectedInstrument, error]);
 
 
     const handleOpenOrderDialog = (side: OrderSide) => {
@@ -192,7 +196,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         };
         
         const executionPrice = currentInstrument.last_price;
-        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, newOrder, executionPrice));
+        setPortfolio(prevPortfolio => {
+            const newPortfolio = executeOrder(prevPortfolio, newOrder, executionPrice);
+            savePortfolio(newPortfolio); // Save immediately on trade
+            return newPortfolio;
+        });
     };
 
     const handleOpenPositionManager = (position: Position) => {
@@ -204,23 +212,27 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const instrument = instruments.find(i => i.instrument_key === instrumentKey);
         if (!instrument) return;
         
-        const positionToClose = portfolio.positions.find(p => p.instrument.instrument_key === instrumentKey);
-        if (!positionToClose) return;
+        setPortfolio(prevPortfolio => {
+            const positionToClose = prevPortfolio.positions.find(p => p.instrument.instrument_key === instrumentKey);
+            if (!positionToClose) return prevPortfolio;
 
-        const closingSide: OrderSide = positionToClose.quantity > 0 ? 'SELL' : 'BUY';
-        
-        const closeOrder: Order = {
-            id: `ord_close_${Date.now()}`,
-            instrument: instrument,
-            type: 'MARKET',
-            side: closingSide,
-            quantity: quantity,
-            status: 'OPEN',
-            createdAt: Date.now() / 1000,
-        };
-        
-        const executionPrice = instrument.last_price;
-        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, closeOrder, executionPrice));
+            const closingSide: OrderSide = positionToClose.quantity > 0 ? 'SELL' : 'BUY';
+            
+            const closeOrder: Order = {
+                id: `ord_close_${Date.now()}`,
+                instrument: instrument,
+                type: 'MARKET',
+                side: closingSide,
+                quantity: quantity,
+                status: 'OPEN',
+                createdAt: Date.now() / 1000,
+            };
+            
+            const executionPrice = instrument.last_price;
+            const newPortfolio = executeOrder(prevPortfolio, closeOrder, executionPrice);
+            savePortfolio(newPortfolio); // Save immediately on trade
+            return newPortfolio;
+        });
     };
     
     const handleReversePosition = (position: Position) => {
@@ -243,7 +255,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         };
     
         const executionPrice = instrument.last_price;
-        setPortfolio(prevPortfolio => executeOrder(prevPortfolio, reverseOrder, executionPrice));
+        setPortfolio(prevPortfolio => {
+            const newPortfolio = executeOrder(prevPortfolio, reverseOrder, executionPrice);
+            savePortfolio(newPortfolio); // Save immediately on trade
+            return newPortfolio;
+        });
     };
 
     const handleResetPortfolio = async () => {
@@ -271,7 +287,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             const diff = newTotalValue - prevPortfolio.totalValue;
             const newCash = prevPortfolio.cash + diff;
             const updatedPortfolio = { ...prevPortfolio, cash: newCash };
-            return updatePortfolioValue(updatedPortfolio);
+            const newPortfolioWithValue = updatePortfolioValue(updatedPortfolio);
+            savePortfolio(newPortfolioWithValue); // Save immediately on fund change
+            return newPortfolioWithValue;
         });
     };
 
@@ -279,6 +297,21 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setShowWelcome(false);
         localStorage.setItem('hasSeenSimulatorWelcome', 'true');
     };
+    
+    if (error) {
+        return (
+            <div className="bg-[#131722] text-white h-screen flex flex-col items-center justify-center font-sans p-4 text-center">
+                <h2 className="text-xl font-bold text-red-500">Failed to Load Simulator</h2>
+                <p className="text-slate-400 mt-2 max-w-md">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-6 px-6 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback"
+                >
+                    Refresh Page
+                </button>
+            </div>
+        );
+    }
 
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
