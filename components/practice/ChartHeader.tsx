@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Instrument, CandleData, Timeframe } from '../../types';
+import type { Instrument, CandleData, Timeframe, OrderSide } from '../../types';
 import StockSelector from './StockSelector';
 import TimeframeSelector from './TimeframeSelector';
 
@@ -10,6 +10,7 @@ interface ChartHeaderProps {
   selectedTimeframe: Timeframe;
   onSelectTimeframe: (timeframe: Timeframe) => void;
   liveOhlc: CandleData | null;
+  onTradeButtonClick: (side: OrderSide) => void;
 }
 
 const ChartHeader: React.FC<ChartHeaderProps> = ({
@@ -18,7 +19,8 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   onSelectInstrument,
   selectedTimeframe,
   onSelectTimeframe,
-  liveOhlc
+  liveOhlc,
+  onTradeButtonClick
 }) => {
   const price = liveOhlc?.close ?? selectedInstrument?.last_price ?? 0;
   const open = liveOhlc?.open ?? 0;
@@ -34,6 +36,20 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
             onSelect={onSelectInstrument}
             selectedInstrument={selectedInstrument}
         />
+        <div className="flex items-center gap-1">
+            <button
+                onClick={() => onTradeButtonClick('BUY')}
+                className="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-500 rounded-md transition-colors button-press-feedback"
+            >
+                BUY
+            </button>
+            <button
+                onClick={() => onTradeButtonClick('SELL')}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-500 rounded-md transition-colors button-press-feedback"
+            >
+                SELL
+            </button>
+        </div>
         {liveOhlc && (
           <div className="hidden sm:flex items-baseline space-x-2">
               <span className={`text-lg font-mono font-bold ${priceColor}`}>{price.toFixed(2)}</span>
