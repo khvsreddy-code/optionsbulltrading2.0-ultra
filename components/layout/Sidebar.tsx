@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
                 <img src={userAvatar} alt="User Avatar" className="w-12 h-12 rounded-full" />
                 <div className="overflow-hidden">
                     <p className="font-semibold text-text-main truncate">{userName}</p>
-                    <p className="text-sm text-text-secondary truncate">{userEmail}</p>
+                    <p className="text-sm text-text-secondary break-all">{userEmail}</p>
                 </div>
             </div>
 
