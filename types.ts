@@ -99,10 +99,11 @@ export interface Portfolio {
   trades: Trade[]; // NEW: To store completed trades
 }
 
+// Quiz related types
 export interface QuizQuestion {
-    question: string;
-    options: string[];
-    correctAnswer: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
 }
 
 // Re-export Timeframe to be accessible from types

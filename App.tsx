@@ -95,11 +95,8 @@ const App: React.FC = () => {
         else if (parts[0] === 'practice') view = 'practice';
         else if (parts[0] === 'profile') view = 'profile';
         else if (parts[0] === 'quiz') {
-            if (parts[1] === 'results') {
-                view = 'quizResults';
-            } else {
-                view = 'quiz';
-            }
+            if (parts[1] === 'results') view = 'quizResults';
+            else view = 'quiz';
         }
         else if (parts[0] === 'policies') {
             switch (parts[1]) {

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Flame, DollarSign, Trophy } from '../components/common/Icons';
+import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Zap, DollarSign, ChevronRight } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { getUserStats, getTotalCompletedLessons, getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
 import anime from 'animejs';
@@ -119,6 +119,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             const sectionHeaders = container.querySelectorAll('.section-header');
             const mainCards = container.querySelectorAll('.main-card-item');
             const libraryCards = container.querySelectorAll('.library-card-item');
+            const aiQuizCard = container.querySelector('.ai-quiz-card');
             const progressDashboard = container.querySelector('.progress-dashboard');
 
 
@@ -159,6 +160,11 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 delay: anime.stagger(100),
             }, '-=700')
             .add({
+                targets: aiQuizCard,
+                opacity: [0, 1],
+                translateY: [20, 0],
+            }, '-=600')
+            .add({
                 targets: progressDashboard,
                 opacity: [0, 1],
                 translateY: [30, 0],
@@ -188,10 +194,11 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         <div ref={homeViewRef} className="p-4 space-y-8">
             {/* Quick Links */}
             <div className="pro-card p-4 quick-links">
-                <div className="grid grid-cols-4 gap-4">
-                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Trophy} />
+                <div className="grid grid-cols-5 gap-4">
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
+                    <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={DollarSign} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
+                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Zap} />
                     <IconLink title="Paper Trading" onClick={() => onNavigate('/practice')} icon={CandlestickChart} />
                 </div>
             </div>
@@ -239,8 +246,29 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     ))}
                 </div>
             </div>
+            
+            {/* AI Quiz Section */}
+            <div className="ai-quiz-card">
+                <div
+                    onClick={() => onNavigate('/quiz')}
+                    className="pro-card p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between bg-gray-800 text-white cursor-pointer hover:bg-gray-700 transition-colors"
+                >
+                    <div className="flex items-center mb-4 md:mb-0 text-center md:text-left">
+                        <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary rounded-xl mr-4">
+                            <Zap size={32} />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold">AI Smart Quiz</h3>
+                            <p className="text-slate-300">Challenge yourself with an AI-powered test.</p>
+                        </div>
+                    </div>
+                    <button className="px-5 py-2.5 bg-primary font-semibold rounded-lg button-press-feedback flex items-center mt-4 md:mt-0 flex-shrink-0">
+                        Start Quiz <ChevronRight size={20} className="ml-1" />
+                    </button>
+                </div>
+            </div>
 
-             {/* NEW Progress Dashboard */}
+             {/* Progress Dashboard */}
             <div className="progress-dashboard">
                 <h2 className="text-xl font-bold text-text-main mb-4 section-header">Your Progress</h2>
                 <div className="bg-gray-800 text-white rounded-2xl p-6 space-y-6">
@@ -266,7 +294,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-cyan-500/20" iconColor="text-cyan-400" />
                         <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
-                        <StatCard icon={Flame} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
+                        <StatCard icon={Zap} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
                         <StatCard 
                             icon={DollarSign} 
                             title="Money Earned" 

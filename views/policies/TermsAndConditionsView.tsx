@@ -1,9 +1,8 @@
 import React from 'react';
-import type { View } from '../../types';
 import PolicyPageLayout from '../../components/layout/PolicyPageLayout';
 
 interface TermsAndConditionsViewProps {
-    onNavigate: (view: View) => void;
+    onNavigate: (path: string) => void;
 }
 
 const TermsAndConditionsView: React.FC<TermsAndConditionsViewProps> = ({ onNavigate }) => {
