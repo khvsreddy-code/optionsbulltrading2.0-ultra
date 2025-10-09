@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode } from 'lightweight-charts';
-import type { CandleData } from '../../types';
-import type { Timeframe } from '../../services/marketSimulator';
+import type { CandleData, Timeframe } from '../../types';
 
 interface ChartComponentProps {
   initialData: CandleData[];
-  liveOhlc: CandleData | null;
   timeframe: Timeframe;
 }
 
@@ -53,11 +51,17 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight,
             layout: { background: { type: ColorType.Solid, color: '#131722' }, textColor: '#D9D9D9' },
             grid: { vertLines: { color: '#2A2E39' }, horzLines: { color: '#2A2E39' } },
-            timeScale: { timeVisible: true, secondsVisible: true, borderColor: '#485158' },
+            timeScale: { timeVisible: true, secondsVisible: timeframe === '1s', borderColor: '#485158' },
             rightPriceScale: { borderColor: '#485158' },
             crosshair: { mode: CrosshairMode.Normal },
             handleScroll: { mouseWheel: true, pressedMouseMove: true },
             handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+            localization: {
+                // Explicitly format time to user's local settings, addressing sync request
+                timeFormatter: (timestamp: number) => {
+                    return new Date(timestamp * 1000).toLocaleTimeString();
+                },
+            },
         });
         chartRef.current = chart;
         candlestickSeriesRef.current = chart.addCandlestickSeries({
@@ -74,7 +78,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         });
         resizeObserver.observe(chartContainerRef.current);
         return () => { resizeObserver.disconnect(); chart.remove(); };
-    }, []);
+    }, [timeframe]); // Recreate chart on timeframe change to update secondsVisible
     
     useEffect(() => {
         if (candlestickSeriesRef.current) {

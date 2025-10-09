@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order, Trade } from '../types';
+import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order, Trade, Timeframe } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
-import { MarketSimulator, Timeframe } from '../services/marketSimulator';
+import { MarketSimulator } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
 import { loadPortfolio, savePortfolio } from '../services/portfolioService';
 
@@ -24,13 +24,46 @@ interface ChartComponentHandle {
     updateCandle: (candle: CandleData) => void;
 }
 
+const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
+
+// Centralized aggregation logic to prevent bugs.
+const aggregateHistory = (ticks: CandleData[], timeframe: Timeframe): CandleData[] => {
+    if (timeframe === '1s') return [...ticks];
+    if (ticks.length === 0) return [];
+    
+    const aggregated: CandleData[] = [];
+    const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
+    
+    let currentCandle: CandleData | null = null;
+    for (const tick of ticks) {
+        const candleStartTime = tick.time - (tick.time % periodInSeconds);
+        if (!currentCandle || currentCandle.time !== candleStartTime) {
+            if (currentCandle) aggregated.push(currentCandle);
+            currentCandle = {
+                time: candleStartTime,
+                open: tick.open,
+                high: tick.high,
+                low: tick.low,
+                close: tick.close,
+            };
+        } else {
+            currentCandle.high = Math.max(currentCandle.high, tick.high);
+            currentCandle.low = Math.min(currentCandle.low, tick.low);
+            currentCandle.close = tick.close;
+        }
+    }
+    if (currentCandle) aggregated.push(currentCandle);
+
+    return aggregated;
+};
+
+
 const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [instruments, setInstruments] = useState<Instrument[]>(curatedStocks);
     const [selectedInstrument, setSelectedInstrument] = useState<Instrument | null>(null);
     const [initialChartData, setInitialChartData] = useState<CandleData[]>([]);
     const [liveOhlc, setLiveOhlc] = useState<CandleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isPortfolioLoading, setIsPortfolioLoading] = useState(true);
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
@@ -45,71 +78,69 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
     
-    useEffect(() => {
-        if (isPortfolioLoading) return; 
+    // Refs to manage live data without constant re-rendering
+    const tickHistoryRef = useRef<CandleData[]>([]);
+    const liveAggregatedCandleRef = useRef<CandleData | null>(null);
 
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
+    // Debounced portfolio saving
+    useEffect(() => {
+        if (isLoading) return; 
+
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         
         saveTimeoutRef.current = window.setTimeout(() => {
             savePortfolio(portfolio);
-        }, 2000); 
+        }, 1500); 
 
         return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         };
-    }, [portfolio, isPortfolioLoading]);
+    }, [portfolio, isLoading]);
 
+    // Main initialization effect
     useEffect(() => {
-        const initializeSimulatorAndPortfolio = async () => {
+        const initialize = async () => {
             try {
                 setIsLoading(true);
-                setIsPortfolioLoading(true);
                 setError(null);
 
                 const { portfolio: loadedPortfolio } = await loadPortfolio();
                 
-                // Use today's date as a seed for a reproducible daily market
                 const dailySeed = new Date().toISOString().slice(0, 10);
                 const sim = new MarketSimulator(dailySeed);
                 simulatorRef.current = sim;
-
+                
                 const fullHistory = sim.getFullHistory();
+                tickHistoryRef.current = fullHistory;
+
                 const currentPrice = fullHistory.length > 0 ? fullHistory[fullHistory.length - 1].close : 65000;
                 
                 const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
                 setSelectedInstrument(initialInstrument);
                 
-                // Update portfolio P&L with the latest price from the deterministic simulation
                 const livePrices: { [key: string]: number } = { [initialInstrument.instrument_key]: currentPrice };
                 const updatedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
                 setPortfolio(updatedPortfolio);
 
-                const initialDataForChart = sim.getHistoricalData(timeframe);
-                setInitialChartData(initialDataForChart);
-                setLiveOhlc(initialDataForChart.length > 0 ? initialDataForChart[initialDataForChart.length - 1] : null);
-                setInstruments(prev => prev.map(inst =>
-                    inst.instrument_type === 'CRYPTO'
-                        ? { ...inst, last_price: currentPrice }
-                        : inst
-                ));
+                const initialAggregatedData = aggregateHistory(fullHistory, timeframe);
+                setInitialChartData(initialAggregatedData);
+                const lastCandle = initialAggregatedData.length > 0 ? initialAggregatedData[initialAggregatedData.length - 1] : null;
+                setLiveOhlc(lastCandle);
+                liveAggregatedCandleRef.current = lastCandle;
+
+                setInstruments(prev => prev.map(inst => ({ ...inst, last_price: currentPrice })));
                 
-                setIsPortfolioLoading(false);
-                setIsLoading(false);
                 sim.start();
+                setIsLoading(false);
 
             } catch (err) {
                 console.error(err);
                 setError(err instanceof Error ? err.message : 'An unknown error occurred.');
                 setIsLoading(false);
-                setIsPortfolioLoading(false);
             }
         };
 
-        initializeSimulatorAndPortfolio();
+        initialize();
 
         if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
             const timer = setTimeout(() => setShowWelcome(true), 500);
@@ -118,45 +149,64 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
         return () => {
             simulatorRef.current?.stop();
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         };
     }, []); 
 
+    // Effect for handling live 1-second ticks
     useEffect(() => {
-        const simulator = simulatorRef.current;
-        if (!simulator || isLoading || isPortfolioLoading || error) return;
+        if (isLoading || !simulatorRef.current) return;
 
-        // On timeframe change, regenerate historical data from the deterministic simulator
-        const historicalData = simulator.getHistoricalData(timeframe);
-        setInitialChartData(historicalData);
-        
-        const handleTick = (candle: CandleData, isUpdate: boolean) => {
-            setLiveOhlc(candle);
-            chartComponentRef.current?.updateCandle(candle);
+        const handleTick = (tick: CandleData) => {
+            tickHistoryRef.current.push(tick);
+            if (tickHistoryRef.current.length > 50000) tickHistoryRef.current.shift();
 
+            const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
+            const candleStartTime = tick.time - (tick.time % periodInSeconds);
+            
+            let currentAggregatedCandle = liveAggregatedCandleRef.current;
+
+            if (currentAggregatedCandle && currentAggregatedCandle.time === candleStartTime) {
+                currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, tick.high);
+                currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, tick.low);
+                currentAggregatedCandle.close = tick.close;
+            } else {
+                currentAggregatedCandle = {
+                    time: candleStartTime, open: tick.open, high: tick.high, low: tick.low, close: tick.close
+                };
+            }
+            liveAggregatedCandleRef.current = currentAggregatedCandle;
+            
+            chartComponentRef.current?.updateCandle(currentAggregatedCandle);
+            setLiveOhlc(currentAggregatedCandle);
+            
             if (selectedInstrument) {
-                const livePrices = { [selectedInstrument.instrument_key]: candle.close };
-                setInstruments(prev => prev.map(inst =>
+                 setInstruments(prev => prev.map(inst =>
                     inst.instrument_key === selectedInstrument.instrument_key
-                        ? { ...inst, last_price: candle.close }
+                        ? { ...inst, last_price: tick.close }
                         : inst
                 ));
-                
-                setPortfolio(prevPortfolio => updatePortfolioValue(prevPortfolio, livePrices));
+                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: tick.close }));
             }
         };
 
-        const unsubscribe = simulator.subscribe(timeframe, handleTick);
-
+        const unsubscribe = simulatorRef.current.subscribe(handleTick);
         return () => unsubscribe();
-    }, [timeframe, isLoading, isPortfolioLoading, selectedInstrument, error]);
+
+    }, [isLoading, timeframe, selectedInstrument]);
+
+    // Effect for changing timeframe
+    useEffect(() => {
+        if (isLoading) return;
+        const newAggregatedData = aggregateHistory(tickHistoryRef.current, timeframe);
+        setInitialChartData(newAggregatedData);
+        const lastCandle = newAggregatedData.length > 0 ? newAggregatedData[newAggregatedData.length - 1] : null;
+        liveAggregatedCandleRef.current = lastCandle;
+        setLiveOhlc(lastCandle);
+    }, [timeframe, isLoading]);
     
     const savePortfolioNow = (portfolioState: Portfolio): Portfolio => {
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         savePortfolio(portfolioState);
         return portfolioState;
     };
@@ -175,18 +225,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const newOrder: Order = {
             id: `ord_${Date.now()}`,
             instrument: currentInstrument,
-            type: 'MARKET',
-            side,
-            quantity,
-            status: 'OPEN',
+            type: 'MARKET', side, quantity, status: 'OPEN',
             createdAt: Date.now() / 1000,
         };
         
-        const executionPrice = currentInstrument.last_price;
-        setPortfolio(prevPortfolio => {
-            const newPortfolio = executeOrder(prevPortfolio, newOrder, executionPrice);
-            return savePortfolioNow(newPortfolio);
-        });
+        setPortfolio(prevPortfolio => savePortfolioNow(executeOrder(prevPortfolio, newOrder, currentInstrument.last_price)));
     };
 
     const handleOpenPositionManager = (position: Position) => {
@@ -206,23 +249,16 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
             
             const closeOrder: Order = {
                 id: `ord_close_${Date.now()}`,
-                instrument: instrument,
-                type: 'MARKET',
-                side: closingSide,
-                quantity: quantity,
-                status: 'OPEN',
-                createdAt: Date.now() / 1000,
+                instrument: instrument, type: 'MARKET', side: closingSide,
+                quantity: quantity, status: 'OPEN', createdAt: Date.now() / 1000,
             };
             
-            const executionPrice = instrument.last_price;
-            const newPortfolio = executeOrder(prevPortfolio, closeOrder, executionPrice);
-            return savePortfolioNow(newPortfolio);
+            return savePortfolioNow(executeOrder(prevPortfolio, closeOrder, instrument.last_price));
         });
     };
     
     const handleReversePosition = (position: Position) => {
         if (!position) return;
-    
         const instrument = instruments.find(i => i.instrument_key === position.instrument.instrument_key);
         if (!instrument) return;
     
@@ -231,23 +267,15 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     
         const reverseOrder: Order = {
             id: `ord_reverse_${Date.now()}`,
-            instrument: instrument,
-            type: 'MARKET',
-            side: reverseSide,
-            quantity: reverseQuantity,
-            status: 'OPEN',
-            createdAt: Date.now() / 1000,
+            instrument: instrument, type: 'MARKET', side: reverseSide,
+            quantity: reverseQuantity, status: 'OPEN', createdAt: Date.now() / 1000,
         };
     
-        const executionPrice = instrument.last_price;
-        setPortfolio(prevPortfolio => {
-            const newPortfolio = executeOrder(prevPortfolio, reverseOrder, executionPrice);
-            return savePortfolioNow(newPortfolio);
-        });
+        setPortfolio(prevPortfolio => savePortfolioNow(executeOrder(prevPortfolio, reverseOrder, instrument.last_price)));
     };
 
     const handleResetPortfolio = async () => {
-        if (window.confirm('Are you sure you want to reset your portfolio? This will erase all trades and reset your balance. The chart history will remain for today.')) {
+        if (window.confirm('Are you sure you want to reset your portfolio? This will erase all trades and reset your balance.')) {
             const newPortfolio = createInitialPortfolio();
             setPortfolio(newPortfolio);
             await savePortfolio(newPortfolio);
@@ -255,41 +283,23 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     };
     
     const handleManageFunds = () => {
-        const currentTotal = portfolio.totalValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
-        const result = window.prompt(`Enter your desired total portfolio value.\nYour current value is ${currentTotal}.\nMinimum value is ₹1,00,000.`, portfolio.totalValue.toFixed(0));
-        
+        const result = window.prompt(`Enter desired total portfolio value.\nCurrent: ₹${portfolio.totalValue.toFixed(2)}`, portfolio.totalValue.toFixed(0));
         if (result === null) return;
-
         const newTotalValue = parseFloat(result);
-
         if (isNaN(newTotalValue) || newTotalValue < 100000) {
-            alert("Invalid input. Please enter a number greater than or equal to 1,00,000.");
+            alert("Invalid input. Please enter a number >= 1,00,000.");
             return;
         }
 
-        setPortfolio(prevPortfolio => {
-            const diff = newTotalValue - prevPortfolio.totalValue;
-            const newCash = prevPortfolio.cash + diff;
-            const updatedPortfolio = { ...prevPortfolio, cash: newCash };
-            const newPortfolioWithValue = updatePortfolioValue(updatedPortfolio);
-            return savePortfolioNow(newPortfolioWithValue);
-        });
+        setPortfolio(prevPortfolio => savePortfolioNow({ ...prevPortfolio, cash: prevPortfolio.cash + (newTotalValue - prevPortfolio.totalValue) }));
     };
 
-    const handleCloseWelcome = () => {
-        setShowWelcome(false);
-        localStorage.setItem('hasSeenSimulatorWelcome', 'true');
-    };
-    
     if (error) {
         return (
-            <div className="bg-[#131722] text-white h-screen flex flex-col items-center justify-center font-sans p-4 text-center">
+            <div className="bg-[#131722] text-white h-screen flex flex-col items-center justify-center p-4 text-center">
                 <h2 className="text-xl font-bold text-red-500">Failed to Load Simulator</h2>
                 <p className="text-slate-400 mt-2 max-w-md">{error}</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="mt-6 px-6 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback"
-                >
+                <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-primary text-white font-semibold rounded-lg">
                     Refresh Page
                 </button>
             </div>
@@ -300,38 +310,30 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
     return (
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
-            <WelcomeDialog isOpen={showWelcome} onClose={handleCloseWelcome} />
+            <WelcomeDialog isOpen={showWelcome} onClose={() => { setShowWelcome(false); localStorage.setItem('hasSeenSimulatorWelcome', 'true'); }} />
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
             <div className="flex-grow flex flex-col overflow-hidden">
                 <main className="flex-grow flex flex-col relative">
                     <ChartHeader
-                        instruments={instruments}
-                        onSelectInstrument={setSelectedInstrument}
-                        selectedInstrument={selectedInstrument}
-                        selectedTimeframe={timeframe}
-                        onSelectTimeframe={setTimeframe}
-                        liveOhlc={liveOhlc}
+                        instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
+                        selectedTimeframe={timeframe} onSelectTimeframe={setTimeframe} liveOhlc={liveOhlc}
                     />
                     <div className="flex-grow relative">
                         {isLoading ? (
                              <div className="absolute inset-0 flex items-center justify-center bg-[#131722]/80 z-30">
-                                <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                              </div>
                         ) : (
                            <>
-                               <ChartTradeButtons
-                                   instrument={displayedInstrument}
-                                   onTradeButtonClick={handleOpenOrderDialog}
-                               />
+                               <ChartTradeButtons instrument={displayedInstrument} onTradeButtonClick={handleOpenOrderDialog} />
                                <ChartComponent 
                                    ref={chartComponentRef}
                                    key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
-                                   initialData={initialChartData} 
-                                   liveOhlc={liveOhlc}
+                                   initialData={initialChartData}
                                    timeframe={timeframe}
                                />
                            </>
@@ -339,27 +341,18 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                     </div>
                 </main>
                 <BottomPanel
-                    portfolio={portfolio}
-                    onPositionClick={handleOpenPositionManager}
-                    onReversePosition={handleReversePosition}
-                    onResetPortfolio={handleResetPortfolio}
-                    onManageFunds={handleManageFunds}
+                    portfolio={portfolio} onPositionClick={handleOpenPositionManager} onReversePosition={handleReversePosition}
+                    onResetPortfolio={handleResetPortfolio} onManageFunds={handleManageFunds}
                 />
             </div>
             
             <PositionManagerDialog
-                position={selectedPosition}
-                isOpen={isPositionManagerOpen}
-                onClose={() => setIsPositionManagerOpen(false)}
+                position={selectedPosition} isOpen={isPositionManagerOpen} onClose={() => setIsPositionManagerOpen(false)}
                 onClosePosition={handleClosePosition}
             />
-
             <OrderDialog
-                instrument={displayedInstrument}
-                isOpen={isOrderDialogOpen}
-                onClose={() => setIsOrderDialogOpen(false)}
-                onPlaceOrder={handlePlaceOrder}
-                initialSide={orderDialogSide}
+                instrument={displayedInstrument} isOpen={isOrderDialogOpen} onClose={() => setIsOrderDialogOpen(false)}
+                onPlaceOrder={handlePlaceOrder} initialSide={orderDialogSide}
             />
         </div>
     );

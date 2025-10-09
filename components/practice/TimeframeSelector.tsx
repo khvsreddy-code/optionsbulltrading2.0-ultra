@@ -1,5 +1,6 @@
 import React from 'react';
-import type { Timeframe } from '../../services/marketSimulator';
+// FIX: The Timeframe type should be imported from the central types file.
+import type { Timeframe } from '../../types';
 
 interface TimeframeSelectorProps {
   selectedTimeframe: Timeframe;

@@ -1,6 +1,5 @@
 import React from 'react';
-import type { Instrument, CandleData } from '../../types';
-import type { Timeframe } from '../../services/marketSimulator';
+import type { Instrument, CandleData, Timeframe } from '../../types';
 import StockSelector from './StockSelector';
 import TimeframeSelector from './TimeframeSelector';
 

@@ -1,22 +1,18 @@
 import type { CandleData } from '../types';
 
-export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
-
 /**
  * A deterministic, seeded pseudo-random walk market simulator.
- * This provides a realistic and unpredictable price action that is perfectly
- * reproducible for a given day, simulating a persistent 24/7 market without a server.
+ * This has been simplified to be a pure 1-second tick generator. It provides a realistic 
+ * and unpredictable price action that is perfectly reproducible for a given day, 
+ * simulating a persistent 24/7 market without a server. All aggregation logic is
+ * now handled by the consumer of this service to prevent bugs.
  */
 export class MarketSimulator {
-    private subscribers: Map<Timeframe, Set<(candle: CandleData, isUpdate: boolean) => void>> = new Map();
-    private readonly allTimeframes: Timeframe[] = ['1s', '1m', '5m', '15m', '30m', '45m'];
-    private timeframeSecondsMap: Map<Timeframe, number> = new Map();
-    
+    private subscribers: Set<(tick: CandleData) => void> = new Set();
     private readonly INTERNAL_TICK_MS = 1000;
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
     private history: CandleData[] = [];
-    private liveCandles: Map<Timeframe, CandleData> = new Map();
     private lastPrice: number = 65000;
     
     private seed: number = 0;
@@ -29,12 +25,6 @@ export class MarketSimulator {
             this.seed |= 0; // Convert to 32bit integer
         }
         this.prng = this.mulberry32(this.seed);
-
-        this.allTimeframes.forEach(tf => {
-            const seconds = this.parseTimeframe(tf);
-            this.timeframeSecondsMap.set(tf, seconds);
-            this.subscribers.set(tf, new Set());
-        });
 
         this.generateInitialHistory();
     }
@@ -49,10 +39,6 @@ export class MarketSimulator {
         }
     }
 
-    private parseTimeframe(tf: Timeframe): number {
-        return { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 }[tf];
-    }
-    
     private generateNextPrice(price: number): number {
         const volatility = 0.0005; 
         const trend = 0.00001; 
@@ -95,51 +81,11 @@ export class MarketSimulator {
         }
     }
 
-    public subscribe(timeframe: Timeframe, callback: (candle: CandleData, isUpdate: boolean) => void): () => void {
-        this.subscribers.get(timeframe)?.add(callback);
-        const latest = this.getLatestCandle(timeframe);
-        if(latest) callback(latest, true);
+    public subscribe(callback: (tick: CandleData) => void): () => void {
+        this.subscribers.add(callback);
         return () => {
-            this.subscribers.get(timeframe)?.delete(callback);
+            this.subscribers.delete(callback);
         };
-    }
-
-    public getHistoricalData(timeframe: Timeframe): CandleData[] {
-        if (this.history.length === 0) return [];
-        
-        if (timeframe === '1s') {
-            return [...this.history];
-        }
-
-        const aggregated: CandleData[] = [];
-        const periodInSeconds = this.timeframeSecondsMap.get(timeframe)!;
-        
-        let currentCandle: CandleData | null = null;
-        for(const tick of this.history) {
-            const candleStartTime = tick.time - (tick.time % periodInSeconds);
-            if (!currentCandle || currentCandle.time !== candleStartTime) {
-                if (currentCandle) aggregated.push(currentCandle);
-                currentCandle = {
-                    time: candleStartTime,
-                    open: tick.open,
-                    high: tick.high,
-                    low: tick.low,
-                    close: tick.close,
-                };
-            } else {
-                currentCandle.high = Math.max(currentCandle.high, tick.high);
-                currentCandle.low = Math.min(currentCandle.low, tick.low);
-                currentCandle.close = tick.close;
-            }
-        }
-        if (currentCandle) aggregated.push(currentCandle);
-
-        return aggregated;
-    }
-    
-    public getLatestCandle(timeframe: Timeframe): CandleData | undefined {
-        const history = this.getHistoricalData(timeframe);
-        return history.length > 0 ? history[history.length - 1] : undefined;
     }
     
     public tick(): void {
@@ -156,27 +102,11 @@ export class MarketSimulator {
         }
         this.lastPrice = newPrice;
 
-        this.allTimeframes.forEach(tf => {
-            const periodInSeconds = this.timeframeSecondsMap.get(tf)!;
-            const candleStartTime = now - (now % periodInSeconds);
-
-            let liveCandle = this.liveCandles.get(tf);
-            const isNewCandle = !liveCandle || liveCandle.time !== candleStartTime;
-
-            if (isNewCandle) {
-                liveCandle = { time: candleStartTime, open: newTick.open, high: newTick.high, low: newTick.low, close: newTick.close };
-            } else {
-                liveCandle.high = Math.max(liveCandle.high, newTick.high);
-                liveCandle.low = Math.min(liveCandle.low, newTick.low);
-                liveCandle.close = newTick.close;
-            }
-            this.liveCandles.set(tf, liveCandle);
-            this.notifySubscribers(tf, liveCandle, !isNewCandle);
-        });
+        this.notifySubscribers(newTick);
     }
 
-    private notifySubscribers(timeframe: Timeframe, candle: CandleData, isUpdate: boolean): void {
-        this.subscribers.get(timeframe)?.forEach(callback => callback(candle, isUpdate));
+    private notifySubscribers(tick: CandleData): void {
+        this.subscribers.forEach(callback => callback(tick));
     }
     
     public getFullHistory(): CandleData[] {

@@ -1,6 +1,8 @@
 // types.ts
 import React from 'react';
-import type { Timeframe } from './services/marketSimulator';
+
+// NEW: Centralized Timeframe definition
+export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
 // Navigation view types
 export type View =
@@ -107,6 +109,3 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: string;
 }
-
-// Re-export Timeframe to be accessible from types
-export type { Timeframe };
