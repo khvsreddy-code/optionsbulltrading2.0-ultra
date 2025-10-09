@@ -106,7 +106,7 @@ export const technicalIndicators: Pattern[] = [
                 <h3 className="text-2xl font-bold mb-4">Average Directional Index (ADX) 🧭</h3>
                 <p className="mb-4">The ADX is a unique and widely misunderstood indicator that measures the <strong>strength</strong> or <strong>power</strong> of a trend, not its direction. It is plotted alongside two companion lines: the Positive Directional Indicator (+DI) and the Negative Directional Indicator (−DI), which define the direction.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">The ADX value itself is derived from the smoothed average of the difference between the +DI and −DI lines. An ADX value rising above 25 confirms that a strong, sustainable trend is in place, making trend-following strategies (like using moving averages) highly effective. Conversely, an ADX value below 20 confirms a weak, ranging, or choppy market, where trend strategies will fail and range-bound strategies (using oscillators like Stochastics) become more appropriate. The ADX line itself tells you *if* you should be trading a trend, while the relationship between the ±DI lines tells you *which* direction to trade. If +DI is above −DI, the trend is bullish; if −DI is above +DI, the trend is bearish. A rising ADX coupled with +DI &gt; −DI is the signature of a powerful, healthy uptrend.</p>
+                <p className="mb-4">The ADX value itself is derived from the smoothed average of the difference between the +DI and −DI lines. An ADX value rising above 25 confirms that a strong, sustainable trend is in place, making trend-following strategies (like using moving averages) highly effective. Conversely, an ADX value below 20 confirms a weak, ranging, or choppy market, where trend strategies will fail and range-bound strategies (using oscillators like Stochastics) become more appropriate. The ADX line itself tells you *if* you should be trading a trend, while the relationship between the ±DI lines tells you *which* direction to trade. If +DI is above −DI, the trend is bullish; if −DI is above +DI, the trend is bearish. A rising ADX coupled with +DI > −DI is the signature of a powerful, healthy uptrend.</p>
             </>
         ),
     },
@@ -368,7 +368,7 @@ export const technicalIndicators: Pattern[] = [
         content: (
             <>
                 <h3 className="text-2xl font-bold mb-4">Arms Index (TRIN) ⚖️</h3>
-                <p className="mb-4">The TRIN (or Traders' Index) is a market breadth indicator that measures the ratio of the Advance/Decline Ratio to the Advance Volume/Decline Volume Ratio. It is typically used for index-level analysis (e.g., S&amp;P 500) to gauge overall market sentiment.</p>
+                <p className="mb-4">The TRIN (or Traders' Index) is a market breadth indicator that measures the ratio of the Advance/Decline Ratio to the Advance Volume/Decline Volume Ratio. It is typically used for index-level analysis (e.g., S&P 500) to gauge overall market sentiment.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
                 <p className="mb-4">TRIN quantifies the severity and conviction of market-wide buying or selling pressure. A reading below 1.0 is considered strongly bullish, as it indicates that the volume is disproportionately concentrated in advancing (rising) stocks. A reading above 1.0 is bearish. Extreme readings are often contrarian signals. An extremely low reading (e.g., &lt;0.5) can signal a buying climax or over-enthusiasm, while an extremely high reading (e.g., &gt;2.0) often signals a panic selling climax and a high-probability short-term bottom, as sellers have been completely exhausted by immediate buying volume.</p>
             </>
@@ -434,7 +434,7 @@ export const technicalIndicators: Pattern[] = [
         content: (
             <>
                 <h3 className="text-2xl font-bold mb-4">Coppock Curve 🔄</h3>
-                <p className="mb-4">The Coppock Curve is a long-term momentum indicator designed specifically to identify major trend turning points and bottoms in broad market indices (like the S&amp;P 500 or Nifty 50), not individual stocks. It is typically used on a monthly chart.</p>
+                <p className="mb-4">The Coppock Curve is a long-term momentum indicator designed specifically to identify major trend turning points and bottoms in broad market indices (like the S&P 500 or Nifty 50), not individual stocks. It is typically used on a monthly chart.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
                 <p className="mb-4">It is calculated as a 10-period Weighted Moving Average (WMA) of the sum of the 14-period Rate of Change (ROC) and the 11-period ROC of the index. Its creator, Edwin Coppock, intended for the indicator's long, smooth wave to reflect the psychological cycle of market grief and recovery, with the periods chosen to approximate the average time it takes for a market to bottom out after a major shock. The primary signal is the <strong>zero-line crossover</strong>: a move from negative territory back up through the zero line is considered a major, long-term, high-confidence buy signal for entering a new bull market.</p>
             </>
@@ -508,7 +508,7 @@ export const technicalIndicators: Pattern[] = [
                 <h3 className="text-2xl font-bold mb-4">High-Low Index (HLI) 🔝</h3>
                 <p className="mb-4">The HLI is a market breadth indicator that compares the number of stocks on a major exchange making new 52-week highs to the number of stocks making new 52-week lows. The result is often smoothed by a moving average (e.g., 10-day SMA) to create a clearer oscillator.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">This index measures the overall health and participation of stocks across an entire market. If a major price index (like the S&amp;P 500) is rallying to a new high, but the High-Low Index is declining, it signals a lack of internal market breadth. This is a significant bearish divergence, indicating that only a few large-cap stocks are pushing the index higher while the majority of smaller stocks are weakening. This signals a significant underlying weakness in the market's foundation and a high probability of a broad market correction or top.</p>
+                <p className="mb-4">This index measures the overall health and participation of stocks across an entire market. If a major price index (like the S&P 500) is rallying to a new high, but the High-Low Index is declining, it signals a lack of internal market breadth. This is a significant bearish divergence, indicating that only a few large-cap stocks are pushing the index higher while the majority of smaller stocks are weakening. This signals a significant underlying weakness in the market's foundation and a high probability of a broad market correction or top.</p>
             </>
         ),
     },

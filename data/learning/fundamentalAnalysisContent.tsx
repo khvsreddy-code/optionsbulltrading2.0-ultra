@@ -15,8 +15,8 @@ export const fundamentalAnalysisTopics: Pattern[] = [
             <p className="mb-4">Quality of Earnings (QoE) is a qualitative and quantitative assessment of the net income figure reported on the income statement. It examines how reliable, sustainable, and transparent a company's reported profit is. QoE analysts look beyond the GAAP (Generally Accepted Accounting Principles) net income to identify non-recurring events, aggressive accounting choices, and mismatches between accrual earnings and actual cash flow.</p>
             <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning Insight</h4>
             <p className="mb-4">High-quality earnings are backed by real cash flow from core operations (CFO). Low-quality earnings often rely on non-cash items, one-time asset sales, or aggressive accruals that inflate the current period's profit at the expense of future periods. A key test is the Accruals Ratio:</p>
-            <div className="bg-gray-100 p-3 rounded-lg my-4 text-center">
-                <code className="text-lg text-gray-700">Accruals Ratio = (Net Income - CFO) / Average Total Assets</code>
+            <div className="bg-primary-light p-3 rounded-lg my-4 text-center">
+                <code className="text-lg text-text-main">Accruals Ratio = (Net Income - CFO) / Average Total Assets</code>
             </div>
             <p className="mb-4">A high or rapidly increasing Accruals Ratio signals that a large portion of earnings is not being converted into cash, indicating a potentially low-quality, unsustainable profit that may lead to a future write-down or restatement. Analysts must also scrutinize Discretionary Accruals like changes in warranty reserves or inventory valuation methods.</p>
         </>
@@ -63,7 +63,7 @@ export const fundamentalAnalysisTopics: Pattern[] = [
             <h4 className="text-xl font-semibold mt-6 mb-2">Description</h4>
             <p className="mb-4">ROIC measures how effectively a company uses all the capital at its disposal (both debt and equity) to generate profits. It is calculated as: ROIC = Net Operating Profit After Taxes (NOPAT) / Invested Capital. It is the gold standard for measuring management's efficiency in capital allocation.</p>
             <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning Insight</h4>
-            <p className="mb-4">The true test of wealth creation is comparing ROIC to the company's Weighted Average Cost of Capital (WACC). If ROIC &gt; WACC, the company is generating economic value. If ROIC &lt; WACC, the company is destroying value. Investors seek companies that can maintain an ROIC consistently greater than their cost of capital, demonstrating a durable competitive advantage. ROIC should be analyzed over a cycle (5-10 years) to filter out cyclical noise.</p>
+            <p className="mb-4">The true test of wealth creation is comparing ROIC to the company's Weighted Average Cost of Capital (WACC). If ROIC {'>'} WACC, the company is generating economic value. If ROIC {'<'} WACC, the company is destroying value. Investors seek companies that can maintain an ROIC consistently greater than their cost of capital, demonstrating a durable competitive advantage. ROIC should be analyzed over a cycle (5-10 years) to filter out cyclical noise.</p>
         </>
     ),
   },
