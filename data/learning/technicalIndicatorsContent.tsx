@@ -106,7 +106,7 @@ export const technicalIndicators: Pattern[] = [
                 <h3 className="text-2xl font-bold mb-4">Average Directional Index (ADX) 🧭</h3>
                 <p className="mb-4">The ADX is a unique and widely misunderstood indicator that measures the <strong>strength</strong> or <strong>power</strong> of a trend, not its direction. It is plotted alongside two companion lines: the Positive Directional Indicator (+DI) and the Negative Directional Indicator (−DI), which define the direction.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">The ADX value itself is derived from the smoothed average of the difference between the +DI and −DI lines. An ADX value rising above 25 confirms that a strong, sustainable trend is in place, making trend-following strategies (like using moving averages) highly effective. Conversely, an ADX value below 20 confirms a weak, ranging, or choppy market, where trend strategies will fail and range-bound strategies (using oscillators like Stochastics) become more appropriate. The ADX line itself tells you *if* you should be trading a trend, while the relationship between the ±DI lines tells you *which* direction to trade. If +DI is above −DI, the trend is bullish; if −DI is above +DI, the trend is bearish. A rising ADX coupled with +DI > −DI is the signature of a powerful, healthy uptrend.</p>
+                <p className="mb-4">The ADX value itself is derived from the smoothed average of the difference between the +DI and −DI lines. An ADX value rising above 25 confirms that a strong, sustainable trend is in place, making trend-following strategies (like using moving averages) highly effective. Conversely, an ADX value below 20 confirms a weak, ranging, or choppy market, where trend strategies will fail and range-bound strategies (using oscillators like Stochastics) become more appropriate. The ADX line itself tells you *if* you should be trading a trend, while the relationship between the ±DI lines tells you *which* direction to trade. If +DI is above −DI, the trend is bullish; if −DI is above +DI, the trend is bearish. A rising ADX coupled with +DI {'>'} −DI is the signature of a powerful, healthy uptrend.</p>
             </>
         ),
     },
@@ -190,15 +190,15 @@ export const technicalIndicators: Pattern[] = [
         ),
     },
     {
-        id: 'cot-index',
-        title: 'Commitment of Traders (COT) Index',
-        emoji: '🏛️',
+        id: 'arms-index',
+        title: 'Arms Index (TRIN)',
+        emoji: '⚖️',
         content: (
             <>
-                <h3 className="text-2xl font-bold mb-4">Commitment of Traders (COT) Index 🏛️</h3>
-                <p className="mb-4">The COT Index is a powerful, long-term sentiment indicator based on the weekly Commitment of Traders report for futures and commodities, published by the CFTC. It transforms the raw positioning data of two key market groups—<strong>Large Speculators</strong> (trend-following funds) and <strong>Commercials</strong> (hedgers, or 'smart money')—into a percentile rank over a multi-year lookback period.</p>
+                <h3 className="text-2xl font-bold mb-4">Arms Index (TRIN) ⚖️</h3>
+                <p className="mb-4">The TRIN (or Traders' Index) is a market breadth indicator that measures the ratio of the Advance/Decline Ratio to the Advance Volume/Decline Volume Ratio. It is typically used for index-level analysis (e.g., S&P 500) to gauge overall market sentiment.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">The COT Index is primarily a <strong>contrarian signal</strong>. The theory is that Large Speculators are trend-followers who tend to become overly crowded and euphoric at market tops and overly pessimistic at bottoms. Commercials, who use the futures markets to hedge real-world assets, are typically on the correct side of major trend changes. Therefore, when Large Speculators reach an extreme net long position (an index reading of 80-100%) while Commercials are at an extreme net short position, it signals a major market top is likely due to speculative overcrowding. The reverse—extreme Speculator short positions—signals a major bottom is near, as there are few participants left to sell.</p>
+                <p className="mb-4">TRIN quantifies the severity and conviction of market-wide buying or selling pressure. A reading below 1.0 is considered strongly bullish, as it indicates that the volume is disproportionately concentrated in advancing (rising) stocks. A reading above 1.0 is bearish. Extreme readings are often contrarian signals. An extremely low reading (e.g., {'<'}0.5) can signal a buying climax or over-enthusiasm, while an extremely high reading (e.g., {'>'}2.0) often signals a panic selling climax and a high-probability short-term bottom, as sellers have been completely exhausted by immediate buying volume.</p>
             </>
         ),
     },
@@ -278,7 +278,7 @@ export const technicalIndicators: Pattern[] = [
                 <h3 className="text-2xl font-bold mb-4">Ultimate Oscillator (UO) ⚙️</h3>
                 <p className="mb-4">Developed by Larry Williams, the UO is a complex momentum oscillator that addresses a common flaw of many oscillators: their sensitivity to short-term price spikes. It achieves this by using a weighted average of momentum calculated over three distinct timeframes (short, medium, and long—typically 7, 14, and 28 periods).</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">Instead of just comparing gains and losses, the UO calculates momentum by measuring "Buying Pressure" relative to the "True Range" for each of the three timeframes. This provides a more nuanced view of momentum. These three momentum readings are then combined using inverse weights (4:2:1), meaning the shortest-term momentum (7-period) has the most significant impact on the final value. This multi-period weighting system ensures that a signal is only triggered when momentum is confirmed across multiple time horizons, making the UO less prone to false readings from a single volatile day. Its most powerful application is identifying <strong>Divergence</strong>: when the price makes a new low but the UO makes a higher low (especially from an oversold level below 30), it signals a high-conviction reversal because buying pressure is improving across all three cycles simultaneously. The key signal is Bullish Divergence confirmed across all three cycles, offering a high-conviction reversal signal at oversold levels (&lt;30).</p>
+                <p className="mb-4">Instead of just comparing gains and losses, the UO calculates momentum by measuring "Buying Pressure" relative to the "True Range" for each of the three timeframes. This provides a more nuanced view of momentum. These three momentum readings are then combined using inverse weights (4:2:1), meaning the shortest-term momentum (7-period) has the most significant impact on the final value. This multi-period weighting system ensures that a signal is only triggered when momentum is confirmed across multiple time horizons, making the UO less prone to false readings from a single volatile day. Its most powerful application is identifying <strong>Divergence</strong>: when the price makes a new low but the UO makes a higher low (especially from an oversold level below 30), it signals a high-conviction reversal because buying pressure is improving across all three cycles simultaneously. The key signal is Bullish Divergence confirmed across all three cycles, offering a high-conviction reversal signal at oversold levels ({'<'}30).</p>
             </>
         ),
     },
@@ -362,15 +362,15 @@ export const technicalIndicators: Pattern[] = [
         ),
     },
     {
-        id: 'arms-index',
-        title: 'Arms Index (TRIN)',
-        emoji: '⚖️',
+        id: 'cot-index',
+        title: 'Commitment of Traders (COT) Index',
+        emoji: '🏛️',
         content: (
             <>
-                <h3 className="text-2xl font-bold mb-4">Arms Index (TRIN) ⚖️</h3>
-                <p className="mb-4">The TRIN (or Traders' Index) is a market breadth indicator that measures the ratio of the Advance/Decline Ratio to the Advance Volume/Decline Volume Ratio. It is typically used for index-level analysis (e.g., S&P 500) to gauge overall market sentiment.</p>
+                <h3 className="text-2xl font-bold mb-4">Commitment of Traders (COT) Index 🏛️</h3>
+                <p className="mb-4">The COT Index is a powerful, long-term sentiment indicator based on the weekly Commitment of Traders report for futures and commodities, published by the CFTC. It transforms the raw positioning data of two key market groups—<strong>Large Speculators</strong> (trend-following funds) and <strong>Commercials</strong> (hedgers, or 'smart money')—into a percentile rank over a multi-year lookback period.</p>
                 <h4 className="text-xl font-semibold mt-6 mb-2">Deep Learning & Psychology</h4>
-                <p className="mb-4">TRIN quantifies the severity and conviction of market-wide buying or selling pressure. A reading below 1.0 is considered strongly bullish, as it indicates that the volume is disproportionately concentrated in advancing (rising) stocks. A reading above 1.0 is bearish. Extreme readings are often contrarian signals. An extremely low reading (e.g., &lt;0.5) can signal a buying climax or over-enthusiasm, while an extremely high reading (e.g., &gt;2.0) often signals a panic selling climax and a high-probability short-term bottom, as sellers have been completely exhausted by immediate buying volume.</p>
+                <p className="mb-4">The COT Index is primarily a <strong>contrarian signal</strong>. The theory is that Large Speculators are trend-followers who tend to become overly crowded and euphoric at market tops and overly pessimistic at bottoms. Commercials, who use the futures markets to hedge real-world assets, are typically on the correct side of major trend changes. Therefore, when Large Speculators reach an extreme net long position (an index reading of 80-100%) while Commercials are at an extreme net short position, it signals a major market top is likely due to speculative overcrowding. The reverse—extreme Speculator short positions—signals a major bottom is near, as there are few participants left to sell.</p>
             </>
         ),
     },
