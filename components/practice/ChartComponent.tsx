@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode, HistogramData } from 'lightweight-charts';
 import type { CandleData, Timeframe } from '../../types';
 
 interface ChartComponentProps {
@@ -11,13 +11,24 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+    const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null); // For volume
     const [countdown, setCountdown] = useState('');
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
-            candlestickSeriesRef.current?.update({
+            if (!candlestickSeriesRef.current || !volumeSeriesRef.current) return;
+            
+            candlestickSeriesRef.current.update({
                 time: candle.time as UTCTimestamp, open: candle.open, high: candle.high, low: candle.low, close: candle.close,
             });
+
+            if (candle.volume !== undefined) {
+                volumeSeriesRef.current.update({
+                    time: candle.time as UTCTimestamp,
+                    value: candle.volume,
+                    color: candle.close >= candle.open ? 'rgba(26, 170, 122, 0.5)' : 'rgba(255, 61, 95, 0.5)',
+                });
+            }
         }
     }));
     
@@ -57,13 +68,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             handleScroll: { mouseWheel: true, pressedMouseMove: true },
             handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
             localization: {
-                // Explicitly format time to user's local settings, addressing sync request
-                timeFormatter: (timestamp: number) => {
-                    return new Date(timestamp * 1000).toLocaleTimeString();
-                },
+                timeFormatter: (timestamp: number) => new Date(timestamp * 1000).toLocaleTimeString(),
             },
         });
         chartRef.current = chart;
+
         candlestickSeriesRef.current = chart.addCandlestickSeries({
             upColor: '#1AAB7A', downColor: '#FF3D5F', borderDownColor: '#FF3D5F',
             borderUpColor: '#1AAB7A', wickDownColor: '#FF3D5F', wickUpColor: '#1AAB7A',
@@ -71,6 +80,16 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         candlestickSeriesRef.current.applyOptions({
             lastValueVisible: true,
             priceLineVisible: true,
+        });
+
+        // Volume Series Setup
+        volumeSeriesRef.current = chart.addHistogramSeries({
+            priceFormat: { type: 'volume' },
+            priceScaleId: '', // Overlay on main chart is default, but let's put it on a new pane
+        });
+        // Configure the price scale for the volume series to be on a separate pane
+        chart.priceScale('').applyOptions({
+            scaleMargins: { top: 0.8, bottom: 0 }, // 80% for volume series on the bottom pane
         });
 
         const resizeObserver = new ResizeObserver(entries => {
@@ -84,27 +103,26 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         if (candlestickSeriesRef.current) {
             candlestickSeriesRef.current.applyOptions({
                 priceFormat: {
-                    type: 'price',
-                    precision: 2,
-                    minMove: 0.01,
-                    formatter: (price) => {
-                        const formattedPrice = price.toFixed(2);
-                        if (countdown) {
-                            return `${formattedPrice}  ${countdown}`;
-                        }
-                        return formattedPrice;
-                    },
+                    type: 'price', precision: 2, minMove: 0.01,
+                    formatter: (price) => countdown ? `${price.toFixed(2)}  ${countdown}` : price.toFixed(2),
                 },
             });
         }
     }, [countdown]);
 
     useEffect(() => {
-        if (candlestickSeriesRef.current && initialData.length > 0) {
+        if (candlestickSeriesRef.current && volumeSeriesRef.current && initialData.length > 0) {
             const candlestickData: BarData[] = initialData.map(c => ({
                 time: c.time as UTCTimestamp, open: c.open, high: c.high, low: c.low, close: c.close,
             }));
+            const volumeData: HistogramData[] = initialData.map(c => ({
+                time: c.time as UTCTimestamp,
+                value: c.volume || 0,
+                color: c.close >= c.open ? 'rgba(26, 170, 122, 0.5)' : 'rgba(255, 61, 95, 0.5)',
+            }));
+
             candlestickSeriesRef.current.setData(candlestickData);
+            volumeSeriesRef.current.setData(volumeData);
             chartRef.current?.timeScale().fitContent();
         }
     }, [initialData]);

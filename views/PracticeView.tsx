@@ -26,7 +26,7 @@ interface ChartComponentHandle {
 
 const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
 
-// Centralized aggregation logic to prevent bugs.
+// Centralized aggregation logic to handle new volume data.
 const aggregateHistory = (ticks: CandleData[], timeframe: Timeframe): CandleData[] => {
     if (timeframe === '1s') return [...ticks];
     if (ticks.length === 0) return [];
@@ -45,11 +45,13 @@ const aggregateHistory = (ticks: CandleData[], timeframe: Timeframe): CandleData
                 high: tick.high,
                 low: tick.low,
                 close: tick.close,
+                volume: tick.volume || 0,
             };
         } else {
             currentCandle.high = Math.max(currentCandle.high, tick.high);
             currentCandle.low = Math.min(currentCandle.low, tick.low);
             currentCandle.close = tick.close;
+            currentCandle.volume = (currentCandle.volume || 0) + (tick.volume || 0);
         }
     }
     if (currentCandle) aggregated.push(currentCandle);
@@ -170,10 +172,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, tick.high);
                 currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, tick.low);
                 currentAggregatedCandle.close = tick.close;
+                currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + (tick.volume || 0);
             } else {
-                currentAggregatedCandle = {
-                    time: candleStartTime, open: tick.open, high: tick.high, low: tick.low, close: tick.close
-                };
+                currentAggregatedCandle = { ...tick };
             }
             liveAggregatedCandleRef.current = currentAggregatedCandle;
             
@@ -198,7 +199,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     // Effect for changing timeframe
     useEffect(() => {
         if (isLoading) return;
-        const newAggregatedData = aggregateHistory(tickHistoryRef.current, timeframe);
+        
+        let newAggregatedData = aggregateHistory(tickHistoryRef.current, timeframe);
+
+        if (timeframe === '1s' && newAggregatedData.length > 3600) {
+            newAggregatedData = newAggregatedData.slice(-3600);
+        }
+        
         setInitialChartData(newAggregatedData);
         const lastCandle = newAggregatedData.length > 0 ? newAggregatedData[newAggregatedData.length - 1] : null;
         liveAggregatedCandleRef.current = lastCandle;
@@ -322,7 +329,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                     <div className="flex-grow relative">
                         {isLoading ? (
                              <div className="absolute inset-0 flex items-center justify-center bg-[#131722]/80 z-30">
-                                <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
