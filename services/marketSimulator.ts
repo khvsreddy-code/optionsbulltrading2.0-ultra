@@ -2,26 +2,67 @@ import type { CandleData } from '../types';
 
 export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
-// Simple seeded PRNG (sfc32) to generate deterministic noise
-function sfc32(a: number, b: number, c: number, d: number) {
-    return function() {
-      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0; 
-      var t = (a + b) | 0;
-      a = b ^ (b >>> 9);
-      b = c + (c << 3) | 0;
-      c = (c << 21 | c >>> 11);
-      d = d + 1 | 0;
-      t = t + d | 0;
-      c = c + t | 0;
-      return (t >>> 0) / 4294967296;
+/**
+ * A self-contained Perlin noise generator for creating realistic, deterministic randomness.
+ */
+class PerlinNoise {
+    private p: number[];
+
+    constructor(seed: number) {
+        // Seeded permutation table generation using a simple PRNG
+        const sfc32 = (a:number, b:number, c:number, d:number) => {
+            return () => {
+              a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0; 
+              var t = (a + b) | 0;
+              a = b ^ (b >>> 9);
+              b = c + (c << 3) | 0;
+              c = (c << 21 | c >>> 11);
+              d = d + 1 | 0;
+              t = t + d | 0;
+              c = c + t | 0;
+              return (t >>> 0) / 4294967296;
+            }
+        }
+        
+        const rand = sfc32(seed, seed * 2, seed * 3, seed * 4);
+        this.p = Array.from({length: 256}, (_, i) => i);
+        
+        for (let i = this.p.length - 1; i > 0; i--) {
+            const j = Math.floor(rand() * (i + 1));
+            [this.p[i], this.p[j]] = [this.p[j], this.p[i]];
+        }
+        // Double the permutation table to avoid buffer overflows
+        this.p = this.p.concat(this.p);
+    }
+
+    private fade(t: number): number {
+        return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    private lerp(t: number, a: number, b: number): number {
+        return a + t * (b - a);
+    }
+
+    private grad(hash: number, x: number): number {
+        // Simple 1D gradient function
+        return (hash & 1) === 0 ? x : -x;
+    }
+
+    public noise(x: number): number {
+        const X = Math.floor(x) & 255;
+        x -= Math.floor(x);
+        const u = this.fade(x);
+        const grad1 = this.grad(this.p[X], x);
+        const grad2 = this.grad(this.p[X + 1], x - 1);
+        return this.lerp(u, grad1, grad2) * 2;
     }
 }
 
+
 /**
- * A deterministic, time-based market simulator.
- * Price is generated using a combination of sine waves, making it predictable
- * and consistent across page refreshes, solving the "catch-up" problem by
- * syncing the simulation to real-world time.
+ * A deterministic, time-based market simulator using Perlin noise for realistic price action.
+ * The price path is procedurally generated but is identical for any given day,
+ * solving the refresh "catch-up" problem while feeling like a live, persistent market.
  */
 export class MarketSimulator {
     private subscribers: Map<Timeframe, Set<(candle: CandleData, isUpdate: boolean) => void>> = new Map();
@@ -35,46 +76,70 @@ export class MarketSimulator {
     private liveCandles: Map<Timeframe, CandleData> = new Map();
     private isHistoryReady = false;
 
+    private noiseGen: PerlinNoise;
+    private dailySeed: number;
+
     constructor() {
         this.allTimeframes.forEach(tf => {
             const seconds = this.parseTimeframe(tf);
             this.timeframeSecondsMap.set(tf, seconds);
             this.subscribers.set(tf, new Set());
         });
+        
+        // Create a deterministic seed for the day
+        const today = new Date();
+        const dateString = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        this.dailySeed = this.hashCode(dateString);
+        this.noiseGen = new PerlinNoise(this.dailySeed);
+    }
+
+    private hashCode(str: string): number {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return Math.abs(hash);
     }
 
     private parseTimeframe(tf: Timeframe): number {
         return { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 }[tf];
     }
-
-    private getRngForTimestamp(timestamp: number): () => number {
-        const timeBlock = Math.floor(timestamp / 300); // New seed every 5 minutes
-        return sfc32(0x9E3779B9, timeBlock, 0x243F6A88, 0x85A308D3);
-    }
     
     private getPriceAtTime(timestamp: number): number {
         const basePrice = 65000;
-        
-        // Combine multiple sine waves for a more organic, yet deterministic, price path
-        const price = basePrice
-            + Math.sin(timestamp / 60) * 50    // 1-minute cycle
-            + Math.sin(timestamp / 300) * 150   // 5-minute cycle
-            + Math.sin(timestamp / 1800) * 400  // 30-minute cycle
-            + Math.sin(timestamp / 7200) * 800; // 2-hour cycle
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const secondsIntoDay = timestamp - (startOfDay.getTime() / 1000);
 
-        const rng = this.getRngForTimestamp(timestamp);
-        const noise = (rng() - 0.5) * 2 * 25; // Add +/- $25 of deterministic noise
+        // Combine multiple octaves of Perlin noise for a realistic price path
+        let totalNoise = 0;
+        let amplitude = 400;
+        let frequency = 0.0005;
+        const persistence = 0.5;
+        const numOctaves = 5;
+
+        for (let i = 0; i < numOctaves; i++) {
+            totalNoise += this.noiseGen.noise(secondsIntoDay * frequency) * amplitude;
+            amplitude *= persistence;
+            frequency *= 2;
+        }
+
+        // Add a slow sine wave for a general daily trend
+        const dailyTrend = Math.sin(secondsIntoDay / (86400 / 2)) * 600;
         
-        return parseFloat((price + noise).toFixed(2));
+        const finalPrice = basePrice + dailyTrend + totalNoise;
+        
+        return parseFloat(finalPrice.toFixed(2));
     }
 
     private getCandleForPeriod(startTime: number, periodInSeconds: number): CandleData {
         const open = this.getPriceAtTime(startTime);
         const close = this.getPriceAtTime(startTime + periodInSeconds);
-        let high = open > close ? open : close;
-        let low = open < close ? open : close;
+        let high = Math.max(open, close);
+        let low = Math.min(open, close);
 
-        // Sample points within the period to find an approximate high/low
         const samples = Math.min(periodInSeconds, 10);
         for (let i = 1; i <= samples; i++) {
             const sampleTime = startTime + (i * periodInSeconds / (samples + 1));
@@ -107,7 +172,7 @@ export class MarketSimulator {
             this.isHistoryReady = true;
         }
         
-        this.tick(); // Initial tick to set live candles before interval starts
+        this.tick(); 
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
     }
 
@@ -120,7 +185,6 @@ export class MarketSimulator {
 
     public subscribe(timeframe: Timeframe, callback: (candle: CandleData, isUpdate: boolean) => void): () => void {
         this.subscribers.get(timeframe)?.add(callback);
-        // Immediately provide the latest candle on subscription
         const latest = this.getLatestCandle(timeframe);
         if(latest) callback(latest, true);
         return () => {
@@ -148,7 +212,6 @@ export class MarketSimulator {
             const isNewCandle = !oldCandle || oldCandle.time !== candleStartTime;
             
             if(isNewCandle && oldCandle) {
-                // Finalize the last candle of the previous period and add to history
                 const finalOldCandle = this.getCandleForPeriod(oldCandle.time, periodInSeconds);
                 const history = this.historicalDataCache.get(tf);
                 if(history) {
@@ -157,18 +220,16 @@ export class MarketSimulator {
                 }
             }
             
-            // Generate the current, updating candle
-            const open = this.getPriceAtTime(candleStartTime);
-            const close = this.getPriceAtTime(nowSeconds + (nowMs % 1000) / 1000); // Use ms for live price feel
+            const open = isNewCandle ? this.getPriceAtTime(candleStartTime) : oldCandle.open;
+            const close = this.getPriceAtTime(nowSeconds + (nowMs % 1000) / 1000);
             
             let high = open > close ? open : close;
             let low = open < close ? open : close;
             
-            // If updating an existing candle, preserve its high/low
             if(!isNewCandle && oldCandle) {
                 high = Math.max(oldCandle.high, close);
                 low = Math.min(oldCandle.low, close);
-            } else { // For a new candle, find the high/low of the elapsed time in this period
+            } else {
                 for (let t = candleStartTime; t <= nowSeconds; t++) {
                    const price = this.getPriceAtTime(t);
                    high = Math.max(high, price);
