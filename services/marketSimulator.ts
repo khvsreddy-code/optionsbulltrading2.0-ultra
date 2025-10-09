@@ -2,42 +2,37 @@ import type { CandleData } from '../types';
 
 export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
+// Simple seeded PRNG (sfc32) to generate deterministic noise
+function sfc32(a: number, b: number, c: number, d: number) {
+    return function() {
+      a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0; 
+      var t = (a + b) | 0;
+      a = b ^ (b >>> 9);
+      b = c + (c << 3) | 0;
+      c = (c << 21 | c >>> 11);
+      d = d + 1 | 0;
+      t = t + d | 0;
+      c = c + t | 0;
+      return (t >>> 0) / 4294967296;
+    }
+}
+
 /**
- * An ultra-realistic market simulator re-architected to run as a continuous background service.
- * This engine ensures all timeframes are always in sync and updated in real-time,
- * providing a seamless and correlated experience, just like a real market feed.
- *
- * Key Architectural Changes:
- * 1.  **Continuous Background Processing:** A single `tick()` interval runs non-stop,
- *     generating the underlying price data regardless of the currently viewed chart.
- * 2.  **Concurrent Timeframe Aggregation:** The state for ALL timeframes (1s, 1m, 5m, etc.)
- *     is maintained and updated simultaneously on every tick.
- * 3.  **Subscription Model:** The UI subscribes to the specific timeframe it needs,
- *     allowing it to switch views without interrupting the underlying simulation.
+ * A deterministic, time-based market simulator.
+ * Price is generated using a combination of sine waves, making it predictable
+ * and consistent across page refreshes, solving the "catch-up" problem by
+ * syncing the simulation to real-world time.
  */
 export class MarketSimulator {
     private subscribers: Map<Timeframe, Set<(candle: CandleData, isUpdate: boolean) => void>> = new Map();
     private readonly allTimeframes: Timeframe[] = ['1s', '1m', '5m', '15m', '30m', '45m'];
     private timeframeSecondsMap: Map<Timeframe, number> = new Map();
     
-    private lastPrice: number = 65000;
-    private drift: number = 0;
-    private volatility: number = 0.4;
-    private meanVolatility: number = 0.4;
-    private volatilityOfVolatility: number = 2.0;
-    private volatilityReversionSpeed: number = 5.0;
-
-    private readonly INTERNAL_TICK_MS = 50;
-    private internalTickCounter: number = 0;
-    private currentSecondCandle: CandleData | null = null;
-    
-    private liveTimeframeCandles: Map<Timeframe, CandleData> = new Map();
-    private secondsWithinTimeframe: Map<Timeframe, number> = new Map();
-
+    private readonly INTERNAL_TICK_MS = 250;
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
-    private base1sHistoricalData: CandleData[] | null = null;
     private historicalDataCache: Map<Timeframe, CandleData[]> = new Map();
+    private liveCandles: Map<Timeframe, CandleData> = new Map();
     private isHistoryReady = false;
 
     constructor() {
@@ -45,7 +40,6 @@ export class MarketSimulator {
             const seconds = this.parseTimeframe(tf);
             this.timeframeSecondsMap.set(tf, seconds);
             this.subscribers.set(tf, new Set());
-            this.historicalDataCache.set(tf, []);
         });
     }
 
@@ -53,24 +47,67 @@ export class MarketSimulator {
         return { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 }[tf];
     }
 
-    public async start(catchUpSeconds: number = 0): Promise<void> {
+    private getRngForTimestamp(timestamp: number): () => number {
+        const timeBlock = Math.floor(timestamp / 300); // New seed every 5 minutes
+        return sfc32(0x9E3779B9, timeBlock, 0x243F6A88, 0x85A308D3);
+    }
+    
+    private getPriceAtTime(timestamp: number): number {
+        const basePrice = 65000;
+        
+        // Combine multiple sine waves for a more organic, yet deterministic, price path
+        const price = basePrice
+            + Math.sin(timestamp / 60) * 50    // 1-minute cycle
+            + Math.sin(timestamp / 300) * 150   // 5-minute cycle
+            + Math.sin(timestamp / 1800) * 400  // 30-minute cycle
+            + Math.sin(timestamp / 7200) * 800; // 2-hour cycle
+
+        const rng = this.getRngForTimestamp(timestamp);
+        const noise = (rng() - 0.5) * 2 * 25; // Add +/- $25 of deterministic noise
+        
+        return parseFloat((price + noise).toFixed(2));
+    }
+
+    private getCandleForPeriod(startTime: number, periodInSeconds: number): CandleData {
+        const open = this.getPriceAtTime(startTime);
+        const close = this.getPriceAtTime(startTime + periodInSeconds);
+        let high = open > close ? open : close;
+        let low = open < close ? open : close;
+
+        // Sample points within the period to find an approximate high/low
+        const samples = Math.min(periodInSeconds, 10);
+        for (let i = 1; i <= samples; i++) {
+            const sampleTime = startTime + (i * periodInSeconds / (samples + 1));
+            const samplePrice = this.getPriceAtTime(sampleTime);
+            high = Math.max(high, samplePrice);
+            low = Math.min(low, samplePrice);
+        }
+        
+        return { time: startTime, open, high, low, close };
+    }
+
+    public async start(): Promise<void> {
         if (this.tickIntervalId) this.stop();
 
         if (!this.isHistoryReady) {
-            const totalHistorySeconds = 10800 + catchUpSeconds;
-            this.base1sHistoricalData = this.generateBase1sHistoricalData(totalHistorySeconds);
+            const nowSeconds = Math.floor(Date.now() / 1000);
             
             this.allTimeframes.forEach(tf => {
-                const aggregated = this.aggregateHistoricalData(this.base1sHistoricalData!, this.timeframeSecondsMap.get(tf)!);
-                this.historicalDataCache.set(tf, aggregated);
+                const periodInSeconds = this.timeframeSecondsMap.get(tf)!;
+                const history: CandleData[] = [];
+                const numCandles = 500;
+                const startTime = nowSeconds - (nowSeconds % periodInSeconds) - (numCandles * periodInSeconds);
+
+                for (let i = 0; i < numCandles; i++) {
+                    const candleStartTime = startTime + (i * periodInSeconds);
+                    history.push(this.getCandleForPeriod(candleStartTime, periodInSeconds));
+                }
+                this.historicalDataCache.set(tf, history);
             });
             this.isHistoryReady = true;
         }
         
-        this.lastPrice = this.base1sHistoricalData![this.base1sHistoricalData!.length - 1].close;
-        const lastTime = this.base1sHistoricalData![this.base1sHistoricalData!.length - 1].time;
-        this.initializeLiveCandles(lastTime);
-
+        this.tick(); // Initial tick to set live candles before interval starts
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
     }
 
@@ -83,233 +120,69 @@ export class MarketSimulator {
 
     public subscribe(timeframe: Timeframe, callback: (candle: CandleData, isUpdate: boolean) => void): () => void {
         this.subscribers.get(timeframe)?.add(callback);
+        // Immediately provide the latest candle on subscription
+        const latest = this.getLatestCandle(timeframe);
+        if(latest) callback(latest, true);
         return () => {
             this.subscribers.get(timeframe)?.delete(callback);
         };
     }
 
     public getHistoricalData(timeframe: Timeframe): CandleData[] {
-        // Return a copy to prevent the UI from accidentally mutating the simulator's state
         return [...(this.historicalDataCache.get(timeframe) || [])];
     }
     
     public getLatestCandle(timeframe: Timeframe): CandleData | undefined {
-        const history = this.getHistoricalData(timeframe);
-        return this.liveTimeframeCandles.get(timeframe) ?? history[history.length - 1];
+        return this.liveCandles.get(timeframe);
     }
-
-    private initializeLiveCandles(lastTime: number): void {
-        this.currentSecondCandle = {
-            time: lastTime + 1,
-            open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-        };
-        this.internalTickCounter = 0;
-
-        this.allTimeframes.forEach(tf => {
-            const timeframeInSeconds = this.timeframeSecondsMap.get(tf)!;
-            const history = this.getHistoricalData(tf);
-            const lastHistoricalCandle = history.length > 0 ? history[history.length - 1] : null;
-            const nextTimeframeStartTime = lastHistoricalCandle ? lastHistoricalCandle.time + timeframeInSeconds : (Math.floor(Date.now() / 1000 / timeframeInSeconds) * timeframeInSeconds);
-
-            this.liveTimeframeCandles.set(tf, {
-                time: nextTimeframeStartTime,
-                open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-            });
-            this.secondsWithinTimeframe.set(tf, 0);
-        });
-    }
-
+    
     private tick(): void {
-        if (!this.currentSecondCandle) return;
-
-        const currentVolatility = this.calculateCurrentVolatility();
-        this.lastPrice = this.generateNextPriceTick(this.lastPrice, currentVolatility);
+        const nowMs = Date.now();
+        const nowSeconds = Math.floor(nowMs / 1000);
         
-        this.currentSecondCandle.high = Math.max(this.currentSecondCandle.high, this.lastPrice);
-        this.currentSecondCandle.low = Math.min(this.currentSecondCandle.low, this.lastPrice);
-        this.currentSecondCandle.close = this.lastPrice;
-        this.internalTickCounter++;
-
-        const ticksPerSecond = 1000 / this.INTERNAL_TICK_MS;
-        if (this.internalTickCounter >= ticksPerSecond) {
-            this.processSecondCompletion();
-        }
-    }
-
-    private processSecondCompletion(): void {
-        const finalizedSecondCandle = { ...this.currentSecondCandle! };
-
-        // Update all timeframes with the completed 1s candle
         this.allTimeframes.forEach(tf => {
-            this.updateTimeframeCandle(tf, finalizedSecondCandle);
+            const periodInSeconds = this.timeframeSecondsMap.get(tf)!;
+            const candleStartTime = nowSeconds - (nowSeconds % periodInSeconds);
+            
+            const oldCandle = this.liveCandles.get(tf);
+            const isNewCandle = !oldCandle || oldCandle.time !== candleStartTime;
+            
+            if(isNewCandle && oldCandle) {
+                // Finalize the last candle of the previous period and add to history
+                const finalOldCandle = this.getCandleForPeriod(oldCandle.time, periodInSeconds);
+                const history = this.historicalDataCache.get(tf);
+                if(history) {
+                    history.push(finalOldCandle);
+                    if(history.length > 1000) history.shift();
+                }
+            }
+            
+            // Generate the current, updating candle
+            const open = this.getPriceAtTime(candleStartTime);
+            const close = this.getPriceAtTime(nowSeconds + (nowMs % 1000) / 1000); // Use ms for live price feel
+            
+            let high = open > close ? open : close;
+            let low = open < close ? open : close;
+            
+            // If updating an existing candle, preserve its high/low
+            if(!isNewCandle && oldCandle) {
+                high = Math.max(oldCandle.high, close);
+                low = Math.min(oldCandle.low, close);
+            } else { // For a new candle, find the high/low of the elapsed time in this period
+                for (let t = candleStartTime; t <= nowSeconds; t++) {
+                   const price = this.getPriceAtTime(t);
+                   high = Math.max(high, price);
+                   low = Math.min(low, price);
+                }
+            }
+
+            const currentCandle = { time: candleStartTime, open, high, low, close };
+            this.liveCandles.set(tf, currentCandle);
+            this.notifySubscribers(tf, currentCandle, !isNewCandle);
         });
-
-        // Reset for the next second
-        this.currentSecondCandle = {
-            time: this.currentSecondCandle!.time + 1,
-            open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-        };
-        this.internalTickCounter = 0;
-    }
-
-    private updateTimeframeCandle(timeframe: Timeframe, secondCandle: CandleData): void {
-        const timeframeInSeconds = this.timeframeSecondsMap.get(timeframe)!;
-        
-        // Special handling for 1s timeframe, which completes every second
-        if (timeframe === '1s') {
-            const history = this.historicalDataCache.get('1s');
-            if (history) {
-                history.push(secondCandle);
-                if (history.length > 1000) history.shift();
-            }
-            this.liveTimeframeCandles.set('1s', secondCandle);
-            this.notifySubscribers('1s', secondCandle, false);
-            return;
-        }
-
-        // Logic for aggregating into larger timeframes (1m, 5m, etc.)
-        const tfCandle = this.liveTimeframeCandles.get(timeframe)!;
-        let currentSeconds = this.secondsWithinTimeframe.get(timeframe)!;
-        
-        tfCandle.high = Math.max(tfCandle.high, secondCandle.high);
-        tfCandle.low = Math.min(tfCandle.low, secondCandle.low);
-        tfCandle.close = secondCandle.close;
-        currentSeconds++;
-        this.secondsWithinTimeframe.set(timeframe, currentSeconds);
-
-        const isTimeframeComplete = currentSeconds >= timeframeInSeconds;
-        this.notifySubscribers(timeframe, { ...tfCandle }, !isTimeframeComplete);
-
-        if (isTimeframeComplete) {
-            // The candle for this timeframe is now complete. Add it to the history.
-            const history = this.historicalDataCache.get(timeframe);
-            if (history) {
-                history.push({ ...tfCandle });
-                if (history.length > 1000) history.shift();
-            }
-
-            // Start a new live candle for the next period.
-            this.liveTimeframeCandles.set(timeframe, {
-                time: tfCandle.time + timeframeInSeconds,
-                open: this.lastPrice, high: this.lastPrice, low: this.lastPrice, close: this.lastPrice,
-            });
-            this.secondsWithinTimeframe.set(timeframe, 0);
-        }
     }
 
     private notifySubscribers(timeframe: Timeframe, candle: CandleData, isUpdate: boolean): void {
         this.subscribers.get(timeframe)?.forEach(callback => callback(candle, isUpdate));
-    }
-    
-    private calculateCurrentVolatility(): number {
-        let tempVolatility = this.volatility;
-        // Check for end-of-period auction effect for all relevant timeframes
-        this.allTimeframes.forEach(tf => {
-            const timeframeInSeconds = this.timeframeSecondsMap.get(tf)!;
-            if (timeframeInSeconds >= 60) { // Only for 1m and above
-                const secondsRemaining = timeframeInSeconds - (this.secondsWithinTimeframe.get(tf)! % timeframeInSeconds);
-                if (secondsRemaining <= 5 && secondsRemaining > 0) {
-                    tempVolatility *= 1.5; // Use a slightly smaller multiplier to avoid excessive spikes when combined
-                }
-            }
-        });
-        return tempVolatility;
-    }
-
-    private generateBase1sHistoricalData(count: number): CandleData[] {
-        const data: CandleData[] = [];
-        let lastClose = 65000;
-        const now = Math.floor(Date.now() / 1000);
-        const alignedNow = now - (now % 3600);
-        const startTime = alignedNow - count;
-
-        for (let i = 0; i < count; i++) {
-            const open = lastClose;
-            let high = open;
-            let low = open;
-            let close = open;
-            const ticksPerCandle = 1000 / this.INTERNAL_TICK_MS;
-
-            for (let j = 0; j < ticksPerCandle; j++) {
-                const tickPrice = this.generateNextPriceTick(close, this.volatility);
-                high = Math.max(high, tickPrice);
-                low = Math.min(low, tickPrice);
-                close = tickPrice;
-            }
-            data.push({ time: startTime + i, open, high, low, close });
-            lastClose = close;
-        }
-        return data;
-    }
-
-    private aggregateHistoricalData(baseData: CandleData[], timeframeInSeconds: number): CandleData[] {
-        const desiredPoints = 500;
-        if (timeframeInSeconds === 1) {
-            return baseData.slice(-desiredPoints);
-        }
-
-        const aggregatedData: CandleData[] = [];
-        if (!baseData || baseData.length === 0) return aggregatedData;
-
-        let currentAggregatedCandle: CandleData | null = null;
-
-        for (const secondCandle of baseData) {
-            const timeframeStartTime = secondCandle.time - (secondCandle.time % timeframeInSeconds);
-
-            if (!currentAggregatedCandle || currentAggregatedCandle.time !== timeframeStartTime) {
-                if (currentAggregatedCandle) {
-                    aggregatedData.push(currentAggregatedCandle);
-                }
-                currentAggregatedCandle = {
-                    time: timeframeStartTime,
-                    open: secondCandle.open,
-                    high: secondCandle.high,
-                    low: secondCandle.low,
-                    close: secondCandle.close,
-                };
-            } else {
-                currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, secondCandle.high);
-                currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, secondCandle.low);
-                currentAggregatedCandle.close = secondCandle.close;
-            }
-        }
-
-        if (currentAggregatedCandle) {
-            aggregatedData.push(currentAggregatedCandle);
-        }
-
-        // FIX: Corrected typo in variable name.
-        return aggregatedData.slice(-desiredPoints);
-    }
-
-    private generateNextPriceTick(lastPrice: number, currentVolatility: number): number {
-        const dt_price = (1 / (365 * 24 * 60 * 60)) / (1000 / this.INTERNAL_TICK_MS);
-        
-        const mean = 65000;
-        const reversionSpeed = 0.01;
-        this.drift = reversionSpeed * (mean - lastPrice) * dt_price;
-
-        const dt_vol = (1 / 252) / (1000 / this.INTERNAL_TICK_MS);
-        const dV = this.volatilityReversionSpeed * (this.meanVolatility - this.volatility) * dt_vol +
-                   this.volatilityOfVolatility * this.volatility * this.generateStandardNormal() * Math.sqrt(dt_vol);
-        this.volatility = Math.max(0.1, this.volatility + dV);
-
-        const Z = this.generateStandardNormal();
-        const volatilityComponent = currentVolatility * Z * Math.sqrt(dt_price);
-        
-        let newPrice = lastPrice * Math.exp(this.drift + volatilityComponent);
-
-        if (Math.random() < 0.0001) {
-            newPrice *= (1 + (Math.random() - 0.5) * 0.01);
-        }
-
-        return isFinite(newPrice) && newPrice > 0 ? newPrice : lastPrice;
-    }
-
-    private generateStandardNormal(): number {
-        let u1 = 0, u2 = 0;
-        while (u1 === 0) u1 = Math.random();
-        while (u2 === 0) u2 = Math.random();
-        return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
     }
 }
