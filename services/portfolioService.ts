@@ -16,12 +16,15 @@ interface PortfolioLoadResult {
  */
 export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // Use getSession() for more robust auth checking. It refreshes the token if needed.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
             // No user logged in, return a temporary initial portfolio for guest sessions
             console.warn("No user session found. Using a temporary portfolio.");
             return { portfolio: createInitialPortfolio(), lastUpdated: new Date().toISOString() };
         }
+
+        const user = session.user;
 
         const { data, error } = await supabase
             .from('simulator_portfolios')
@@ -68,12 +71,15 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
  */
 export const savePortfolio = async (portfolio: Portfolio): Promise<void> => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // Use getSession() for more robust auth checking.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
             // Cannot save if no user is logged in
             return;
         }
         
+        const user = session.user;
+
         const { error } = await supabase
             .from('simulator_portfolios')
             .upsert({
