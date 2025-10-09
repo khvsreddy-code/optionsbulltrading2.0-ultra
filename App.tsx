@@ -214,7 +214,6 @@ const App: React.FC = () => {
                     user={user} 
                     onNavigate={handleNavigate}
                     onMenuClick={() => setIsSidebarOpen(true)}
-                    activeView={view}
                 />
                 <main className="flex-grow">
                     {renderView()}

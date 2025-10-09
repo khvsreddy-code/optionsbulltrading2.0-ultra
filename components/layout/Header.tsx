@@ -1,30 +1,15 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { Bell, User as UserIcon, Menu } from '../common/Icons';
-import type { View } from '../../types';
 
 interface HeaderProps {
     user: SupabaseUser | null;
     onNavigate: (path: string) => void;
     onMenuClick: () => void;
-    activeView: View;
 }
 
-const viewTitles: { [key in View]?: string } = {
-    home: 'Home',
-    learningHome: 'Learning Library',
-    learningChapter: 'Lesson',
-    bullishPatternsList: 'Bullish Patterns',
-    bearishPatternsList: 'Bearish Patterns',
-    technicalIndicatorsList: 'Technical Indicators',
-    fundamentalAnalysisList: 'Fundamental Analysis',
-    patternDetail: 'Lesson Detail',
-    profile: 'My Profile',
-};
-
-
-const Header: React.FC<HeaderProps> = ({ user, onNavigate, onMenuClick, activeView }) => {
-    const title = viewTitles[activeView] || 'OptionsBull';
+const Header: React.FC<HeaderProps> = ({ user, onNavigate, onMenuClick }) => {
+    const userName = user?.user_metadata?.full_name || 'Trader';
 
     return (
         <header className="bg-card p-4 border-b border-border sticky top-0 z-30">
@@ -37,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ user, onNavigate, onMenuClick, activeVi
                     >
                         <Menu size={24} />
                     </button>
-                    <h1 className="font-bold text-xl text-text-main">{title}</h1>
+                    <h1 className="font-bold text-xl text-text-main">Welcome, {userName.split(' ')[0]}</h1>
                 </div>
                 
                 <div className="flex items-center space-x-2">
