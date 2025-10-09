@@ -1,16 +1,28 @@
 import { supabase } from './supabaseClient';
 import { learningCurriculum } from '../data/learningContent';
+import { bullishPatterns } from '../data/learning/bullishPatternsContent';
+import { bearishPatterns } from '../data/learning/bearishPatternsContent';
+import { technicalIndicators } from '../data/learning/technicalIndicatorsContent';
+import { fundamentalAnalysisTopics } from '../data/learning/fundamentalAnalysisContent';
 
 const PROGRESS_STORAGE_KEY = 'optionsbull_learning_progress';
+// NEW: Storage key for test results
+const TESTS_PROGRESS_STORAGE_KEY = 'optionsbull_tests_progress';
 
 // Type for progress data
 export type ProgressData = {
-    [subChapterId: string]: boolean;
+    [lessonId: string]: boolean;
 };
+
+// NEW: Type for test progress
+export type TestProgressData = {
+    [testId: string]: boolean; // true for passed
+};
+
 
 /**
  * Retrieves all learning progress data from localStorage.
- * @returns {ProgressData} An object mapping sub-chapter IDs to their completion status.
+ * @returns {ProgressData} An object mapping lesson IDs to their completion status.
  */
 export const getProgressData = (): ProgressData => {
     try {
@@ -22,24 +34,36 @@ export const getProgressData = (): ProgressData => {
     }
 };
 
+// NEW: Function to get test progress data
+const getTestProgressData = (): TestProgressData => {
+    try {
+        const data = localStorage.getItem(TESTS_PROGRESS_STORAGE_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (error) {
+        console.error("Error reading test progress from localStorage", error);
+        return {};
+    }
+};
+
+
 /**
- * Checks if a specific sub-chapter has been marked as complete.
- * @param {string} subChapterId - The ID of the sub-chapter to check.
- * @returns {boolean} True if the sub-chapter is complete, false otherwise.
+ * Checks if a specific lesson has been marked as complete.
+ * @param {string} lessonId - The ID of the lesson to check.
+ * @returns {boolean} True if the lesson is complete, false otherwise.
  */
-export const isSubChapterComplete = (subChapterId: string): boolean => {
+export const isSubChapterComplete = (lessonId: string): boolean => {
     const progress = getProgressData();
-    return !!progress[subChapterId];
+    return !!progress[lessonId];
 };
 
 /**
- * Toggles the completion status for a sub-chapter and saves it to localStorage.
+ * Toggles the completion status for a lesson and saves it to localStorage.
  * Dispatches a custom event to notify the app of the change.
- * @param {string} subChapterId - The ID of the sub-chapter to update.
+ * @param {string} lessonId - The ID of the lesson to update.
  */
-export const toggleSubChapterCompletion = (subChapterId: string): void => {
+export const toggleSubChapterCompletion = (lessonId: string): void => {
     const progress = getProgressData();
-    progress[subChapterId] = !progress[subChapterId];
+    progress[lessonId] = !progress[lessonId];
     try {
         localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
         // Dispatch a custom event to notify other components of the change
@@ -50,18 +74,74 @@ export const toggleSubChapterCompletion = (subChapterId: string): void => {
 };
 
 /**
- * Calculates the number of completed sub-chapters for a given main chapter.
- * @param {string} chapterId - The ID of the main chapter.
- * @returns {number} The count of completed sub-chapters.
+ * NEW: Calculates the total number of completed lessons across all modules.
+ * @returns {number} The total count of completed lessons.
  */
-export const getCompletedCountForChapter = (chapterId: string): number => {
-    const chapter = learningCurriculum.find(c => c.id === chapterId);
-    if (!chapter || !chapter.subChapters || chapter.subChapters.length === 0) {
-        return 0;
+export const getTotalCompletedLessons = (): number => {
+    const progressData = getProgressData();
+    // Simply count the number of 'true' entries.
+    return Object.values(progressData).filter(Boolean).length;
+};
+
+/**
+ * NEW: Calculates the total number of passed tests.
+ * @returns {number} The total count of passed tests.
+ */
+export const getTestsPassedCount = (): number => {
+    const testProgress = getTestProgressData();
+    return Object.values(testProgress).filter(Boolean).length;
+};
+
+// NEW: (Placeholder for future use) Marks a test as passed.
+export const markTestAsPassed = (testId: string): void => {
+    const testProgress = getTestProgressData();
+    testProgress[testId] = true;
+    try {
+        localStorage.setItem(TESTS_PROGRESS_STORAGE_KEY, JSON.stringify(testProgress));
+        window.dispatchEvent(new CustomEvent('testProgressUpdated'));
+    } catch (error) {
+        console.error("Error saving test progress to localStorage", error);
+    }
+};
+
+
+/**
+ * NEW: Calculates completion counts for any given module.
+ * @param {string} moduleId - The ID of the main module (e.g., 'ch1', 'ch3').
+ * @returns {{completed: number, total: number}} The completed and total lesson counts.
+ */
+export const getModuleLessonCounts = (moduleId: string): { completed: number; total: number } => {
+    let lessons: { id: string }[] = [];
+
+    switch (moduleId) {
+        case 'ch1':
+            const basicsModule = learningCurriculum.find(c => c.id === 'ch1');
+            lessons = basicsModule?.subChapters || [];
+            break;
+        case 'ch3':
+            lessons = bullishPatterns;
+            break;
+        case 'ch4':
+            lessons = bearishPatterns;
+            break;
+        case 'ch5':
+            lessons = technicalIndicators;
+            break;
+        case 'ch6':
+            lessons = fundamentalAnalysisTopics;
+            break;
+        default:
+            return { completed: 0, total: 0 };
+    }
+
+    if (lessons.length === 0) {
+        return { completed: 0, total: 0 };
     }
 
     const progress = getProgressData();
-    return chapter.subChapters.filter(sc => progress[sc.id]).length;
+    const completed = lessons.filter(lesson => progress[lesson.id]).length;
+    
+    return { completed, total: lessons.length };
 };
 
 

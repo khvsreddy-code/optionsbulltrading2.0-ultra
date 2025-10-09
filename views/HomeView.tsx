@@ -3,8 +3,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Flame, DollarSign } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
-import { getUserStats } from '../services/progressService';
-import { getProgressData } from '../services/progressService';
+import { getUserStats, getTotalCompletedLessons, getTestsPassedCount } from '../services/progressService';
 import anime from 'animejs';
 
 interface HomeViewProps {
@@ -84,20 +83,30 @@ const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | nu
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const homeViewRef = useRef<HTMLDivElement>(null);
-    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, pnlPercent: 0 });
+    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0 });
 
     useEffect(() => {
         const fetchStats = async () => {
             const { totalPnl } = await getUserStats();
-            const progressData = getProgressData();
-            const lessonsLearned = Object.values(progressData).filter(Boolean).length;
+            const lessonsLearned = getTotalCompletedLessons();
+            const testsPassed = getTestsPassedCount();
             const initialPortfolio = 100000;
             const pnlPercent = initialPortfolio > 0 ? (totalPnl / initialPortfolio) * 100 : 0;
 
-            setStats({ pnl: totalPnl, lessonsLearned, pnlPercent });
+            setStats({ pnl: totalPnl, lessonsLearned, testsPassed, pnlPercent });
         };
 
-        fetchStats();
+        fetchStats(); // Fetch on mount
+
+        // Add listeners to update stats when progress changes
+        window.addEventListener('progressUpdated', fetchStats);
+        window.addEventListener('testProgressUpdated', fetchStats); // For future test feature
+
+        return () => {
+            // Cleanup listeners
+            window.removeEventListener('progressUpdated', fetchStats);
+            window.removeEventListener('testProgressUpdated', fetchStats);
+        };
     }, []);
 
     useEffect(() => {
@@ -253,7 +262,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-cyan-500/20" iconColor="text-cyan-400" />
-                        <StatCard icon={CheckCircle} title="Tests Passed" value={0} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
+                        <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
                         <StatCard icon={Flame} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
                         <StatCard 
                             icon={DollarSign} 

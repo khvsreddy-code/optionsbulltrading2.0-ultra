@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
-import { getCompletedCountForChapter, isSubChapterComplete } from '../../services/progressService';
+import { getModuleLessonCounts, isSubChapterComplete } from '../../services/progressService';
 
 interface LearningModuleDetailViewProps {
     onNavigate: (path: string) => void;
@@ -54,8 +54,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
         );
     }
 
-    const completedCount = getCompletedCountForChapter(module.id);
-    const totalCount = module.subChapters.length;
+    const { completed: completedCount, total: totalCount } = getModuleLessonCounts(module.id);
     const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
     const moduleTitle = module.title.split(': ')[1] || module.title;
 

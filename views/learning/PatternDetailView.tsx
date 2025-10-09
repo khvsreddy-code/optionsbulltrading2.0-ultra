@@ -1,11 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 // FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
 import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
-import { ChevronRight } from '../../components/common/Icons';
+import { ChevronRight, CheckCircle } from '../../components/common/Icons';
+import { isSubChapterComplete, toggleSubChapterCompletion } from '../../services/progressService';
+import CompletionDialog from '../../components/learning/CompletionDialog';
 
 interface PatternDetailViewProps {
     onNavigate: (path: string) => void;
@@ -14,6 +16,15 @@ interface PatternDetailViewProps {
 
 const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patternId }) => {
     const mainRef = useRef<HTMLElement>(null);
+    const [isComplete, setIsComplete] = useState(false);
+    const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+
+    useEffect(() => {
+        if (patternId) {
+            setIsComplete(isSubChapterComplete(patternId));
+        }
+        window.scrollTo(0, 0); // Scroll to top when new lesson loads
+    }, [patternId]);
 
     useEffect(() => {
         if (mainRef.current) {
@@ -25,7 +36,6 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                 easing: 'easeOutQuad'
             });
         }
-        window.scrollTo(0, 0); // Scroll to top when new lesson loads
     }, [patternId]);
 
     const allContent = [
@@ -35,15 +45,29 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
         ...fundamentalAnalysisTopics
     ];
 
-    const pattern = allContent.find(p => p.id === patternId);
+    const currentIndex = allContent.findIndex(p => p.id === patternId);
+    const pattern = currentIndex !== -1 ? allContent[currentIndex] : null;
+    const nextLesson = (currentIndex !== -1 && currentIndex < allContent.length - 1) 
+        ? allContent[currentIndex + 1] 
+        : null;
+    
+    const handleToggleComplete = () => {
+        if (pattern) {
+            if (!isComplete) {
+                toggleSubChapterCompletion(pattern.id);
+                setIsComplete(true);
+                setIsCompletionDialogOpen(true); // Open the dialog on completion
+            } else {
+                toggleSubChapterCompletion(pattern.id);
+                setIsComplete(false);
+            }
+        }
+    };
     
     const handleNextLesson = () => {
-        if (!pattern) return;
-
-        const currentIndex = allContent.findIndex(p => p.id === pattern.id);
-        if (currentIndex !== -1 && currentIndex < allContent.length - 1) {
-            const nextPattern = allContent[currentIndex + 1];
-            onNavigate(`/learning/pattern/${nextPattern.id}`);
+        setIsCompletionDialogOpen(false); // Close dialog before navigating
+        if (nextLesson) {
+            onNavigate(`/learning/pattern/${nextLesson.id}`);
         } else {
             // If it's the last lesson, navigate back to the main learning page
             onNavigate('/learning');
@@ -88,17 +112,32 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
             </main>
             
             <footer className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border p-4 flex items-center justify-between gap-4">
-                <p className="text-xs text-text-secondary flex-1">
-                    The information provided in this content is for educational and informational purposes only. It is not intended as financial, investment, or trading advice. Please consult with a qualified advisor before making any financial decisions. Any actions taken based on this information are at your own risk.
-                </p>
+                <button
+                    onClick={handleToggleComplete}
+                    className={`flex-1 flex items-center justify-center p-3 rounded-lg font-semibold transition-all button-press-feedback text-sm ${
+                        isComplete
+                            ? 'bg-primary-light text-primary'
+                            : 'bg-primary text-white'
+                    }`}
+                >
+                    <CheckCircle size={20} className="mr-2" />
+                    <span>{isComplete ? 'Completed' : 'Mark as Complete'}</span>
+                </button>
                 <button
                     onClick={handleNextLesson}
-                    className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback shadow-lg shadow-primary/20"
+                    className="w-14 h-14 flex-shrink-0 bg-text-main text-white rounded-full flex items-center justify-center button-press-feedback shadow-lg"
                     aria-label="Next Lesson"
                 >
                     <ChevronRight size={24} />
                 </button>
             </footer>
+            
+            <CompletionDialog
+                isOpen={isCompletionDialogOpen}
+                onClose={() => setIsCompletionDialogOpen(false)}
+                onNext={handleNextLesson}
+                nextLessonTitle={nextLesson ? nextLesson.title : "Back to Library"}
+            />
         </div>
     );
 };
