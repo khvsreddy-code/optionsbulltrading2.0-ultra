@@ -14,7 +14,7 @@ const ChartTradeButtons: React.FC<ChartTradeButtonsProps> = ({ instrument, onTra
   
   return (
     <div 
-        className="absolute top-4 left-4 z-20 flex items-stretch bg-[#1C2127] border border-[#2A2E39] rounded-lg shadow-lg text-white font-semibold"
+        className="absolute top-4 left-[56px] z-20 flex items-stretch bg-[#1C2127] border border-[#2A2E39] rounded-lg shadow-lg text-white font-semibold"
     >
       {/* BUY Button */}
       <button

@@ -81,6 +81,7 @@ export const Calendar = createIcon(<><rect width="18" height="18" x="3" y="4" rx
 
 
 // --- Drawing Toolbar Icons ---
+export const Magnet = createIcon(<><path d="M10 6V4a2 2 0 1 0-4 0v2" /><path d="M18 6V4a2 2 0 1 0-4 0v2" /><path d="M4 9a6 6 0 0 1 16 0" /><path d="M4 9v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9" /><path d="M20 9v6a2 2 0 0 1-2 2h0a2 2 0 0 1-2-2V9" /></>);
 export const Crosshair = createIcon(<><circle cx="12" cy="12" r="10" /><path d="M22 12h-4" /><path d="M12 6V2" /><path d="M6 12H2" /><path d="M12 22v-4" /></>);
 export const TrendLine = createIcon(<><path d="m3 3 18 18" /><path d="M14 4 12 6" /><path d="M20 10 18 12" /></>);
 export const HorizontalLine = createIcon(<><path d="M3 12h18" /><path d="M3 6h2" /><path d="M19 6h2" /><path d="M3 18h2" /><path d="M19 18h2" /></>);
@@ -89,6 +90,8 @@ export const Brush = createIcon(<><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 
 export const TextIcon = createIcon(<><path d="M17 6.1H7a1 1 0 0 0-1 1v1.5a1 1 0 0 0 1 1h1.5a1 1 0 0 0 1-1V8.1h1.5v8.3H9.5a1 1 0 0 0-1 1v1.5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-1-1h-1.5V8.1H17a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-1-1Z"/></>);
 export const Eraser = createIcon(<><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" /><path d="M22 21H7" /><path d="m5 12 5 5" /></>);
 export const Trash = createIcon(<><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>);
+export const Rectangle = createIcon(<rect x="3" y="5" width="18" height="14" rx="2" />);
+export const Circle = createIcon(<circle cx="12" cy="12" r="9" />);
 
 export const GoogleIcon: React.FC<IconProps> = ({ size = 24, className = '' }) => (
     <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

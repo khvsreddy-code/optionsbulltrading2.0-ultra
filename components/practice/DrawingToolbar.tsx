@@ -1,51 +1,183 @@
-import React from 'react';
-import { Crosshair, TrendLine, HorizontalLine, FibRetracement, Brush, TextIcon, Eraser, Trash } from '../common/Icons';
+import React, { useState, useRef, useEffect } from 'react';
+import type { OrderSide, DrawingTool } from '../../types';
+import { Crosshair, TrendLine, Rectangle, Circle, Brush, Magnet, Trash, HorizontalLine, FibRetracement, ChevronRight } from '../common/Icons';
 
-export type DrawingTool = 'crosshair' | 'trendline' | 'horizontal' | 'fib' | 'brush' | 'text' | 'eraser' | 'trash' | null;
-
-interface DrawingToolbarProps {
-  activeTool: DrawingTool;
-  onToolSelect: (tool: DrawingTool) => void;
+interface Tool {
+  id: DrawingTool;
+  label: string;
+  icon: React.FC<any>;
 }
 
-const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onToolSelect }) => {
-  const tools = [
-    { id: 'crosshair', icon: Crosshair, enabled: true, description: 'Show crosshair pointer' },
-    { id: 'trendline', icon: TrendLine, enabled: true, description: 'Draw a trend line' },
-    { id: 'horizontal', icon: HorizontalLine, enabled: true, description: 'Draw a horizontal line' },
-    { id: 'fib', icon: FibRetracement, enabled: true, description: 'Draw Fibonacci Retracement' },
-    { id: 'brush', icon: Brush, enabled: false, description: 'Freeform drawing' },
-    { id: 'text', icon: TextIcon, enabled: true, description: 'Add text annotation' },
-    { id: 'eraser', icon: Eraser, enabled: false, description: 'Erase individual drawings' },
-    { id: 'trash', icon: Trash, enabled: true, description: 'Delete all drawings' },
-  ];
+interface ToolGroup {
+  id: string;
+  label: string;
+  tools: Tool[];
+}
+
+const toolGroups: ToolGroup[] = [
+    { id: 'cursors', label: 'Cursors', tools: [
+        { id: 'crosshair', label: 'Crosshair', icon: Crosshair },
+    ]},
+    { id: 'trendlines', label: 'Trend Line Tools', tools: [
+        { id: 'trendline', label: 'Trend Line', icon: TrendLine },
+        { id: 'horizontal-line', label: 'Horizontal Line', icon: HorizontalLine },
+    ]},
+    { id: 'fib', label: 'Gann and Fibonacci Tools', tools: [
+        { id: 'fib-retracement', label: 'Fib Retracement', icon: FibRetracement },
+    ]},
+    { id: 'shapes', label: 'Geometric Shapes', tools: [
+        { id: 'rectangle', label: 'Rectangle', icon: Rectangle },
+        { id: 'circle', label: 'Circle', icon: Circle },
+    ]},
+    { id: 'drawing', label: 'Annotation Tools', tools: [
+        { id: 'brush', label: 'Brush', icon: Brush },
+    ]}
+];
+
+interface DrawingToolbarProps {
+  activeTool: DrawingTool | null;
+  onToolSelect: (tool: DrawingTool) => void;
+  color: string;
+  onColorChange: (color: string) => void;
+  lineWidth: number;
+  onLineWidthChange: (width: number) => void;
+  isMagnetOn: boolean;
+  onMagnetToggle: () => void;
+  onClear: () => void;
+  onTradeButtonClick: (side: OrderSide) => void;
+}
+
+
+const DrawingToolbar: React.FC<DrawingToolbarProps> = ({
+  activeTool, onToolSelect, color, onColorChange,
+  lineWidth, onLineWidthChange, isMagnetOn, onMagnetToggle,
+  onClear, onTradeButtonClick
+}) => {
+  const [openFlyout, setOpenFlyout] = useState<string | null>(null);
+  const [selectedTools, setSelectedTools] = useState<Record<string, DrawingTool>>(
+    toolGroups.reduce((acc, group) => ({ ...acc, [group.id]: group.tools[0].id }), {})
+  );
+
+  const handleToolSelect = (group: ToolGroup, toolId: DrawingTool) => {
+    onToolSelect(toolId);
+    setSelectedTools(prev => ({ ...prev, [group.id]: toolId }));
+    setOpenFlyout(null);
+  };
+  
+  const getGroupIcon = (group: ToolGroup) => {
+    const selectedToolId = selectedTools[group.id];
+    return group.tools.find(t => t.id === selectedToolId)?.icon || group.tools[0].icon;
+  }
 
   return (
-    <div className="absolute top-4 left-2 z-20 bg-[#1C2127] border border-[#2A2E39] rounded-lg p-1 flex flex-col items-center space-y-1">
-      {tools.map(tool => (
-        <div key={tool.id} className="relative group flex items-center">
+    <div className="practice-toolbar">
+      <div className="toolbar-section">
+        <h3>Trade</h3>
+        <div className="flex gap-2">
             <button
-              onClick={() => tool.enabled && onToolSelect(tool.id as DrawingTool)}
-              aria-label={tool.description}
-              disabled={!tool.enabled}
-              className={`p-2 rounded-md transition-colors ${
-                activeTool === tool.id
-                  ? 'bg-blue-600 text-white'
-                  : tool.enabled
-                  ? 'text-slate-400 hover:bg-slate-700 hover:text-white'
-                  : 'text-slate-600 cursor-not-allowed'
-              }`}
+                onClick={() => onTradeButtonClick('BUY')}
+                className="flex-1 p-2 rounded-md font-semibold text-white bg-green-600 hover:bg-green-500 transition-colors"
             >
-              <tool.icon size={20} />
+                BUY
             </button>
-            <div
-              className="absolute left-full ml-3 w-max bg-slate-900 text-white text-xs font-semibold rounded-md px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 shadow-lg border border-slate-700"
-              role="tooltip"
+            <button
+                onClick={() => onTradeButtonClick('SELL')}
+                className="flex-1 p-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-500 transition-colors"
             >
-              {tool.description} {!tool.enabled && <span className="text-yellow-400 font-normal"> (Coming Soon)</span>}
-            </div>
+                SELL
+            </button>
         </div>
-      ))}
+      </div>
+
+      <div className="toolbar-section">
+        <h3>Tools</h3>
+        <div className="flex flex-col gap-1">
+          {toolGroups.map(group => {
+            const ActiveIcon = getGroupIcon(group);
+            const isGroupActive = group.tools.some(t => t.id === activeTool);
+
+            if (group.tools.length === 1) {
+              const tool = group.tools[0];
+              return (
+                <button
+                  key={tool.id}
+                  title={tool.label}
+                  onClick={() => onToolSelect(tool.id)}
+                  className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
+                >
+                  <tool.icon size={20} />
+                </button>
+              );
+            }
+
+            return (
+              <div key={group.id} className="tool-group">
+                <button
+                  title={group.label}
+                  onClick={() => setOpenFlyout(openFlyout === group.id ? null : group.id)}
+                  className={`w-full tool-btn flex justify-between items-center ${isGroupActive ? 'active' : ''}`}
+                >
+                  <ActiveIcon size={20} />
+                  <ChevronRight size={14} />
+                </button>
+                {openFlyout === group.id && (
+                  <div className="flyout-menu">
+                    {group.tools.map(tool => (
+                      <button
+                        key={tool.id}
+                        title={tool.label}
+                        onClick={() => handleToolSelect(group, tool.id)}
+                        className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
+                      >
+                        <tool.icon size={20} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      <div className="toolbar-section">
+          <h3>Style</h3>
+          <div className="flex items-center flex-wrap">
+              <input 
+                  type="color" 
+                  value={color}
+                  onChange={(e) => onColorChange(e.target.value)}
+                  title="Select color"
+              />
+              <div className="flex items-center">
+                  <input
+                      type="range"
+                      id="lineWidth"
+                      min="1"
+                      max="20"
+                      value={lineWidth}
+                      onChange={(e) => onLineWidthChange(Number(e.target.value))}
+                  />
+                  <span id="lineWidthValue">{lineWidth}</span>
+              </div>
+          </div>
+      </div>
+
+       <div className="toolbar-section">
+            <h3>Actions</h3>
+            <div className="flex flex-wrap">
+                <button
+                    title="Magnet Mode"
+                    onClick={onMagnetToggle}
+                    className={`tool-btn magnet-btn ${isMagnetOn ? 'active' : ''}`}
+                >
+                    <Magnet size={20} />
+                </button>
+                <button title="Clear All Drawings" onClick={onClear} className="tool-btn">
+                    <Trash size={20} />
+                </button>
+            </div>
+       </div>
     </div>
   );
 };

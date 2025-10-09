@@ -109,3 +109,26 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: string;
 }
+
+// --- NEW/UPDATED Drawing Types ---
+export type DrawingTool =
+  | 'crosshair'
+  | 'trendline'
+  | 'rectangle'
+  | 'circle'
+  | 'brush'
+  | 'horizontal-line'
+  | 'fib-retracement';
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Drawing {
+  id: string;
+  tool: DrawingTool;
+  points: Point[];
+  color: string;
+  lineWidth: number;
+}

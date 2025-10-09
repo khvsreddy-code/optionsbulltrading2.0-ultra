@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order, Trade, Timeframe } from '../types';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import type { CandleData, Instrument, Order, OrderSide, Portfolio, Position, Trade, Timeframe, DrawingTool, Drawing, Point } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
@@ -11,9 +11,10 @@ import ChartHeader from '../components/practice/ChartHeader';
 import ChartComponent from '../components/practice/ChartComponent';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
 import OrderDialog from '../components/practice/OrderDialog';
-import ChartTradeButtons from '../components/practice/ChartTradeButtons';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
+import DrawingToolbar from '../components/practice/DrawingToolbar';
+
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -73,6 +74,14 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [showWelcome, setShowWelcome] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
+    // --- Drawing State ---
+    const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool | null>('crosshair');
+    const [drawingColor, setDrawingColor] = useState('#3B82F6'); // blue-500
+    const [drawingLineWidth, setDrawingLineWidth] = useState(2);
+    const [isMagnetOn, setIsMagnetOn] = useState(false);
+    const [drawings, setDrawings] = useState<Drawing[]>([]);
+    const [drawingState, setDrawingState] = useState<{ tool: DrawingTool; points: Point[] } | null>(null);
+    
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
 
@@ -80,7 +89,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
     
-    // Refs to manage live data without constant re-rendering
+    const drawingCanvasRef = useRef<HTMLCanvasElement>(null);
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
+        
     const tickHistoryRef = useRef<CandleData[]>([]);
     const liveAggregatedCandleRef = useRef<CandleData | null>(null);
 
@@ -211,6 +222,148 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         liveAggregatedCandleRef.current = lastCandle;
         setLiveOhlc(lastCandle);
     }, [timeframe, isLoading]);
+
+    // --- NEW DRAWING LOGIC ---
+
+    // Resize canvas to fit container
+    useLayoutEffect(() => {
+        const canvas = drawingCanvasRef.current;
+        const container = canvasContainerRef.current;
+        if (!canvas || !container) return;
+
+        const resizeObserver = new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            canvas.width = width;
+            canvas.height = height;
+        });
+
+        resizeObserver.observe(container);
+        return () => resizeObserver.disconnect();
+    }, []);
+
+    // Redraw canvas when drawings change
+    useLayoutEffect(() => {
+        const canvas = drawingCanvasRef.current;
+        const ctx = canvas?.getContext('2d');
+        if (!canvas || !ctx) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const drawObject = (drawing: Drawing | { tool: DrawingTool, points: Point[], color: string, lineWidth: number }) => {
+            if (drawing.points.length === 0) return;
+            ctx.strokeStyle = drawing.color;
+            ctx.lineWidth = drawing.lineWidth;
+            ctx.fillStyle = drawing.color;
+            ctx.font = '12px sans-serif';
+
+            switch (drawing.tool) {
+                case 'brush':
+                    ctx.beginPath();
+                    ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+                    drawing.points.forEach(p => ctx.lineTo(p.x, p.y));
+                    ctx.stroke();
+                    break;
+                case 'horizontal-line':
+                     ctx.beginPath();
+                     ctx.moveTo(0, drawing.points[0].y);
+                     ctx.lineTo(canvas.width, drawing.points[0].y);
+                     ctx.stroke();
+                     break;
+                case 'fib-retracement':
+                    if (drawing.points.length < 2) break;
+                    const [start, end] = drawing.points;
+                    const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+                    const dy = end.y - start.y;
+
+                    ctx.beginPath();
+                    ctx.moveTo(start.x, start.y);
+                    ctx.lineTo(end.x, end.y);
+                    ctx.setLineDash([2, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    levels.forEach(level => {
+                        const y = start.y + dy * level;
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(canvas.width, y);
+                        ctx.stroke();
+                        ctx.fillText(level.toFixed(3), 5, y - 2);
+                    });
+                    break;
+            }
+        };
+
+        drawings.forEach(drawObject);
+        if (drawingState) drawObject(drawingState);
+
+    }, [drawings, drawingState]);
+    
+    // Handle user input on canvas
+    useEffect(() => {
+        const canvas = drawingCanvasRef.current;
+        if (!canvas || !activeDrawingTool || activeDrawingTool === 'crosshair') return;
+
+        const getMousePos = (e: MouseEvent): Point => {
+            const rect = canvas.getBoundingClientRect();
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        };
+
+        const handleMouseDown = (e: MouseEvent) => {
+            const pos = getMousePos(e);
+            
+            if (activeDrawingTool === 'brush') {
+                setDrawingState({ tool: 'brush', points: [pos] });
+            } else if (activeDrawingTool === 'horizontal-line') {
+                 setDrawings(prev => [...prev, {
+                    id: `draw_${Date.now()}`, tool: 'horizontal-line', points: [pos],
+                    color: drawingColor, lineWidth: drawingLineWidth
+                }]);
+            } else if (activeDrawingTool === 'fib-retracement') {
+                if (!drawingState || drawingState.tool !== 'fib-retracement') {
+                    setDrawingState({ tool: 'fib-retracement', points: [pos, pos] });
+                } else {
+                    setDrawings(prev => [...prev, {
+                        id: `draw_${Date.now()}`, tool: 'fib-retracement', points: drawingState.points,
+                        color: drawingColor, lineWidth: drawingLineWidth
+                    }]);
+                    setDrawingState(null);
+                }
+            }
+        };
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!drawingState) return;
+            const pos = getMousePos(e);
+            if (drawingState.tool === 'brush') {
+                setDrawingState(prev => ({ ...prev!, points: [...prev!.points, pos] }));
+            } else if (drawingState.tool === 'fib-retracement') {
+                setDrawingState(prev => ({ ...prev!, points: [prev!.points[0], pos] }));
+            }
+        };
+        const handleMouseUp = (e: MouseEvent) => {
+            if (!drawingState) return;
+            if (drawingState.tool === 'brush') {
+                setDrawings(prev => [...prev, {
+                    id: `draw_${Date.now()}`, ...drawingState
+                }]);
+                setDrawingState(null);
+            }
+        };
+
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            canvas.removeEventListener('mousedown', handleMouseDown);
+            canvas.removeEventListener('mousemove', handleMouseMove);
+            canvas.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [activeDrawingTool, drawingState, drawingColor, drawingLineWidth]);
+
+    const handleClearDrawings = () => {
+       setDrawings([]);
+       setDrawingState(null);
+    };
     
     const savePortfolioNow = (portfolioState: Portfolio): Portfolio => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -314,19 +467,32 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     }
 
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
+    const canvasCursor = activeDrawingTool !== 'crosshair' ? 'crosshair' : 'default';
 
     return (
         <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
             <WelcomeDialog isOpen={showWelcome} onClose={() => { setShowWelcome(false); localStorage.setItem('hasSeenSimulatorWelcome', 'true'); }} />
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
-            <div className="flex-grow flex flex-col overflow-hidden">
-                <main className="flex-grow flex flex-col relative">
+            <div className="practice-container">
+                <DrawingToolbar 
+                    activeTool={activeDrawingTool}
+                    onToolSelect={setActiveDrawingTool}
+                    color={drawingColor}
+                    onColorChange={setDrawingColor}
+                    lineWidth={drawingLineWidth}
+                    onLineWidthChange={setDrawingLineWidth}
+                    isMagnetOn={isMagnetOn}
+                    onMagnetToggle={() => setIsMagnetOn(prev => !prev)}
+                    onClear={handleClearDrawings}
+                    onTradeButtonClick={handleOpenOrderDialog}
+                />
+                <main className="practice-canvas-container flex flex-col">
                     <ChartHeader
                         instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
                         selectedTimeframe={timeframe} onSelectTimeframe={setTimeframe} liveOhlc={liveOhlc}
                     />
-                    <div className="flex-grow relative">
+                    <div ref={canvasContainerRef} className="flex-grow relative">
                         {isLoading ? (
                              <div className="absolute inset-0 flex items-center justify-center bg-[#131722]/80 z-30">
                                 <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -336,22 +502,27 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                              </div>
                         ) : (
                            <>
-                               <ChartTradeButtons instrument={displayedInstrument} onTradeButtonClick={handleOpenOrderDialog} />
                                <ChartComponent 
                                    ref={chartComponentRef}
                                    key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
                                    initialData={initialChartData}
                                    timeframe={timeframe}
                                />
+                               <canvas
+                                   id="drawingCanvas"
+                                   ref={drawingCanvasRef}
+                                   className="absolute top-0 left-0 w-full h-full pointer-events-auto z-20"
+                                   style={{ cursor: canvasCursor }}
+                               />
                            </>
                         )}
                     </div>
                 </main>
-                <BottomPanel
-                    portfolio={portfolio} onPositionClick={handleOpenPositionManager} onReversePosition={handleReversePosition}
-                    onResetPortfolio={handleResetPortfolio} onManageFunds={handleManageFunds}
-                />
             </div>
+            <BottomPanel
+                portfolio={portfolio} onPositionClick={handleOpenPositionManager} onReversePosition={handleReversePosition}
+                onResetPortfolio={handleResetPortfolio} onManageFunds={handleManageFunds}
+            />
             
             <PositionManagerDialog
                 position={selectedPosition} isOpen={isPositionManagerOpen} onClose={() => setIsPositionManagerOpen(false)}
