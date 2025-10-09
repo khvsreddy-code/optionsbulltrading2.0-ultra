@@ -157,7 +157,7 @@ export const bullishPatterns: Pattern[] = [
   {
     id: 'piercing-pattern',
     title: 'Piercing Pattern',
-    emoji: ' piercing',
+    emoji: '🗡️',
     content: (
         <>
             <Image 

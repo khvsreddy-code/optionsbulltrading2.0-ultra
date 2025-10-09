@@ -17,7 +17,7 @@ const defaultProfile: ProfileData = {
 
 /**
  * Fetches the complete profile for the currently authenticated user.
- * This includes stats, progress, and subscription status.
+ * If a profile doesn't exist, it creates one.
  * @returns {Promise<ProfileData>} A promise that resolves to the user's complete profile data.
  */
 export const getProfileData = async (): Promise<ProfileData> => {
@@ -34,11 +34,33 @@ export const getProfileData = async (): Promise<ProfileData> => {
             .eq('id', session.user.id)
             .single();
 
-        if (error && error.code !== 'PGRST116') { // Ignore 'not found' errors
+        if (error && error.code === 'PGRST116') { // Case: Profile does not exist, create it.
+            console.log("No profile found, creating a new one for user:", session.user.id);
+            const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .insert({ id: session.user.id })
+                .select('total_pnl, progress_data, subscription_status, subscription_expires_at')
+                .single();
+            
+            if (insertError) {
+                console.error("Error creating new profile:", insertError);
+                return defaultProfile; // Return default on creation failure
+            }
+
+            // Return the newly created profile's data, ensuring shape matches ProfileData
+            return {
+                total_pnl: newProfile?.total_pnl || 0,
+                progress_data: newProfile?.progress_data || {},
+                subscription_status: newProfile?.subscription_status || 'free',
+                subscription_expires_at: newProfile?.subscription_expires_at || null,
+            };
+
+        } else if (error) { // Case: Other database error
             console.error("Error fetching user profile:", error);
             return defaultProfile;
         }
 
+        // Case: Profile exists, return its data
         return {
             total_pnl: data?.total_pnl || 0,
             progress_data: data?.progress_data || {},
