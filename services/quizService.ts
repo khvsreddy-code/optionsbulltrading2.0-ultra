@@ -15,6 +15,13 @@ export const quizTopics: TopicDetails[] = [
 
 export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> => {
     try {
+        // First, ensure the user session is fresh to prevent authentication errors.
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            console.error("Authentication error:", sessionError);
+            throw new Error("Authentication error. Please sign in again.");
+        }
+        
         // Invoke the secure Supabase Edge Function instead of calling Gemini directly from the browser.
         // The function's name ('finnhub-webhook') is determined by its folder name in the `supabase/functions` directory.
         // This function now securely handles the API key and Gemini API call.
