@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 // FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
-import { ChevronRight, CheckCircle } from '../../components/common/Icons';
-import { getCompletedCountForChapter, isSubChapterComplete } from '../../services/progressService';
+import { ChevronRight } from '../../components/common/Icons';
+import { getCompletedCountForChapter } from '../../services/progressService';
 
 interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
@@ -50,13 +50,15 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
         }
     }, []);
     
-    const getTargetPathForChapter = (chapterId: string): string => {
-        if (chapterId === 'ch3') return '/learning/bullish';
-        if (chapterId === 'ch4') return '/learning/bearish';
-        if (chapterId === 'ch5') return '/learning/indicators';
-        if (chapterId === 'ch6') return '/learning/fundamental';
-        // For 'Basics', we navigate to the main learning home which lists sub-chapters
-        return '/learning'; 
+    const getPathForModule = (chapterId: string): string => {
+        switch(chapterId) {
+            case 'ch1': return `/learning/module/ch1`;
+            case 'ch3': return '/learning/bullish';
+            case 'ch4': return '/learning/bearish';
+            case 'ch5': return '/learning/indicators';
+            case 'ch6': return '/learning/fundamental';
+            default: return '/learning';
+        }
     };
     
     const basicsModule = learningCurriculum.find(c => c.id === 'ch1');
@@ -81,42 +83,20 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                 <div className="space-y-8">
                     {/* Render Basics Module Separately with Progress */}
                     {basicsModule && (
-                        <div>
-                            <div className="pro-card rounded-2xl overflow-hidden anim-child">
-                                <div className="relative w-full h-40">
-                                    <img src={basicsModule.image} alt={basicsModule.title} className="absolute inset-0 w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40"></div>
-                                    <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{basicsModule.title.split(': ')[1] || basicsModule.title}</h3>
-                                </div>
-                                <div className="p-4 bg-card">
-                                    <p className="text-sm font-semibold text-text-secondary">{basicsCompletedCount} of {basicsTotalCount} lessons completed</p>
-                                    <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
-                                        <div className="bg-primary h-2.5 rounded-full" style={{ width: `${basicsProgress}%`, transition: 'width 0.5s ease-in-out' }}></div>
-                                    </div>
-                                </div>
+                        <div 
+                            className="pro-card rounded-2xl overflow-hidden anim-child cursor-pointer group"
+                            onClick={() => onNavigate(getPathForModule(basicsModule.id))}
+                        >
+                            <div className="relative w-full h-40 group-hover:scale-105 transition-transform duration-300">
+                                <img src={basicsModule.image} alt={basicsModule.title} className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40"></div>
+                                <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{basicsModule.title.split(': ')[1] || basicsModule.title}</h3>
                             </div>
-                            <div className="space-y-3 mt-4">
-                                {basicsModule.subChapters.map((subChapter) => {
-                                    const isComplete = isSubChapterComplete(subChapter.id);
-                                    return (
-                                        <div key={subChapter.id} className="anim-child">
-                                            <button
-                                                onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-                                                className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
-                                            >
-                                                <div>
-                                                    <p className={`font-semibold transition-colors ${isComplete ? 'text-text-secondary line-through' : 'text-text-main'}`}>{subChapter.title}</p>
-                                                    <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
-                                                </div>
-                                                {isComplete ? (
-                                                    <CheckCircle size={22} className="text-primary flex-shrink-0 ml-2" />
-                                                ) : (
-                                                    <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
-                                                )}
-                                            </button>
-                                        </div>
-                                    );
-                                })}
+                            <div className="p-4 bg-card">
+                                <p className="text-sm font-semibold text-text-secondary">{basicsCompletedCount} of {basicsTotalCount} lessons completed</p>
+                                <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
+                                    <div className="bg-primary h-2.5 rounded-full" style={{ width: `${basicsProgress}%`, transition: 'width 0.5s ease-in-out' }}></div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -128,7 +108,7 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                                 <ImageCard
                                     title={chapter.title.split(': ')[1] || chapter.title}
                                     image={chapter.image}
-                                    onClick={() => onNavigate(getTargetPathForChapter(chapter.id))}
+                                    onClick={() => onNavigate(getPathForModule(chapter.id))}
                                     className="h-32"
                                 />
                             </div>

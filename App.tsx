@@ -25,6 +25,7 @@ import BearishPatternsListView from './views/learning/BearishPatternsListView';
 import PatternDetailView from './views/learning/PatternDetailView';
 import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
+import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
 
 
 // Auth components
@@ -86,6 +87,7 @@ const App: React.FC = () => {
         let view: View = 'home';
         let activeChapterId: string | null = null;
         let activePatternId: string | null = null;
+        let activeModuleId: string | null = null;
 
         if (parts[0] === 'pricing') view = 'pricing';
         else if (parts[0] === 'practice') view = 'practice';
@@ -101,7 +103,10 @@ const App: React.FC = () => {
             }
         } else if (parts[0] === 'learning') {
             if (parts.length === 1) view = 'learningHome';
-            else if (parts[1] === 'chapter' && parts[2]) {
+            else if (parts[1] === 'module' && parts[2]) {
+                view = 'learningModuleDetail';
+                activeModuleId = parts[2];
+            } else if (parts[1] === 'chapter' && parts[2]) {
                 view = 'learningChapter';
                 activeChapterId = parts[2];
             } else if (parts[1] === 'bullish') view = 'bullishPatternsList';
@@ -115,10 +120,10 @@ const App: React.FC = () => {
         } else {
             view = 'home';
         }
-        return { view, activeChapterId, activePatternId };
+        return { view, activeChapterId, activePatternId, activeModuleId };
     };
 
-    const { view, activeChapterId, activePatternId } = parseLocation();
+    const { view, activeChapterId, activePatternId, activeModuleId } = parseLocation();
 
 
     const renderView = () => {
@@ -144,6 +149,8 @@ const App: React.FC = () => {
                             return <ContactUsView onNavigate={handleNavigate} />;
                         case 'learningHome':
                             return <LearningHomeView onNavigate={handleNavigate} />;
+                        case 'learningModuleDetail':
+                             return <LearningModuleDetailView onNavigate={handleNavigate} moduleId={activeModuleId} />;
                         case 'learningChapter':
                             return <LearningChapterView onNavigate={handleNavigate} chapterId={activeChapterId} />;
                         case 'bullishPatternsList':

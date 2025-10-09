@@ -19,6 +19,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
 
     useEffect(() => {
         if (viewRef.current) {
+            const backBtn = viewRef.current.querySelector('.back-btn-anim');
             const profileHeader = viewRef.current.querySelector('.profile-header-anim');
             const subCard = viewRef.current.querySelector('.sub-card-anim');
             const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
@@ -28,30 +29,31 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 easing: 'easeOutExpo',
             })
             .add({
-                targets: profileHeader,
+                targets: [backBtn, profileHeader],
                 opacity: [0, 1],
                 translateY: [-30, 0],
                 duration: 600,
+                delay: anime.stagger(50)
             })
             .add({
                 targets: subCard,
                 opacity: [0, 1],
                 scale: [0.9, 1],
                 duration: 500,
-            }, '-=300')
+            }, '-=400')
             .add({
                 targets: menuItems,
                 opacity: [0, 1],
                 translateX: [-20, 0],
                 delay: anime.stagger(100),
                 duration: 400,
-            }, '-=200')
+            }, '-=300')
              .add({
                 targets: logoutBtn,
                 opacity: [0, 1],
                 translateY: [20, 0],
                 duration: 500,
-            }, '-=200');
+            }, '-=300');
         }
     }, []);
 
@@ -93,7 +95,18 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
     };
 
     return (
-        <div ref={viewRef} className="p-4 space-y-8">
+        <div ref={viewRef} className="p-4 space-y-6">
+            {/* Back Button */}
+            <div className="back-btn-anim">
+                 <button 
+                    onClick={() => window.history.back()}
+                    className="flex items-center text-text-secondary font-semibold hover:text-text-main transition-colors p-2 -ml-2"
+                >
+                    <ChevronRight size={22} className="transform rotate-180" />
+                    <span className="ml-1">Back</span>
+                </button>
+            </div>
+
             {/* Profile Header */}
             <div className="flex flex-col items-center space-y-3 profile-header-anim">
                 <div className="relative">

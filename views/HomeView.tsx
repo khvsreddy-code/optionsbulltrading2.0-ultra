@@ -123,12 +123,15 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         { title: "Courses", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png" }
     ];
 
-    const getTargetPathForChapter = (chapterId: string): string => {
-        if (chapterId === 'ch3') return '/learning/bullish';
-        if (chapterId === 'ch4') return '/learning/bearish';
-        if (chapterId === 'ch5') return '/learning/indicators';
-        if (chapterId === 'ch6') return '/learning/fundamental';
-        return '/learning';
+    const getPathForModule = (chapterId: string): string => {
+        switch(chapterId) {
+            case 'ch1': return `/learning/module/ch1`;
+            case 'ch3': return '/learning/bullish';
+            case 'ch4': return '/learning/bearish';
+            case 'ch5': return '/learning/indicators';
+            case 'ch6': return '/learning/fundamental';
+            default: return '/learning';
+        }
     };
 
     return (
@@ -179,7 +182,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                           <ImageCard
                               title={chapter.title.split(': ')[1] || chapter.title}
                               image={chapter.image}
-                              onClick={() => onNavigate(chapter.isExternalLink ? getTargetPathForChapter(chapter.id) : '/learning')}
+                              onClick={() => onNavigate(getPathForModule(chapter.id))}
                               className="aspect-video"
                           />
                         </div>

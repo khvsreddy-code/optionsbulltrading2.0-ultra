@@ -14,6 +14,7 @@ export type View =
   | 'contact'
   | 'learningHome'
   | 'learningChapter'
+  | 'learningModuleDetail'
   | 'practice'
   | 'profile'
   | 'bullishPatternsList'

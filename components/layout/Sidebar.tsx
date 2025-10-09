@@ -1,6 +1,6 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Home, BookOpen, Swap, Briefcase, User, SignOut, X } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 
@@ -19,7 +19,8 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
 
     const navItems = [
         { label: 'Home', icon: Home, path: '/home', views: ['home'] },
-        { label: 'Learn', icon: BookOpen, path: '/learning', views: ['learningHome', 'learningChapter', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'technicalIndicatorsList', 'fundamentalAnalysisList'] },
+        { label: 'Learn', icon: BookOpen, path: '/learning', views: ['learningHome', 'learningChapter', 'learningModuleDetail', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'technicalIndicatorsList', 'fundamentalAnalysisList'] },
+        { label: 'Pricing', icon: DollarSign, path: '/pricing', views: ['pricing'] },
         { label: 'Portfolio', icon: Briefcase, path: '/home', views: [] }, // Placeholder
     ];
     
