@@ -5,7 +5,7 @@ import type { View } from './types';
 
 // Layout components
 import Header from './components/layout/Header';
-import BottomNavBar from './components/layout/BottomNavBar';
+import Sidebar from './components/layout/Sidebar';
 import ProfileView from './views/ProfileView'; // Import the actual ProfileView
 
 // View components
@@ -35,6 +35,7 @@ const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<SupabaseUser | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     const [location, setLocation] = useState(window.location.hash.slice(1) || '/home');
 
@@ -77,6 +78,7 @@ const App: React.FC = () => {
 
     const handleNavigate = (path: string) => {
         window.location.hash = path;
+        setIsSidebarOpen(false); // Close sidebar on navigation
     };
     
     const parseLocation = () => {
@@ -192,16 +194,31 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="relative min-h-screen bg-background font-sans">
-            <div className="flex flex-col min-h-screen">
-                <Header user={user} onNavigate={handleNavigate}/>
-                <main className="flex-grow pb-24">
+        <div className="relative min-h-screen bg-background font-sans md:flex">
+            {/* Mobile Sidebar Overlay */}
+            <div 
+                className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+                onClick={() => setIsSidebarOpen(false)}
+            ></div>
+
+            <Sidebar
+                user={user}
+                onNavigate={handleNavigate}
+                activeView={view}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
+            />
+
+            <div className="flex-1 md:ml-64 flex flex-col">
+                <Header 
+                    user={user} 
+                    onNavigate={handleNavigate}
+                    onMenuClick={() => setIsSidebarOpen(true)}
+                    activeView={view}
+                />
+                <main className="flex-grow">
                     {renderView()}
                 </main>
-                <BottomNavBar
-                    activeView={view}
-                    onTabChange={handleNavigate}
-                />
             </div>
         </div>
     );

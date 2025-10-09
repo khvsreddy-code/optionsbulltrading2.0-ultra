@@ -61,6 +61,7 @@ export const Home = createIcon(<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 
 export const GraduationCap = createIcon(<><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.084a1 1 0 0 0 0 1.838l8.57 3.908a2 2 0 0 0 1.66 0l8.59-3.908Z"/><path d="M6 12v4c0 1.66 4 3 6 3s6-1.34 6-3v-4"/></>);
 export const Stopwatch = createIcon(<><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 7 5"/><path d="M19 3 17 5"/><path d="M12 3v-1"/></>);
 export const CheckCircle = createIcon(<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>);
+export const Menu = createIcon(<><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>);
 
 
 // --- New Icons for Fundamental Analysis ---
