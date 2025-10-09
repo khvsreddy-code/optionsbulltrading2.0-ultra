@@ -48,7 +48,7 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullish%20candlestickpatterns.jpg',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullish-candlestickpatterns.jpg',
     isExternalLink: true,
     subChapters: []
   },

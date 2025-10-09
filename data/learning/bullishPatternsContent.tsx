@@ -237,4 +237,143 @@ export const bullishPatterns: Pattern[] = [
         </>
     ),
   },
+  {
+    id: 'bullish-harami',
+    title: 'Bullish Harami',
+    emoji: '🤰',
+    content: (
+        <>
+            <Image 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishharami_context.png" 
+                alt="Bullish Harami pattern on a chart" 
+                caption="A small green candle inside the prior red candle signals a potential end to the selling pressure."
+            />
+            <h3 className="text-2xl font-bold mb-2">The Bullish Harami Pattern</h3>
+            <p className="mb-6 text-lg">The Bullish Harami is a two-candle reversal pattern that signals a potential end to a downtrend. "Harami" is an old Japanese word for "pregnant," and the pattern visually resembles a pregnant woman, with the small second candle being the "baby" inside the larger first one.</p>
+
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
+            <ul className="space-y-4 mb-6 list-disc pl-5">
+                <li><strong>First Candle:</strong> A large bearish (red) candle that is part of the ongoing downtrend.</li>
+                <li><strong>Second Candle:</strong> A small bullish (green) candle whose entire body is contained within the real body of the first candle.</li>
+            </ul>
+
+            <Diagram 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharami_diagram.png"
+                alt="Bullish Harami pattern diagram"
+            />
+            
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
+            <p className="mb-4">The Bullish Harami represents a sudden loss of momentum by sellers:</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">Bearish Control</h5>
+            <p className="mb-4">The first long red candle confirms that sellers are in complete control, pushing the price lower.</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">The Sudden Halt</h5>
+            <p className="mb-4">The second day opens higher than the previous close and trades within a very narrow range, unable to push lower. This small candle represents a sudden state of equilibrium or indecision. The powerful selling pressure has abruptly stopped, and bears are no longer able to drive the market down. This pause is often the first sign that the downtrend is losing steam and a reversal could be near.</p>
+        </>
+    ),
+  },
+  {
+    id: 'three-inside-up',
+    title: 'Three Inside Up',
+    emoji: '🔼',
+    content: (
+        <>
+            <Image 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/threeinsideup_context.png" 
+                alt="Three Inside Up pattern on a chart" 
+                caption="A bullish harami followed by a strong green candle confirms the reversal."
+            />
+            <h3 className="text-2xl font-bold mb-2">The Three Inside Up Pattern</h3>
+            <p className="mb-6 text-lg">This is a three-candle bullish reversal pattern that is a more reliable confirmation of the Bullish Harami. It provides a stronger signal that the downtrend has concluded and an uptrend is beginning.</p>
+
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
+            <ol className="space-y-4 mb-6 list-decimal pl-5">
+                <li><strong>First Candle:</strong> A long bearish (red) candle continuing the downtrend.</li>
+                <li><strong>Second Candle:</strong> A small bullish (green) candle contained within the body of the first candle (forming a Bullish Harami).</li>
+                <li><strong>Third Candle:</strong> A bullish (green) candle that closes above the high of the first candle, providing bullish confirmation.</li>
+            </ol>
+
+            <Diagram 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsideup_diagram.png"
+                alt="Three Inside Up pattern diagram"
+            />
+            
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
+            <p className="mb-4">The pattern shows a clear three-step process from bearish control to a confirmed bullish reversal:</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">Step 1: Bearish Dominance</h5>
+            <p className="mb-4">The first candle shows the downtrend is intact.</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">Step 2: Indecision</h5>
+            <p className="mb-4">The Bullish Harami on the second day shows that the selling momentum has stalled and the market is pausing.</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">Step 3: Bullish Confirmation</h5>
+            <p className="mb-4">The third candle resolves the indecision in favor of the bulls. Buyers take decisive control, pushing the price up and closing above the range of the first day's decline. This confirms the reversal and signals that a new uptrend is likely beginning.</p>
+        </>
+    ),
+  },
+  {
+    id: 'tweezer-bottom',
+    title: 'Tweezer Bottom',
+    emoji: '🥢',
+    content: (
+        <>
+            <Image 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/tweezerbottom_context.png" 
+                alt="Tweezer Bottom pattern on a chart" 
+                caption="Two candles with matching lows signal a strong support level and potential reversal."
+            />
+            <h3 className="text-2xl font-bold mb-2">The Tweezer Bottom Pattern</h3>
+            <p className="mb-6 text-lg">The Tweezer Bottom is a two-candle (or more) bullish reversal pattern that forms at the end of a downtrend. It is identified by two or more candles having matching or very similar low prices.</p>
+
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
+            <ul className="space-y-4 mb-6 list-disc pl-5">
+                <li><strong>First Candle:</strong> Typically a bearish (red) candle that continues the downtrend.</li>
+                <li><strong>Second Candle:</strong> Often a bullish (green) candle.</li>
+                <li><strong>Matching Lows:</strong> The critical feature is that both candles have almost identical low points, indicating a strong level of support.</li>
+            </ul>
+
+            <Diagram 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezerbottom_diagram.png"
+                alt="Tweezer Bottom pattern diagram"
+            />
+            
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
+            <p className="mb-4">The Tweezer Bottom indicates a strong rejection of lower prices:</p>
+            <p className="mb-4">On the first day, the bears successfully push the price down. On the second day, the price opens and sellers again attempt to push it lower, but they are met with strong buying pressure at the exact same low as the previous day. The market refuses to go any lower and reverses to close higher. This failure to break the previous low is a significant sign that a strong support level has been established. The "tweezers" signify that the market is picking a bottom, and the bears are losing their power.</p>
+        </>
+    ),
+  },
+  {
+    id: 'bullish-kicker',
+    title: 'Bullish Kicker',
+    emoji: '🚀',
+    content: (
+        <>
+            <Image 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishkicker_context.png" 
+                alt="Bullish Kicker pattern on a chart" 
+                caption="A sudden gap up creates a powerful bullish signal, leaving bears trapped."
+            />
+            <h3 className="text-2xl font-bold mb-2">The Bullish Kicker Pattern</h3>
+            <p className="mb-6 text-lg">The Bullish Kicker is one of the most powerful two-candle reversal patterns. It signals a dramatic and often violent shift in market sentiment from bearish to bullish, typically triggered by a significant news event or change in fundamentals overnight.</p>
+
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
+            <ul className="space-y-4 mb-6 list-disc pl-5">
+                <li><strong>First Candle:</strong> A bearish (red) candle that occurs during a downtrend.</li>
+                <li><strong>Second Candle:</strong> A bullish (green) candle that opens significantly higher than the previous day's open—a large gap up. The price does not fill this gap and continues to move higher.</li>
+            </ul>
+
+            <Diagram 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishkicker_diagram.png"
+                alt="Bullish Kicker pattern diagram"
+            />
+            
+            <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
+            <p className="mb-4">The Kicker pattern illustrates an instantaneous and decisive change of heart in the market:</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">Established Bearish Sentiment:</h5>
+            <p className="mb-4">The first red candle shows that sellers are in control, and participants go home expecting the downtrend to continue.</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">The Overnight Shock:</h5>
+            <p className="mb-4">Some game-changing news is released after market hours (e.g., positive earnings surprise, FDA approval, etc.). This news is so overwhelmingly positive that it causes a flood of buy orders before the market even opens, resulting in a large gap up.</p>
+            <h5 className="text-lg font-semibold mt-4 mb-2">No Second Chances:</h5>
+            <p className="mb-4">The price never looks back. It continues to rally throughout the day, leaving no opportunity for bears to exit their short positions at a reasonable price. This creates a short squeeze, adding fuel to the fire as trapped shorts are forced to buy back their shares at higher and higher prices. The complete directional change without any overlap in price range signifies an extremely powerful and committed move by the bulls.</p>
+        </>
+    ),
+  },
 ];
