@@ -1,40 +1,20 @@
 import { supabase } from './supabaseClient';
+import { getProfileData } from './profileService'; // <-- Import the new central function
+
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../data/learning/technicalIndicatorsContent';
 import { fundamentalAnalysisTopics } from '../data/learning/fundamentalAnalysisContent';
 
-const PROGRESS_STORAGE_KEY = 'optionsbull_learning_progress';
-// NEW: Storage key for test results
 const TESTS_PROGRESS_STORAGE_KEY = 'optionsbull_tests_progress';
 
-// Type for progress data
-export type ProgressData = {
-    [lessonId: string]: boolean;
-};
-
-// NEW: Type for test progress
+// Type for test progress
 export type TestProgressData = {
     [testId: string]: boolean; // true for passed
 };
 
-
-/**
- * Retrieves all learning progress data from localStorage.
- * @returns {ProgressData} An object mapping lesson IDs to their completion status.
- */
-export const getProgressData = (): ProgressData => {
-    try {
-        const data = localStorage.getItem(PROGRESS_STORAGE_KEY);
-        return data ? JSON.parse(data) : {};
-    } catch (error) {
-        console.error("Error reading progress from localStorage", error);
-        return {};
-    }
-};
-
-// NEW: Function to get test progress data
+// Function to get test progress data (remains local for now)
 const getTestProgressData = (): TestProgressData => {
     try {
         const data = localStorage.getItem(TESTS_PROGRESS_STORAGE_KEY);
@@ -45,54 +25,61 @@ const getTestProgressData = (): TestProgressData => {
     }
 };
 
-
 /**
  * Checks if a specific lesson has been marked as complete.
  * @param {string} lessonId - The ID of the lesson to check.
- * @returns {boolean} True if the lesson is complete, false otherwise.
+ * @returns {Promise<boolean>} A promise that resolves to true if the lesson is complete.
  */
-export const isSubChapterComplete = (lessonId: string): boolean => {
-    const progress = getProgressData();
-    return !!progress[lessonId];
+export const isSubChapterComplete = async (lessonId: string): Promise<boolean> => {
+    const profile = await getProfileData();
+    return !!profile.progress_data[lessonId];
 };
 
 /**
- * Toggles the completion status for a lesson and saves it to localStorage.
- * Dispatches a custom event to notify the app of the change.
+ * Toggles the completion status for a lesson and saves it to Supabase.
  * @param {string} lessonId - The ID of the lesson to update.
  */
-export const toggleSubChapterCompletion = (lessonId: string): void => {
-    const progress = getProgressData();
-    progress[lessonId] = !progress[lessonId];
+export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
     try {
-        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(progress));
-        // Dispatch a custom event to notify other components of the change
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.warn("No session for toggleSubChapterCompletion");
+            return;
+        }
+
+        const currentProfile = await getProfileData();
+        const newProgress = {
+            ...currentProfile.progress_data,
+            [lessonId]: !currentProfile.progress_data[lessonId],
+        };
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ progress_data: newProgress })
+            .eq('id', session.user.id);
+            
+        if (error) throw error;
+        
         window.dispatchEvent(new CustomEvent('progressUpdated'));
     } catch (error) {
-        console.error("Error saving progress to localStorage", error);
+        console.error("Error saving progress to Supabase", error);
     }
 };
 
 /**
- * NEW: Calculates the total number of completed lessons across all modules.
- * @returns {number} The total count of completed lessons.
+ * Calculates the total number of completed lessons.
+ * @returns {Promise<number>} A promise that resolves to the total count of completed lessons.
  */
-export const getTotalCompletedLessons = (): number => {
-    const progressData = getProgressData();
-    // Simply count the number of 'true' entries.
-    return Object.values(progressData).filter(Boolean).length;
+export const getTotalCompletedLessons = async (): Promise<number> => {
+    const profile = await getProfileData();
+    return Object.values(profile.progress_data).filter(Boolean).length;
 };
 
-/**
- * NEW: Calculates the total number of passed tests.
- * @returns {number} The total count of passed tests.
- */
 export const getTestsPassedCount = (): number => {
     const testProgress = getTestProgressData();
     return Object.values(testProgress).filter(Boolean).length;
 };
 
-// NEW: (Placeholder for future use) Marks a test as passed.
 export const markTestAsPassed = (testId: string): void => {
     const testProgress = getTestProgressData();
     testProgress[testId] = true;
@@ -104,10 +91,6 @@ export const markTestAsPassed = (testId: string): void => {
     }
 };
 
-/**
- * NEW: Calculates the total number of lessons available across all modules.
- * @returns {number} The total count of all lessons.
- */
 export const getTotalLessonCount = (): number => {
     const basicsLessons = learningCurriculum.find(c => c.id === 'ch1')?.subChapters.length || 0;
     const bullishLessons = bullishPatterns.length;
@@ -118,19 +101,17 @@ export const getTotalLessonCount = (): number => {
     return basicsLessons + bullishLessons + bearishLessons + indicatorLessons + fundamentalLessons;
 };
 
-
 /**
- * NEW: Calculates completion counts for any given module.
+ * Calculates completion counts for any given module.
  * @param {string} moduleId - The ID of the main module (e.g., 'ch1', 'ch3').
- * @returns {{completed: number, total: number}} The completed and total lesson counts.
+ * @returns {Promise<{completed: number, total: number}>} A promise resolving to completed/total counts.
  */
-export const getModuleLessonCounts = (moduleId: string): { completed: number; total: number } => {
+export const getModuleLessonCounts = async (moduleId: string): Promise<{ completed: number; total: number }> => {
     let lessons: { id: string }[] = [];
 
     switch (moduleId) {
         case 'ch1':
-            const basicsModule = learningCurriculum.find(c => c.id === 'ch1');
-            lessons = basicsModule?.subChapters || [];
+            lessons = learningCurriculum.find(c => c.id === 'ch1')?.subChapters || [];
             break;
         case 'ch3':
             lessons = bullishPatterns;
@@ -152,69 +133,12 @@ export const getModuleLessonCounts = (moduleId: string): { completed: number; to
         return { completed: 0, total: 0 };
     }
 
-    const progress = getProgressData();
-    const completed = lessons.filter(lesson => progress[lesson.id]).length;
+    const profile = await getProfileData();
+    const completed = lessons.filter(lesson => profile.progress_data[lesson.id]).length;
     
     return { completed, total: lessons.length };
 };
 
-
-/**
- * Fetches user-specific statistics like total P&L from the Supabase 'profiles' table.
- * @returns {Promise<{totalPnl: number}>} An object containing user stats.
- */
-export const getUserStats = async (): Promise<{ totalPnl: number }> => {
-    try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session?.user) {
-            console.error("No valid session found for fetching stats:", sessionError?.message);
-            return { totalPnl: 0 };
-        }
-        const user = session.user;
-
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('total_pnl')
-            .eq('id', user.id)
-            .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116: row not found
-            console.error("Error fetching user profile for stats:", error);
-            return { totalPnl: 0 };
-        }
-
-        return { totalPnl: data?.total_pnl || 0 };
-    } catch (e) {
-        console.error("Unexpected error in getUserStats:", e);
-        return { totalPnl: 0 };
-    }
-};
-
-/**
- * Updates the user's total P&L in the Supabase 'profiles' table by a given amount.
- * Uses an RPC call for an atomic increment to prevent race conditions.
- * @param {number} pnlChange - The profit or loss from a closed trade.
- */
-export const updateUserPnl = async (pnlChange: number): Promise<void> => {
-    try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session?.user) {
-            console.warn("Cannot update PNL, no valid user session found.", sessionError?.message);
-            return;
-        }
-        const user = session.user;
-
-        // We assume an RPC function `increment_pnl` exists in Supabase.
-        // SQL: create function increment_pnl(user_id_in uuid, pnl_increment numeric) ...
-        const { error } = await supabase.rpc('increment_pnl', {
-            user_id_in: user.id,
-            pnl_increment: pnlChange
-        });
-
-        if (error) {
-            console.error("Error updating user P&L:", error);
-        }
-    } catch (e) {
-        console.error("Unexpected error in updateUserPnl:", e);
-    }
-};
+// getUserStats and updateUserPnl have been moved to profileService.ts
+// to consolidate all direct 'profiles' table interactions.
+export { getProfileData, updateUserPnl } from './profileService';

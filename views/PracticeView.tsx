@@ -74,42 +74,55 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 setIsPortfolioLoading(true);
                 setError(null);
 
+                // 1. Load saved portfolio and last active timestamp.
                 const loadedData = await loadPortfolio();
                 let loadedPortfolio = loadedData.portfolio;
                 const lastUpdated = new Date(loadedData.lastUpdated);
-                
+
+                // 2. Calculate how long the user was away to "catch up" the market.
                 const secondsOffline = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
                 const catchUpSeconds = secondsOffline > 5 ? secondsOffline : 0;
-
+                
+                // 3. Start the simulator, generating all price data for the time the user was away.
                 const sim = new MarketSimulator();
                 simulatorRef.current = sim;
                 await sim.start(catchUpSeconds);
 
+                // Get the full, up-to-date historical chart data.
                 const initialData = sim.getHistoricalData(timeframe);
                 setInitialChartData(initialData);
                 
-                const latestCandle = sim.getLatestCandle(timeframe);
+                // Set the active instrument.
                 const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
                 setSelectedInstrument(initialInstrument);
+                
+                const latestCandle = sim.getLatestCandle(timeframe);
 
+                // 4. CRITICAL: Update portfolio P&L with the new "caught-up" price before starting live ticks.
                 if (latestCandle) {
+                    const latestPrice = latestCandle.close;
                     const livePrices: { [key: string]: number } = {};
-                    loadedPortfolio.positions.forEach(pos => {
-                         if (pos.instrument.instrument_key === initialInstrument.instrument_key) {
-                            livePrices[pos.instrument.instrument_key] = latestCandle.close;
-                        }
-                    });
                     
-                    loadedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
+                    // Apply the latest price to ALL open positions to update their P&L.
+                    loadedPortfolio.positions.forEach(pos => {
+                        livePrices[pos.instrument.instrument_key] = latestPrice;
+                    });
+                
+                    const updatedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
+                    setPortfolio(updatedPortfolio);
+                
+                    // Update all UI elements with the latest caught-up data.
                     setLiveOhlc(latestCandle);
-                     setInstruments(prev => prev.map(inst =>
-                        inst.instrument_key === initialInstrument.instrument_key
-                            ? { ...inst, last_price: latestCandle.close }
+                    setInstruments(prev => prev.map(inst =>
+                        inst.instrument_type === 'CRYPTO' // Apply to all simulated assets
+                            ? { ...inst, last_price: latestPrice }
                             : inst
                     ));
+                } else {
+                    // If no data, just set the loaded portfolio without updating prices.
+                    setPortfolio(loadedPortfolio);
                 }
                 
-                setPortfolio(loadedPortfolio);
                 setIsPortfolioLoading(false);
                 setIsLoading(false);
 

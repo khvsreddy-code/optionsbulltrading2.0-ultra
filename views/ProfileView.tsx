@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
+import { getProfileData } from '../services/profileService'; // <-- Use new service
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
-// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 
 interface ProfileViewProps {
@@ -10,52 +10,73 @@ interface ProfileViewProps {
     onNavigate: (path: string) => void;
 }
 
+interface ProfileData {
+    subscription_status: string;
+    subscription_expires_at: string | null;
+}
+
 const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState(user?.user_metadata?.full_name || 'Trader');
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=7065F0&color=fff`);
+    const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const viewRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (viewRef.current) {
-            const backBtn = viewRef.current.querySelector('.back-btn-anim');
-            const profileHeader = viewRef.current.querySelector('.profile-header-anim');
-            const subCard = viewRef.current.querySelector('.sub-card-anim');
-            const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
-            const logoutBtn = viewRef.current.querySelector('.logout-btn-anim');
+        const fetchProfile = async () => {
+            setLoading(true);
+            const data = await getProfileData();
+            setProfileData(data);
+            setLoading(false);
 
-            anime.timeline({
-                easing: 'easeOutExpo',
-            })
-            .add({
-                targets: [backBtn, profileHeader],
-                opacity: [0, 1],
-                translateY: [-30, 0],
-                duration: 600,
-                delay: anime.stagger(50)
-            })
-            .add({
-                targets: subCard,
-                opacity: [0, 1],
-                scale: [0.9, 1],
-                duration: 500,
-            }, '-=400')
-            .add({
-                targets: menuItems,
-                opacity: [0, 1],
-                translateX: [-20, 0],
-                delay: anime.stagger(100),
-                duration: 400,
-            }, '-=300')
-             .add({
-                targets: logoutBtn,
-                opacity: [0, 1],
-                translateY: [20, 0],
-                duration: 500,
-            }, '-=300');
-        }
-    }, []);
+            if (viewRef.current) {
+                 const backBtn = viewRef.current.querySelector('.back-btn-anim');
+                const profileHeader = viewRef.current.querySelector('.profile-header-anim');
+                const subCard = viewRef.current.querySelector('.sub-card-anim');
+                const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
+                const logoutBtn = viewRef.current.querySelector('.logout-btn-anim');
+
+                anime.timeline({
+                    easing: 'easeOutExpo',
+                })
+                .add({
+                    targets: [backBtn, profileHeader],
+                    opacity: [0, 1],
+                    translateY: [-30, 0],
+                    duration: 600,
+                    delay: anime.stagger(50)
+                })
+                .add({
+                    targets: subCard,
+                    opacity: [0, 1],
+                    scale: [0.9, 1],
+                    duration: 500,
+                }, '-=400')
+                .add({
+                    targets: menuItems,
+                    opacity: [0, 1],
+                    translateX: [-20, 0],
+                    delay: anime.stagger(100),
+                    duration: 400,
+                }, '-=300')
+                 .add({
+                    targets: logoutBtn,
+                    opacity: [0, 1],
+                    translateY: [20, 0],
+                    duration: 500,
+                }, '-=300');
+            }
+        };
+
+        fetchProfile();
+
+        // Add event listener to refetch profile data after a successful payment
+        const handleSubscriptionUpdate = () => fetchProfile();
+        window.addEventListener('subscriptionUpdated', handleSubscriptionUpdate);
+        return () => window.removeEventListener('subscriptionUpdated', handleSubscriptionUpdate);
+
+    }, [user]);
 
     const handleNameChange = async () => {
         const newName = prompt("Enter your new name:", userName);
@@ -66,7 +87,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 alert("Error updating name: " + error.message);
             } else {
                 setUserName(newName);
-                // The session needs to be refreshed to reflect the change everywhere
                 alert("Name updated successfully! The change will be fully reflected after your next login.");
             }
             setLoading(false);
@@ -94,9 +114,44 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
         setLoading(false);
     };
 
+    const renderSubscriptionCard = () => {
+        if (!profileData) return null;
+
+        const isPremium = profileData.subscription_status === 'premium';
+        const expiryDate = profileData.subscription_expires_at ? new Date(profileData.subscription_expires_at) : null;
+        const isExpired = expiryDate ? expiryDate < new Date() : false;
+
+        if (isPremium && !isExpired) {
+            return (
+                <div className="pro-card p-5 flex items-center justify-between bg-green-500/10 sub-card-anim">
+                    <div>
+                        <h3 className="font-bold text-green-600">Premium Plan</h3>
+                        <p className="text-sm text-green-600/80">
+                            Expires on: {expiryDate?.toLocaleDateString('en-GB')}
+                        </p>
+                    </div>
+                    <span className="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg text-sm">Active</span>
+                </div>
+            );
+        }
+
+        return (
+            <div className="pro-card p-5 flex items-center justify-between bg-primary-light sub-card-anim">
+                <div>
+                    <h3 className="font-bold text-primary">{isExpired ? 'Subscription Expired' : 'Free Plan'}</h3>
+                    <p className="text-sm text-primary/80">{isExpired ? 'Please renew to continue access.' : 'Access to basic learning modules.'}</p>
+                </div>
+                <button 
+                    onClick={() => onNavigate('/pricing')}
+                    className="px-4 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback text-sm">
+                    {isExpired ? 'Renew' : 'Upgrade'}
+                </button>
+            </div>
+        );
+    };
+
     return (
         <div ref={viewRef} className="p-4 space-y-6">
-            {/* Back Button */}
             <div className="back-btn-anim">
                  <button 
                     onClick={() => window.history.back()}
@@ -107,7 +162,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 </button>
             </div>
 
-            {/* Profile Header */}
             <div className="flex flex-col items-center space-y-3 profile-header-anim">
                 <div className="relative">
                     <img
@@ -139,27 +193,14 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 <p className="text-sm text-text-secondary">{user?.email}</p>
             </div>
             
-            {/* Subscription Card */}
-            <div className="pro-card p-5 flex items-center justify-between bg-primary-light sub-card-anim">
-                <div>
-                    <h3 className="font-bold text-primary">Free Plan</h3>
-                    <p className="text-sm text-primary/80">Access to basic learning modules.</p>
-                </div>
-                <button 
-                    onClick={() => onNavigate('/pricing')}
-                    className="px-4 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback text-sm">
-                    Upgrade to Premium
-                </button>
-            </div>
+            {loading ? <div className="h-24 flex items-center justify-center">...</div> : renderSubscriptionCard()}
 
-            {/* Menu List */}
             <div className="space-y-2">
                 <ProfileMenuItem icon={Star} label="My Subscriptions" className="profile-menu-item-anim" />
                 <ProfileMenuItem icon={Shield} label="Privacy Policy" className="profile-menu-item-anim" />
                 <ProfileMenuItem icon={FileText} label="Terms & Conditions" className="profile-menu-item-anim" />
             </div>
             
-            {/* Logout Button */}
             <div className="logout-btn-anim">
                  <button 
                     onClick={signOutUser}
@@ -169,14 +210,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                     <span>Logout</span>
                 </button>
             </div>
-            {loading && (
-                <div className="fixed inset-0 bg-white/50 flex items-center justify-center">
-                    <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-            )}
         </div>
     );
 };

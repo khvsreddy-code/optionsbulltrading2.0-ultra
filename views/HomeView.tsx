@@ -3,7 +3,8 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Zap, DollarSign, ChevronRight } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
-import { getUserStats, getTotalCompletedLessons, getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
+import { getProfileData } from '../services/profileService'; // <-- Use new centralized service
+import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
 import anime from 'animejs';
 
 interface HomeViewProps {
@@ -87,27 +88,28 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
     useEffect(() => {
         const fetchStats = async () => {
-            const { totalPnl } = await getUserStats();
-            const lessonsLearned = getTotalCompletedLessons();
+            const profile = await getProfileData();
+            const lessonsLearned = Object.values(profile.progress_data || {}).filter(Boolean).length;
             const testsPassed = getTestsPassedCount();
             const totalLessons = getTotalLessonCount();
             const initialPortfolio = 100000;
-            const pnlPercent = initialPortfolio > 0 ? (totalPnl / initialPortfolio) * 100 : 0;
+            const pnlPercent = initialPortfolio > 0 ? (profile.total_pnl / initialPortfolio) * 100 : 0;
             const overallProgress = totalLessons > 0 ? (lessonsLearned / totalLessons) * 100 : 0;
 
-            setStats({ pnl: totalPnl, lessonsLearned, testsPassed, pnlPercent, overallProgress });
+            setStats({ pnl: profile.total_pnl, lessonsLearned, testsPassed, pnlPercent, overallProgress });
         };
 
-        fetchStats(); // Fetch on mount
+        fetchStats();
 
-        // Add listeners to update stats when progress changes
         window.addEventListener('progressUpdated', fetchStats);
-        window.addEventListener('testProgressUpdated', fetchStats); // For future test feature
+        window.addEventListener('testProgressUpdated', fetchStats);
+        // Also listen for subscription updates that might change view
+        window.addEventListener('subscriptionUpdated', fetchStats);
 
         return () => {
-            // Cleanup listeners
             window.removeEventListener('progressUpdated', fetchStats);
             window.removeEventListener('testProgressUpdated', fetchStats);
+            window.removeEventListener('subscriptionUpdated', fetchStats);
         };
     }, []);
 

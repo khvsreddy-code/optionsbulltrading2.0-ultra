@@ -9,20 +9,61 @@ interface LearningModuleDetailViewProps {
     moduleId: string | null;
 }
 
+interface LessonItemProps {
+    subChapter: { id: string; title: string; readingTime: string; };
+    onNavigate: (path: string) => void;
+}
+
+const LessonItem: React.FC<LessonItemProps> = ({ subChapter, onNavigate }) => {
+    const [isComplete, setIsComplete] = useState(false);
+
+    useEffect(() => {
+        const checkCompletion = async () => {
+            const completed = await isSubChapterComplete(subChapter.id);
+            setIsComplete(completed);
+        };
+        checkCompletion();
+
+        const handleProgressUpdate = () => checkCompletion();
+        window.addEventListener('progressUpdated', handleProgressUpdate);
+        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+    }, [subChapter.id]);
+
+    return (
+        <button
+            onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
+            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
+        >
+            <div>
+                <p className={`font-semibold transition-colors ${isComplete ? 'text-text-secondary line-through' : 'text-text-main'}`}>{subChapter.title}</p>
+                <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
+            </div>
+            {isComplete ? (
+                <CheckCircle size={22} className="text-primary flex-shrink-0 ml-2" />
+            ) : (
+                <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
+            )}
+        </button>
+    );
+};
+
 const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onNavigate, moduleId }) => {
     const viewRef = useRef<HTMLDivElement>(null);
-    const [progressVersion, setProgressVersion] = useState(0);
+    const [progress, setProgress] = useState({ completed: 0, total: 0 });
 
-    // Listen for progress changes to trigger re-renders
     useEffect(() => {
-        const handleProgressUpdate = () => {
-            setProgressVersion(v => v + 1);
+        const fetchProgress = async () => {
+            if (moduleId) {
+                const counts = await getModuleLessonCounts(moduleId);
+                setProgress(counts);
+            }
         };
+        fetchProgress();
+
+        const handleProgressUpdate = () => fetchProgress();
         window.addEventListener('progressUpdated', handleProgressUpdate);
-        return () => {
-            window.removeEventListener('progressUpdated', handleProgressUpdate);
-        };
-    }, []);
+        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+    }, [moduleId]);
 
     useEffect(() => {
         if(viewRef.current) {
@@ -54,8 +95,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
         );
     }
 
-    const { completed: completedCount, total: totalCount } = getModuleLessonCounts(module.id);
-    const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+    const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
     const moduleTitle = module.title.split(': ')[1] || module.title;
 
     return (
@@ -78,35 +118,19 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                         </div>
                     </div>
                     <div className="p-4 bg-card">
-                        <p className="text-sm font-semibold text-text-secondary">{completedCount} of {totalCount} lessons completed</p>
+                        <p className="text-sm font-semibold text-text-secondary">{progress.completed} of {progress.total} lessons completed</p>
                         <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
-                            <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s ease-in-out' }}></div>
+                            <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    {module.subChapters.map((subChapter) => {
-                        const isComplete = isSubChapterComplete(subChapter.id);
-                        return (
-                            <div key={subChapter.id} className="anim-child">
-                                <button
-                                    onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-                                    className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
-                                >
-                                    <div>
-                                        <p className={`font-semibold transition-colors ${isComplete ? 'text-text-secondary line-through' : 'text-text-main'}`}>{subChapter.title}</p>
-                                        <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
-                                    </div>
-                                    {isComplete ? (
-                                        <CheckCircle size={22} className="text-primary flex-shrink-0 ml-2" />
-                                    ) : (
-                                        <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
-                                    )}
-                                </button>
-                            </div>
-                        );
-                    })}
+                    {module.subChapters.map((subChapter) => (
+                        <div key={subChapter.id} className="anim-child">
+                           <LessonItem subChapter={subChapter} onNavigate={onNavigate} />
+                        </div>
+                    ))}
                 </div>
             </main>
         </div>

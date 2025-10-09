@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
-// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
+import { supabase } from '../services/supabaseClient';
 
 declare global {
   interface Window {
@@ -17,12 +17,14 @@ interface PricingViewProps {
 
 const plans = [
     {
-        title: '1 month plan',
+        title: 'Basic Plan (1 Month)',
         price: 2999,
+        duration: 1, // Duration in months
     },
     {
-        title: '3 month plan',
+        title: 'Value Plan (3 Months)',
         price: 8997,
+        duration: 3,
         highlight: true,
     },
 ];
@@ -43,42 +45,73 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
         }
     }, []);
     
-    const handleSubscribe = (plan: { title: string; price: number }) => {
+    const handleSubscribe = async (plan: { title: string; price: number, duration: number }) => {
         if (!user) {
             alert('Please sign in to subscribe.');
             return;
         }
 
-        const options = {
-            key: 'rzp_test_RQ5XAtXLTbM4dL', 
-            amount: plan.price * 100, 
-            currency: 'INR',
-            name: 'Optionsbulltrading Inc.',
-            description: `Subscription for ${plan.title}`,
-            image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png',
-            handler: function (response: any) {
-                alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
-                console.log('Payment Response:', response);
-            },
-            prefill: {
-                name: user.user_metadata?.full_name || 'Valued Customer',
-                email: user.email,
-                contact: '' 
-            },
-            notes: {
-                plan_title: plan.title,
-                user_id: user.id,
-            },
-            theme: {
-                color: '#53AC53'
+        try {
+            // Step 1: Create a secure order on the backend
+            const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+                body: { 
+                    amount: plan.price * 100, // Amount must be in paise
+                    receipt: `receipt_user_${user.id}_${Date.now()}`
+                },
+            });
+
+            if (orderError || !orderData.id) {
+                console.error('Error creating Razorpay order:', orderError);
+                alert(`Could not initiate payment. ${orderError?.message || 'Please try again.'}`);
+                return;
             }
-        };
-        
-        if (window.Razorpay) {
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-        } else {
-            alert('Payment gateway could not be loaded. Please check your connection and try again.');
+
+            // Step 2: Open Razorpay checkout with the secure order_id
+            const options = {
+                key: 'rzp_test_RQ5XAtXLTbM4dL', // This is a public key, safe to expose
+                amount: plan.price * 100, 
+                currency: 'INR',
+                name: 'Optionsbulltrading Inc.',
+                description: `Subscription for ${plan.title}`,
+                image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png',
+                order_id: orderData.id,
+                handler: async function (response: any) {
+                    // Step 3: Verify the payment on the backend
+                    const { data: verificationData, error: verificationError } = await supabase.functions.invoke('verify-payment', {
+                        body: {
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            plan_duration_months: plan.duration,
+                        },
+                    });
+
+                    if (verificationError) {
+                        alert(`Payment verification failed: ${verificationError.message}`);
+                    } else {
+                        alert(`Payment successful! Your subscription is now active.`);
+                        // Navigate to profile to see updated status
+                        onNavigate('/profile'); 
+                    }
+                },
+                prefill: {
+                    name: user.user_metadata?.full_name || 'Valued Customer',
+                    email: user.email,
+                },
+                theme: {
+                    color: '#53AC53'
+                }
+            };
+            
+            if (window.Razorpay) {
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } else {
+                alert('Payment gateway could not be loaded. Please check your connection and try again.');
+            }
+        } catch (error) {
+            console.error("Subscription process error:", error);
+            alert("An unexpected error occurred. Please try again.");
         }
     };
 
@@ -93,12 +126,12 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
 
             <div className="relative z-10 max-w-4xl mx-auto text-center">
                 <header className="anim-child">
-                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-text-main">Plans for every level of ambition</h1>
-                    <p className="text-lg text-text-secondary mt-2">Start your journey to becoming a pro trader.</p>
+                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-text-main">Choose Your Plan</h1>
+                    <p className="text-lg text-text-secondary mt-2">Start your journey to becoming a profitable trader today.</p>
                 </header>
 
                 <main className="mt-12 w-full">
-                    <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-2xl mx-auto">
+                    <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto">
                         {plans.map(plan => (
                             <div className="anim-child w-full" key={plan.title}>
                                 <PricingCard plan={plan} onSubscribe={handleSubscribe} />

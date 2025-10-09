@@ -27,9 +27,9 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
 
         const user = session.user;
 
-        // Step 2: Attempt to fetch the existing portfolio.
+        // Step 2: Attempt to fetch the existing portfolio from the correct 'portfolios' table.
         const { data, error } = await supabase
-            .from('simulator_portfolios')
+            .from('portfolios')
             .select('portfolio_data, updated_at')
             .eq('user_id', user.id)
             .single();
@@ -45,12 +45,12 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
             return { portfolio: data.portfolio_data as Portfolio, lastUpdated: data.updated_at };
         } 
         
-        // Step 4: If no portfolio exists, create and save a new one.
+        // Step 4: If no portfolio exists, create and save a new one in the correct 'portfolios' table.
         else {
             console.log("No existing portfolio found for user. Creating a new one.");
             const initialPortfolio = createInitialPortfolio();
             const { error: insertError } = await supabase
-                .from('simulator_portfolios')
+                .from('portfolios')
                 .insert({
                     user_id: user.id,
                     portfolio_data: initialPortfolio,
@@ -86,7 +86,7 @@ export const savePortfolio = async (portfolio: Portfolio): Promise<void> => {
         const user = session.user;
 
         const { error } = await supabase
-            .from('simulator_portfolios')
+            .from('portfolios')
             .upsert({
                 user_id: user.id,
                 portfolio_data: portfolio,

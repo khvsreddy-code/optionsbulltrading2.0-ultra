@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
@@ -17,9 +16,13 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
 
     useEffect(() => {
-        if (chapterId) {
-            setIsComplete(isSubChapterComplete(chapterId));
-        }
+        const checkCompletion = async () => {
+            if (chapterId) {
+                const completed = await isSubChapterComplete(chapterId);
+                setIsComplete(completed);
+            }
+        };
+        checkCompletion();
         window.scrollTo(0, 0);
     }, [chapterId]);
 
@@ -43,17 +46,17 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         ? allSubChapters[currentSubChapterIndex + 1] 
         : null;
         
-    const handleToggleComplete = () => {
+    const handleToggleComplete = async () => {
         if (subChapter) {
-            if (!isComplete) {
-                // If marking as complete for the first time
-                toggleSubChapterCompletion(subChapter.id);
-                setIsComplete(true);
+            // Optimistically update UI
+            const wasJustCompleted = !isComplete;
+            setIsComplete(wasJustCompleted);
+            
+            // Persist change to the backend
+            await toggleSubChapterCompletion(subChapter.id);
+
+            if (wasJustCompleted) {
                 setIsCompletionDialogOpen(true);
-            } else {
-                // If un-marking as complete
-                toggleSubChapterCompletion(subChapter.id);
-                setIsComplete(false);
             }
         }
     };

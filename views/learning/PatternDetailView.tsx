@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
@@ -20,10 +19,14 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
 
     useEffect(() => {
-        if (patternId) {
-            setIsComplete(isSubChapterComplete(patternId));
-        }
-        window.scrollTo(0, 0); // Scroll to top when new lesson loads
+        const checkCompletion = async () => {
+            if (patternId) {
+                const completed = await isSubChapterComplete(patternId);
+                setIsComplete(completed);
+            }
+        };
+        checkCompletion();
+        window.scrollTo(0, 0);
     }, [patternId]);
 
     useEffect(() => {
@@ -51,30 +54,28 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
         ? allContent[currentIndex + 1] 
         : null;
     
-    const handleToggleComplete = () => {
+    const handleToggleComplete = async () => {
         if (pattern) {
-            if (!isComplete) {
-                toggleSubChapterCompletion(pattern.id);
-                setIsComplete(true);
-                setIsCompletionDialogOpen(true); // Open the dialog on completion
-            } else {
-                toggleSubChapterCompletion(pattern.id);
-                setIsComplete(false);
+            const wasJustCompleted = !isComplete;
+            setIsComplete(wasJustCompleted); // Optimistic UI update
+
+            await toggleSubChapterCompletion(pattern.id);
+
+            if (wasJustCompleted) {
+                setIsCompletionDialogOpen(true);
             }
         }
     };
     
     const handleNextLesson = () => {
-        setIsCompletionDialogOpen(false); // Close dialog before navigating
+        setIsCompletionDialogOpen(false);
         if (nextLesson) {
             onNavigate(`/learning/pattern/${nextLesson.id}`);
         } else {
-            // If it's the last lesson, navigate back to the main learning page
             onNavigate('/learning');
         }
     };
     
-    // Determine the correct back path based on where the content was found
     const backTargetPath = fundamentalAnalysisTopics.some(p => p.id === patternId) ? '/learning/fundamental'
                          : technicalIndicators.some(p => p.id === patternId) ? '/learning/indicators'
                          : bearishPatterns.some(p => p.id === patternId) ? '/learning/bearish'

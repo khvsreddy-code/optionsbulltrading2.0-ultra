@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState } from 'react';
-// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { learningCurriculum, Chapter } from '../../data/learningContent';
 import { ChevronRight } from '../../components/common/Icons';
@@ -9,11 +8,23 @@ interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
 }
 
-// NEW Reusable Module Card component
 const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => void; }> = ({ chapter, onNavigate }) => {
-    const { completed, total } = getModuleLessonCounts(chapter.id);
-    const progress = total > 0 ? (completed / total) * 100 : 0;
+    const [progress, setProgress] = useState({ completed: 0, total: 0 });
+    const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
     const title = chapter.title.split(': ')[1] || chapter.title;
+
+    useEffect(() => {
+        const fetchProgress = async () => {
+            const counts = await getModuleLessonCounts(chapter.id);
+            setProgress(counts);
+        };
+        fetchProgress();
+
+        const handleProgressUpdate = () => fetchProgress();
+        window.addEventListener('progressUpdated', handleProgressUpdate);
+        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+    }, [chapter.id]);
+
 
     const getPathForModule = (chapterId: string): string => {
         switch(chapterId) {
@@ -37,9 +48,9 @@ const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => voi
                 <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{title}</h3>
             </div>
             <div className="p-4 bg-card">
-                <p className="text-sm font-semibold text-text-secondary">{completed} of {total} lessons completed</p>
+                <p className="text-sm font-semibold text-text-secondary">{progress.completed} of {progress.total} lessons completed</p>
                 <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s ease-in-out' }}></div>
+                    <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
                 </div>
             </div>
         </div>
@@ -49,20 +60,7 @@ const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => voi
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const viewRef = useRef<HTMLDivElement>(null);
-    const [progressVersion, setProgressVersion] = useState(0);
-
-    // Listen for progress changes to trigger re-renders
-    useEffect(() => {
-        const handleProgressUpdate = () => {
-            setProgressVersion(v => v + 1);
-        };
-        window.addEventListener('progressUpdated', handleProgressUpdate);
-        return () => {
-            window.removeEventListener('progressUpdated', handleProgressUpdate);
-        };
-    }, []);
-
-
+    
     useEffect(() => {
         if(viewRef.current) {
             anime({
