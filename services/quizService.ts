@@ -1,5 +1,4 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import React from 'react';
 import type { QuizQuestion, QuizTopic } from '../types';
 
 // Import all content sources
@@ -20,81 +19,45 @@ export const quizTopics: TopicDetails[] = [
     { id: 'fundamental', name: 'Fundamental Analysis', description: 'Questions on company valuation and economic analysis.' },
 ];
 
-// Helper to extract text from React nodes
-const extractTextFromNode = (node: React.ReactNode): string => {
-    if (typeof node === 'string') {
-        return node;
-    }
-    if (typeof node === 'number') {
-        return String(node);
-    }
-    if (Array.isArray(node)) {
-        return node.map(extractTextFromNode).join(' ');
-    }
-    if (React.isValidElement(node)) {
-        // Don't extract from code or other special elements that might not be text
-        if (typeof node.type === 'string' && ['code', 'pre', 'img', 'figure', 'figcaption'].includes(node.type)) {
-            return '';
-        }
-        return extractTextFromNode(node.props.children);
-    }
-    return '';
-};
-
-const processContent = (items: { title: string; content: React.ReactNode }[]) => {
-    let text = '';
-    items.forEach(item => {
-        text += `Topic: ${item.title}\n`;
-        text += `${extractTextFromNode(item.content)}\n\n`;
-    });
-    return text;
-};
-
-// Aggregate learning content based on the selected topic
-const getAggregatedContent = (topic: QuizTopic): string => {
-    let fullText = '';
+// Helper to get a list of topic titles
+const getTopicTitles = (topic: QuizTopic): string => {
+    let titles: string[] = [];
 
     switch (topic) {
         case 'basics':
-            learningCurriculum.forEach(chapter => {
-                if (chapter.id === 'ch1') { // Only basics module
-                    chapter.subChapters.forEach(sub => {
-                         fullText += `Topic: ${chapter.title} - ${sub.title}\n`;
-                         fullText += `${extractTextFromNode(sub.content)}\n\n`;
-                    });
-                }
-            });
+            const basicsModule = learningCurriculum.find(c => c.id === 'ch1');
+            if (basicsModule) {
+                titles = basicsModule.subChapters.map(sub => sub.title.split(': ')[1] || sub.title);
+            }
             break;
         case 'bullish':
-            fullText = processContent(bullishPatterns);
+            titles = bullishPatterns.map(p => p.title);
             break;
         case 'bearish':
-            fullText = processContent(bearishPatterns);
+            titles = bearishPatterns.map(p => p.title);
             break;
         case 'indicators':
-            fullText = processContent(technicalIndicators);
+            titles = technicalIndicators.map(p => p.title);
             break;
         case 'fundamental':
-            fullText = processContent(fundamentalAnalysisTopics);
+            titles = fundamentalAnalysisTopics.map(p => p.title);
             break;
         case 'all':
         default:
-             learningCurriculum.forEach(chapter => {
-                chapter.subChapters.forEach(sub => {
-                     fullText += `Topic: ${chapter.title} - ${sub.title}\n`;
-                     fullText += `${extractTextFromNode(sub.content)}\n\n`;
-                });
-            });
-            fullText += processContent(bullishPatterns);
-            fullText += processContent(bearishPatterns);
-            fullText += processContent(technicalIndicators);
-            fullText += processContent(fundamentalAnalysisTopics);
+            const basics = learningCurriculum.find(c => c.id === 'ch1');
+            if (basics) {
+                titles.push(...basics.subChapters.map(sub => sub.title.split(': ')[1] || sub.title));
+            }
+            titles.push(...bullishPatterns.map(p => p.title));
+            titles.push(...bearishPatterns.map(p => p.title));
+            titles.push(...technicalIndicators.map(p => p.title));
+            titles.push(...fundamentalAnalysisTopics.map(p => p.title));
             break;
     }
 
-    // Naive text reduction to fit within context limits if needed.
-    return fullText.replace(/\s+/g, ' ').trim();
+    return titles.join(', ');
 };
+
 
 const quizSchema = {
   type: Type.ARRAY,
@@ -141,25 +104,20 @@ export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> =>
         const ai = getAiClient();
 
         const topicName = quizTopics.find(t => t.id === topic)?.name || 'Stock Market Trading';
-        const numberOfQuestions = topic === 'all' ? 50 : 15;
+        const numberOfQuestions = topic === 'all' ? 25 : 10; // Reduced number of questions for faster, more reliable generation
 
         const QUIZ_GENERATION_PROMPT = `
-You are an expert quizmaster specializing in stock market trading education. 
-Based on the following learning material on the topic of "${topicName}", generate a challenging quiz of ${numberOfQuestions} multiple-choice questions. 
+You are an expert quizmaster specializing in stock market trading education.
+Your task is to generate a challenging quiz of ${numberOfQuestions} multiple-choice questions on the general topic of "${topicName}".
+The specific concepts to be tested are included in the following list: {{CONTEXT}}.
 Each question must have exactly 4 options, and only one correct answer.
-The questions should cover a wide and diverse range of topics from the provided material.
-Ensure the options are plausible and the correct answer is clearly identifiable from the source material.
-Do not make up information not present in the text.
+The questions should be diverse and cover the concepts from the provided list.
+You must use your general knowledge about these trading concepts to formulate the questions and answers.
 
 The output must be a JSON array of objects, strictly following the provided schema.
-
-Learning Material:
----
-{{CONTEXT}}
----
 `;
 
-        const content = getAggregatedContent(topic);
+        const content = getTopicTitles(topic);
         const prompt = QUIZ_GENERATION_PROMPT.replace('{{CONTEXT}}', content);
 
         const response = await ai.models.generateContent({
