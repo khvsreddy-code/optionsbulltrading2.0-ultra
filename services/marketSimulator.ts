@@ -3,35 +3,49 @@ import type { CandleData } from '../types';
 export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
 
 /**
- * A non-deterministic, random-walk market simulator. This version provides a more
- * "realistic" and unpredictable price action that the user preferred. State must be
- * managed and persisted externally to ensure consistency across sessions.
+ * A deterministic, seeded pseudo-random walk market simulator.
+ * This provides a realistic and unpredictable price action that is perfectly
+ * reproducible for a given day, simulating a persistent 24/7 market without a server.
  */
 export class MarketSimulator {
     private subscribers: Map<Timeframe, Set<(candle: CandleData, isUpdate: boolean) => void>> = new Map();
     private readonly allTimeframes: Timeframe[] = ['1s', '1m', '5m', '15m', '30m', '45m'];
     private timeframeSecondsMap: Map<Timeframe, number> = new Map();
     
-    private readonly INTERNAL_TICK_MS = 1000; // Run on a 1s internal tick
+    private readonly INTERNAL_TICK_MS = 1000;
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
     private history: CandleData[] = [];
     private liveCandles: Map<Timeframe, CandleData> = new Map();
     private lastPrice: number = 65000;
+    
+    private seed: number = 0;
+    private prng: () => number;
 
-    constructor(initialPrice: number = 65000, initialHistory?: CandleData[]) {
+    constructor(seedString: string) {
+        // Create a numeric seed from the string
+        for (let i = 0; i < seedString.length; i++) {
+            this.seed = (this.seed << 5) - this.seed + seedString.charCodeAt(i);
+            this.seed |= 0; // Convert to 32bit integer
+        }
+        this.prng = this.mulberry32(this.seed);
+
         this.allTimeframes.forEach(tf => {
             const seconds = this.parseTimeframe(tf);
             this.timeframeSecondsMap.set(tf, seconds);
             this.subscribers.set(tf, new Set());
         });
 
-        if (initialHistory && initialHistory.length > 0) {
-            this.history = [...initialHistory];
-            this.lastPrice = this.history[this.history.length - 1].close;
-        } else {
-            this.lastPrice = initialPrice;
-            this.generateInitialHistory();
+        this.generateInitialHistory();
+    }
+    
+    // Mulberry32: a simple, effective pseudo-random number generator
+    private mulberry32(a: number) {
+        return () => {
+          let t = a += 0x6D2B79F5;
+          t = Math.imul(t ^ t >>> 15, t | 1);
+          t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+          return ((t ^ t >>> 14) >>> 0) / 4294967296;
         }
     }
 
@@ -42,7 +56,7 @@ export class MarketSimulator {
     private generateNextPrice(price: number): number {
         const volatility = 0.0005; 
         const trend = 0.00001; 
-        const rand = Math.random() - 0.5 + trend;
+        const rand = this.prng() - 0.5 + trend;
         let change = rand * price * volatility;
         
         const maxChange = price * 0.001;
@@ -55,20 +69,21 @@ export class MarketSimulator {
         const history: CandleData[] = [];
         let price = this.lastPrice;
         const now = Math.floor(Date.now() / 1000);
-        const startTime = now - 500; 
+        // Generate a deep history of 12 hours
+        const startTime = now - (12 * 60 * 60); 
 
-        for (let i = 0; i < 500; i++) {
+        for (let t = startTime; t < now; t++) {
             const open = price;
             price = this.generateNextPrice(price);
-            const high = Math.max(open, price);
-            const low = Math.min(open, price);
-            history.push({ time: startTime + i, open, high, low, close: price });
+            const high = Math.max(open, price, this.generateNextPrice(price));
+            const low = Math.min(open, price, this.generateNextPrice(price));
+            history.push({ time: t, open, high, low, close: price });
         }
         this.history = history;
-        this.lastPrice = history[history.length - 1].close;
+        this.lastPrice = history.length > 0 ? history[history.length - 1].close : this.lastPrice;
     }
 
-    public async start(): Promise<void> {
+    public start(): void {
         if (this.tickIntervalId) this.stop();
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
     }
@@ -90,13 +105,14 @@ export class MarketSimulator {
     }
 
     public getHistoricalData(timeframe: Timeframe): CandleData[] {
+        if (this.history.length === 0) return [];
+        
         if (timeframe === '1s') {
             return [...this.history];
         }
 
         const aggregated: CandleData[] = [];
         const periodInSeconds = this.timeframeSecondsMap.get(timeframe)!;
-        if (this.history.length === 0) return [];
         
         let currentCandle: CandleData | null = null;
         for(const tick of this.history) {
@@ -126,7 +142,7 @@ export class MarketSimulator {
         return history.length > 0 ? history[history.length - 1] : undefined;
     }
     
-    public tick(isCatchUp = false): void {
+    public tick(): void {
         const open = this.lastPrice;
         const newPrice = this.generateNextPrice(open);
         const high = Math.max(open, newPrice);
@@ -135,12 +151,10 @@ export class MarketSimulator {
         
         const newTick: CandleData = { time: now, open, high, low, close: newPrice };
         this.history.push(newTick);
-        if (this.history.length > 2000) { // Limit history size
+        if (this.history.length > 50000) { // Keep ~14 hours of 1s data
             this.history.shift();
         }
         this.lastPrice = newPrice;
-
-        if (isCatchUp) return;
 
         this.allTimeframes.forEach(tf => {
             const periodInSeconds = this.timeframeSecondsMap.get(tf)!;

@@ -97,8 +97,6 @@ export interface Portfolio {
   totalValue: number;
   orders: Order[];
   trades: Trade[]; // NEW: To store completed trades
-  chartHistory?: CandleData[]; // For persisting the random walk
-  lastPrice?: number; // For persisting the random walk
 }
 
 // Quiz related types

@@ -70,44 +70,30 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 setIsPortfolioLoading(true);
                 setError(null);
 
-                const { portfolio: loadedPortfolio, lastUpdated } = await loadPortfolio();
+                const { portfolio: loadedPortfolio } = await loadPortfolio();
                 
-                const sim = new MarketSimulator(loadedPortfolio.lastPrice, loadedPortfolio.chartHistory);
+                // Use today's date as a seed for a reproducible daily market
+                const dailySeed = new Date().toISOString().slice(0, 10);
+                const sim = new MarketSimulator(dailySeed);
                 simulatorRef.current = sim;
 
-                const lastUpdateTime = new Date(lastUpdated).getTime();
-                const now = Date.now();
-                const timeDiffSeconds = Math.floor((now - lastUpdateTime) / 1000);
-                const ticksToCatchUp = Math.min(3600, Math.max(0, timeDiffSeconds));
-
-                if (ticksToCatchUp > 1) {
-                    for (let i = 0; i < ticksToCatchUp; i++) {
-                        sim.tick(true);
-                    }
-                }
-                
-                const finalHistory = sim.getFullHistory();
-                const finalPrice = finalHistory.length > 0 ? finalHistory[finalHistory.length - 1].close : (loadedPortfolio.lastPrice || 65000);
+                const fullHistory = sim.getFullHistory();
+                const currentPrice = fullHistory.length > 0 ? fullHistory[fullHistory.length - 1].close : 65000;
                 
                 const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
                 setSelectedInstrument(initialInstrument);
                 
-                const livePrices: { [key: string]: number } = {};
-                loadedPortfolio.positions.forEach(pos => {
-                    livePrices[pos.instrument.instrument_key] = finalPrice;
-                });
+                // Update portfolio P&L with the latest price from the deterministic simulation
+                const livePrices: { [key: string]: number } = { [initialInstrument.instrument_key]: currentPrice };
                 const updatedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
-                
-                updatedPortfolio.chartHistory = finalHistory;
-                updatedPortfolio.lastPrice = finalPrice;
                 setPortfolio(updatedPortfolio);
 
-                const initialData = sim.getHistoricalData(timeframe);
-                setInitialChartData(initialData);
-                setLiveOhlc(initialData.length > 0 ? initialData[initialData.length - 1] : null);
+                const initialDataForChart = sim.getHistoricalData(timeframe);
+                setInitialChartData(initialDataForChart);
+                setLiveOhlc(initialDataForChart.length > 0 ? initialDataForChart[initialDataForChart.length - 1] : null);
                 setInstruments(prev => prev.map(inst =>
                     inst.instrument_type === 'CRYPTO'
-                        ? { ...inst, last_price: finalPrice }
+                        ? { ...inst, last_price: currentPrice }
                         : inst
                 ));
                 
@@ -142,6 +128,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const simulator = simulatorRef.current;
         if (!simulator || isLoading || isPortfolioLoading || error) return;
 
+        // On timeframe change, regenerate historical data from the deterministic simulator
         const historicalData = simulator.getHistoricalData(timeframe);
         setInitialChartData(historicalData);
         
@@ -157,12 +144,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         : inst
                 ));
                 
-                const fullHistory = simulator.getFullHistory();
-                setPortfolio(prevPortfolio => ({
-                    ...updatePortfolioValue(prevPortfolio, livePrices),
-                    chartHistory: fullHistory,
-                    lastPrice: candle.close,
-                }));
+                setPortfolio(prevPortfolio => updatePortfolioValue(prevPortfolio, livePrices));
             }
         };
 
@@ -175,17 +157,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         if (saveTimeoutRef.current) {
             clearTimeout(saveTimeoutRef.current);
         }
-        const simulator = simulatorRef.current;
-        const history = simulator ? simulator.getFullHistory() : portfolioState.chartHistory;
-        const lastPrice = history && history.length > 0 ? history[history.length - 1].close : portfolioState.lastPrice;
-
-        const portfolioToSave = {
-            ...portfolioState,
-            chartHistory: history,
-            lastPrice: lastPrice,
-        };
-        savePortfolio(portfolioToSave);
-        return portfolioToSave;
+        savePortfolio(portfolioState);
+        return portfolioState;
     };
 
     const handleOpenOrderDialog = (side: OrderSide) => {
@@ -274,29 +247,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     };
 
     const handleResetPortfolio = async () => {
-        if (window.confirm('Are you sure you want to reset your portfolio? This will erase all trades and reset your balance and chart history.')) {
-            simulatorRef.current?.stop();
-            
+        if (window.confirm('Are you sure you want to reset your portfolio? This will erase all trades and reset your balance. The chart history will remain for today.')) {
             const newPortfolio = createInitialPortfolio();
-            const newSim = new MarketSimulator();
-            simulatorRef.current = newSim;
-            
-            const newHistory = newSim.getFullHistory();
-            newPortfolio.chartHistory = newHistory;
-            newPortfolio.lastPrice = newHistory.length > 0 ? newHistory[newHistory.length - 1].close : 65000;
-            
             setPortfolio(newPortfolio);
             await savePortfolio(newPortfolio);
-            
-            setInitialChartData(newSim.getHistoricalData(timeframe));
-            setLiveOhlc(newHistory.length > 0 ? newHistory[newHistory.length - 1] : null);
-            setInstruments(prev => prev.map(inst =>
-                inst.instrument_type === 'CRYPTO'
-                    ? { ...inst, last_price: newPortfolio.lastPrice! }
-                    : inst
-            ));
-            
-            newSim.start();
         }
     };
     
