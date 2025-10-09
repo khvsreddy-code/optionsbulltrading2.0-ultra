@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CandlestickChart } from '../components/common/Icons';
+import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Flame, DollarSign } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
-// FIX: Use a standard ES module import for animejs.
+import { getUserStats } from '../services/progressService';
+import { getProgressData } from '../services/progressService';
 import anime from 'animejs';
 
 interface HomeViewProps {
@@ -64,9 +65,40 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
     );
 };
 
+const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | number, iconBgColor: string, iconColor: string}> = ({ icon: Icon, title, value, iconBgColor, iconColor }) => (
+    <div className="bg-gray-700/50 rounded-2xl p-4 flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-slate-300">{title}</h4>
+            <Icon size={20} className={iconColor} />
+        </div>
+        <div>
+            {typeof value === 'number' && value % 1 !== 0 ? (
+                 <p className="text-2xl font-bold text-white mt-2">{value.toFixed(2)}</p>
+            ) : (
+                <p className="text-2xl font-bold text-white mt-2">{value}</p>
+            )}
+        </div>
+    </div>
+);
+
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const homeViewRef = useRef<HTMLDivElement>(null);
+    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, pnlPercent: 0 });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            const { totalPnl } = await getUserStats();
+            const progressData = getProgressData();
+            const lessonsLearned = Object.values(progressData).filter(Boolean).length;
+            const initialPortfolio = 100000;
+            const pnlPercent = initialPortfolio > 0 ? (totalPnl / initialPortfolio) * 100 : 0;
+
+            setStats({ pnl: totalPnl, lessonsLearned, pnlPercent });
+        };
+
+        fetchStats();
+    }, []);
 
     useEffect(() => {
         const container = homeViewRef.current;
@@ -76,6 +108,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             const sectionHeaders = container.querySelectorAll('.section-header');
             const mainCards = container.querySelectorAll('.main-card-item');
             const libraryCards = container.querySelectorAll('.library-card-item');
+            const progressDashboard = container.querySelector('.progress-dashboard');
+
 
             anime.timeline({
                 easing: 'easeOutExpo',
@@ -112,7 +146,12 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 opacity: [0, 1],
                 scale: [0.8, 1],
                 delay: anime.stagger(100),
-            }, '-=700');
+            }, '-=700')
+            .add({
+                targets: progressDashboard,
+                opacity: [0, 1],
+                translateY: [30, 0],
+            }, '-=1000');
         }
     }, []);
 
@@ -187,6 +226,43 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                           />
                         </div>
                     ))}
+                </div>
+            </div>
+
+             {/* NEW Progress Dashboard */}
+            <div className="progress-dashboard">
+                <h2 className="text-xl font-bold text-text-main mb-4 section-header">Your Progress</h2>
+                <div className="bg-gray-800 text-white rounded-2xl p-6 space-y-6">
+                    <div className="flex flex-col items-center">
+                        <div className="relative w-32 h-32">
+                            <svg width="128" height="128" viewBox="0 0 120 120" className="transform -rotate-90">
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#4B5563" strokeWidth="12" />
+                                <circle
+                                    cx="60" cy="60" r="54" fill="none" stroke="#3B82F6" strokeWidth="12"
+                                    strokeDasharray="339.29"
+                                    strokeDashoffset={339.29 * (1 - (0 / 100))}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-3xl font-bold">0%</span>
+                            </div>
+                        </div>
+                        <p className="mt-2 text-lg font-semibold tracking-wider text-slate-300">BEGINNER</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-cyan-500/20" iconColor="text-cyan-400" />
+                        <StatCard icon={CheckCircle} title="Tests Passed" value={0} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
+                        <StatCard icon={Flame} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
+                        <StatCard 
+                            icon={DollarSign} 
+                            title="Money Earned" 
+                            value={`${stats.pnlPercent.toFixed(2)}%`} 
+                            iconBgColor="bg-green-500/20" 
+                            iconColor="text-green-400" 
+                        />
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+import { supabase } from './supabaseClient';
 import { learningCurriculum } from '../data/learningContent';
 
 const PROGRESS_STORAGE_KEY = 'optionsbull_learning_progress';
@@ -61,4 +62,63 @@ export const getCompletedCountForChapter = (chapterId: string): number => {
 
     const progress = getProgressData();
     return chapter.subChapters.filter(sc => progress[sc.id]).length;
+};
+
+
+/**
+ * Fetches user-specific statistics like total P&L from the Supabase 'profiles' table.
+ * @returns {Promise<{totalPnl: number}>} An object containing user stats.
+ */
+export const getUserStats = async (): Promise<{ totalPnl: number }> => {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.log("No user session found for fetching stats.");
+            return { totalPnl: 0 };
+        }
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('total_pnl')
+            .eq('id', user.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116: row not found
+            console.error("Error fetching user profile for stats:", error);
+            return { totalPnl: 0 };
+        }
+
+        return { totalPnl: data?.total_pnl || 0 };
+    } catch (e) {
+        console.error("Unexpected error in getUserStats:", e);
+        return { totalPnl: 0 };
+    }
+};
+
+/**
+ * Updates the user's total P&L in the Supabase 'profiles' table by a given amount.
+ * Uses an RPC call for an atomic increment to prevent race conditions.
+ * @param {number} pnlChange - The profit or loss from a closed trade.
+ */
+export const updateUserPnl = async (pnlChange: number): Promise<void> => {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.log("No user session found for updating P&L.");
+            return;
+        }
+
+        // We assume an RPC function `increment_pnl` exists in Supabase.
+        // SQL: create function increment_pnl(user_id_in uuid, pnl_increment numeric) ...
+        const { error } = await supabase.rpc('increment_pnl', {
+            user_id_in: user.id,
+            pnl_increment: pnlChange
+        });
+
+        if (error) {
+            console.error("Error updating user P&L:", error);
+        }
+    } catch (e) {
+        console.error("Unexpected error in updateUserPnl:", e);
+    }
 };

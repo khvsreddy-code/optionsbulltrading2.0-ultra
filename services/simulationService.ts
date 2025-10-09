@@ -1,4 +1,5 @@
 import type { Order, Portfolio, Position, Trade } from '../types';
+import { updateUserPnl } from './progressService';
 
 const INITIAL_CASH = 100000; // Start with ₹1,00,000
 
@@ -49,6 +50,9 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
                 exitTime: Date.now() / 1000,
             };
             newPortfolio.trades.unshift(newTrade);
+            
+            // NEW: Update persistent P&L in Supabase
+            updateUserPnl(newTrade.realizedPnl);
         }
     }
     // --- END OF TRADE LOGIC ---
