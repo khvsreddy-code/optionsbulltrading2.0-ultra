@@ -24,7 +24,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/shootingstar_context.png" 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/shootingstar_context.png" 
             alt="Shooting Star pattern on a chart" 
             caption="A Shooting Star forms after an uptrend, signaling a potential price peak."
         />
@@ -41,7 +41,7 @@ export const bearishPatterns: Pattern[] = [
         </ul>
 
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/shootingstar_diagram.png"
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/shootingstar_diagram.png"
             alt="Shooting Star pattern diagram"
         />
 
@@ -66,7 +66,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/bearishengulfing_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bearishengulfing_context.png" 
                 alt="Bearish Engulfing pattern on a chart" 
                 caption="A large red candle engulfs the prior green candle, reversing the uptrend."
             />
@@ -81,7 +81,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/bearishengulfing_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishengulfing_diagram.png"
                 alt="Bearish Engulfing pattern diagram"
             />
             
@@ -110,7 +110,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/darkcloud_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/darkcloud_context.png" 
                 alt="Dark Cloud Cover pattern on a chart" 
                 caption="A red candle opens higher but closes deep into the prior green candle's body."
             />
@@ -125,7 +125,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/darkcloud_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/darkcloud_diagram.png"
                 alt="Dark Cloud Cover pattern diagram"
             />
             
@@ -147,7 +147,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/eveningstar_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/eveningstar_context.png" 
                 alt="Evening Star pattern on a chart" 
                 caption="A three-candle pattern signaling a bearish reversal after a period of indecision at the top."
             />
@@ -163,7 +163,7 @@ export const bearishPatterns: Pattern[] = [
             </ol>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/eveningstar_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/eveningstar_diagram.png"
                 alt="Evening Star pattern diagram"
             />
             
@@ -185,7 +185,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/3blackcrows_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3blackcrows_context.png" 
                 alt="Three Black Crows pattern on a chart" 
                 caption="Three consecutive long red candles signal a strong and steady bearish reversal."
             />
@@ -202,7 +202,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning/3blackcrows_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3blackcrows_diagram.png"
                 alt="Three Black Crows pattern diagram"
             />
 

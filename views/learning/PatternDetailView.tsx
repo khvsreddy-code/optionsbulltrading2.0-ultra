@@ -25,6 +25,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                 easing: 'easeOutQuad'
             });
         }
+        window.scrollTo(0, 0); // Scroll to top when new lesson loads
     }, [patternId]);
 
     const allContent = [
@@ -35,6 +36,19 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     ];
 
     const pattern = allContent.find(p => p.id === patternId);
+    
+    const handleNextLesson = () => {
+        if (!pattern) return;
+
+        const currentIndex = allContent.findIndex(p => p.id === pattern.id);
+        if (currentIndex !== -1 && currentIndex < allContent.length - 1) {
+            const nextPattern = allContent[currentIndex + 1];
+            onNavigate(`/learning/pattern/${nextPattern.id}`);
+        } else {
+            // If it's the last lesson, navigate back to the main learning page
+            onNavigate('/learning');
+        }
+    };
     
     // Determine the correct back path based on where the content was found
     const backTargetPath = fundamentalAnalysisTopics.some(p => p.id === patternId) ? '/learning/fundamental'
@@ -67,11 +81,24 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{pattern.title}</h1>
             </header>
 
-            <main ref={mainRef} className="p-4">
+            <main ref={mainRef} className="p-4 pb-32">
                 <div className="prose max-w-none text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold">
                     {pattern.content}
                 </div>
             </main>
+            
+            <footer className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border p-4 flex items-center justify-between gap-4">
+                <p className="text-xs text-text-secondary flex-1">
+                    The information provided in this content is for educational and informational purposes only. It is not intended as financial, investment, or trading advice. Please consult with a qualified advisor before making any financial decisions. Any actions taken based on this information are at your own risk.
+                </p>
+                <button
+                    onClick={handleNextLesson}
+                    className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback shadow-lg shadow-primary/20"
+                    aria-label="Next Lesson"
+                >
+                    <ChevronRight size={24} />
+                </button>
+            </footer>
         </div>
     );
 };
