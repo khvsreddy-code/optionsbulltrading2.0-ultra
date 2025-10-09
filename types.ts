@@ -21,7 +21,9 @@ export type View =
   | 'bearishPatternsList'
   | 'patternDetail'
   | 'technicalIndicatorsList'
-  | 'fundamentalAnalysisList';
+  | 'fundamentalAnalysisList'
+  | 'quiz'
+  | 'quizResults';
 
 // Financial data types
 export interface CandleData {
@@ -95,6 +97,12 @@ export interface Portfolio {
   totalValue: number;
   orders: Order[];
   trades: Trade[]; // NEW: To store completed trades
+}
+
+export interface QuizQuestion {
+    question: string;
+    options: string[];
+    correctAnswer: string;
 }
 
 // Re-export Timeframe to be accessible from types

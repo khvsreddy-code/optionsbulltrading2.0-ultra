@@ -26,6 +26,8 @@ import PatternDetailView from './views/learning/PatternDetailView';
 import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
+import QuizView from './views/quiz/QuizView';
+import QuizResultsView from './views/quiz/QuizResultsView';
 
 
 // Auth components
@@ -92,6 +94,13 @@ const App: React.FC = () => {
         if (parts[0] === 'pricing') view = 'pricing';
         else if (parts[0] === 'practice') view = 'practice';
         else if (parts[0] === 'profile') view = 'profile';
+        else if (parts[0] === 'quiz') {
+            if (parts[1] === 'results') {
+                view = 'quizResults';
+            } else {
+                view = 'quiz';
+            }
+        }
         else if (parts[0] === 'policies') {
             switch (parts[1]) {
                 case 'cancellation': view = 'cancellation'; break;
@@ -167,6 +176,10 @@ const App: React.FC = () => {
                             return <PracticeView onNavigate={handleNavigate} theme={'dark'} />; // Keep simulator dark
                         case 'profile':
                             return <ProfileView user={user} onNavigate={handleNavigate} />;
+                        case 'quiz':
+                            return <QuizView onNavigate={handleNavigate} />;
+                        case 'quizResults':
+                            return <QuizResultsView onNavigate={handleNavigate} />;
                         default:
                             return <HomeView onNavigate={handleNavigate} user={user} />;
                     }
@@ -195,7 +208,7 @@ const App: React.FC = () => {
     }
     
     // Views that have their own full-page layout
-    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing'];
+    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }

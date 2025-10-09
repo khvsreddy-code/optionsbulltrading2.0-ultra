@@ -104,6 +104,20 @@ export const markTestAsPassed = (testId: string): void => {
     }
 };
 
+/**
+ * NEW: Calculates the total number of lessons available across all modules.
+ * @returns {number} The total count of all lessons.
+ */
+export const getTotalLessonCount = (): number => {
+    const basicsLessons = learningCurriculum.find(c => c.id === 'ch1')?.subChapters.length || 0;
+    const bullishLessons = bullishPatterns.length;
+    const bearishLessons = bearishPatterns.length;
+    const indicatorLessons = technicalIndicators.length;
+    const fundamentalLessons = fundamentalAnalysisTopics.length;
+
+    return basicsLessons + bullishLessons + bearishLessons + indicatorLessons + fundamentalLessons;
+};
+
 
 /**
  * NEW: Calculates completion counts for any given module.

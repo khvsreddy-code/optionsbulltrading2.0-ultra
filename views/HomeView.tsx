@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Flame, DollarSign } from '../components/common/Icons';
+import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Flame, DollarSign, Trophy } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
-import { getUserStats, getTotalCompletedLessons, getTestsPassedCount } from '../services/progressService';
+import { getUserStats, getTotalCompletedLessons, getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
 import anime from 'animejs';
 
 interface HomeViewProps {
@@ -83,17 +83,19 @@ const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | nu
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const homeViewRef = useRef<HTMLDivElement>(null);
-    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0 });
+    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0, overallProgress: 0 });
 
     useEffect(() => {
         const fetchStats = async () => {
             const { totalPnl } = await getUserStats();
             const lessonsLearned = getTotalCompletedLessons();
             const testsPassed = getTestsPassedCount();
+            const totalLessons = getTotalLessonCount();
             const initialPortfolio = 100000;
             const pnlPercent = initialPortfolio > 0 ? (totalPnl / initialPortfolio) * 100 : 0;
+            const overallProgress = totalLessons > 0 ? (lessonsLearned / totalLessons) * 100 : 0;
 
-            setStats({ pnl: totalPnl, lessonsLearned, testsPassed, pnlPercent });
+            setStats({ pnl: totalPnl, lessonsLearned, testsPassed, pnlPercent, overallProgress });
         };
 
         fetchStats(); // Fetch on mount
@@ -187,7 +189,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             {/* Quick Links */}
             <div className="pro-card p-4 quick-links">
                 <div className="grid grid-cols-4 gap-4">
-                    <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={Telegram} />
+                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Trophy} />
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
                     <IconLink title="Paper Trading" onClick={() => onNavigate('/practice')} icon={CandlestickChart} />
@@ -249,12 +251,13 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                                 <circle
                                     cx="60" cy="60" r="54" fill="none" stroke="#3B82F6" strokeWidth="12"
                                     strokeDasharray="339.29"
-                                    strokeDashoffset={339.29 * (1 - (0 / 100))}
+                                    strokeDashoffset={339.29 * (1 - (stats.overallProgress / 100))}
                                     strokeLinecap="round"
+                                    style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
                                 />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-bold">0%</span>
+                                <span className="text-3xl font-bold">{Math.floor(stats.overallProgress)}%</span>
                             </div>
                         </div>
                         <p className="mt-2 text-lg font-semibold tracking-wider text-slate-300">BEGINNER</p>
