@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from './services/supabaseClient';
 import type { View } from './types';
@@ -26,13 +26,25 @@ import PatternDetailView from './views/learning/PatternDetailView';
 import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
-import QuizView from './views/quiz/QuizView';
-import QuizResultsView from './views/quiz/QuizResultsView';
-
 
 // Auth components
 import AuthLayout from './components/auth/AuthLayout';
 import LoginScreen from './components/auth/LoginScreen';
+
+// Lazily load quiz components to prevent startup crash
+const QuizView = lazy(() => import('./views/quiz/QuizView'));
+const QuizResultsView = lazy(() => import('./views/quiz/QuizResultsView'));
+
+
+const LoadingSpinner: React.FC = () => (
+    <div className="flex items-center justify-center min-h-screen bg-background">
+        <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+);
+
 
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
@@ -174,9 +186,9 @@ const App: React.FC = () => {
                         case 'profile':
                             return <ProfileView user={user} onNavigate={handleNavigate} />;
                         case 'quiz':
-                            return <QuizView onNavigate={handleNavigate} />;
+                            return <Suspense fallback={<LoadingSpinner />}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
-                            return <QuizResultsView onNavigate={handleNavigate} />;
+                            return <Suspense fallback={<LoadingSpinner />}><QuizResultsView onNavigate={handleNavigate} /></Suspense>;
                         default:
                             return <HomeView onNavigate={handleNavigate} user={user} />;
                     }
@@ -186,14 +198,7 @@ const App: React.FC = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-background">
-                <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
-        );
+        return <LoadingSpinner />;
     }
     
     if (!session) {
