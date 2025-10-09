@@ -3,11 +3,14 @@ import type { CandleData, Instrument, OrderSide, Portfolio, Position, Order, Tra
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator, Timeframe } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
+import { loadPortfolio, savePortfolio } from '../services/portfolioService';
+
+// Components
 import SimulatorHeader from '../components/practice/SimulatorHeader';
 import ChartHeader from '../components/practice/ChartHeader';
 import ChartComponent from '../components/practice/ChartComponent';
 import PositionManagerDialog from '../components/practice/PositionManagerDialog';
-import OrderDialog from '../components/practice/OrderDialog'; // NEW
+import OrderDialog from '../components/practice/OrderDialog';
 import ChartTradeButtons from '../components/practice/ChartTradeButtons';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
@@ -27,71 +30,122 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [initialChartData, setInitialChartData] = useState<CandleData[]>([]);
     const [liveOhlc, setLiveOhlc] = useState<CandleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPortfolioLoading, setIsPortfolioLoading] = useState(true);
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
     const [timeframe, setTimeframe] = useState<Timeframe>('1m');
     const [showWelcome, setShowWelcome] = useState(false);
     
-    // --- NEW: State for Order Dialog ---
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
-
-    // Effect to initialize the simulator ONCE on mount
+    const saveTimeoutRef = useRef<number | null>(null);
+    
+    // Effect to save portfolio on change (debounced)
     useEffect(() => {
-        const sim = new MarketSimulator();
-        simulatorRef.current = sim;
-        
-        sim.start().then(() => {
+        if (isPortfolioLoading) return; // Don't save during initial load or while it's still loading
+
+        if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current);
+        }
+
+        saveTimeoutRef.current = window.setTimeout(() => {
+            savePortfolio(portfolio);
+        }, 1500); // Debounce save by 1.5 seconds
+
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [portfolio, isPortfolioLoading]);
+
+    // Main initialization effect for loading data and starting the simulation
+    useEffect(() => {
+        const initializeSimulatorAndPortfolio = async () => {
+            setIsLoading(true);
+            setIsPortfolioLoading(true);
+
+            // 1. Load portfolio from Supabase
+            const loadedData = await loadPortfolio();
+            let loadedPortfolio = loadedData.portfolio;
+            const lastUpdated = new Date(loadedData.lastUpdated);
+            
+            // 2. Calculate time offline for catch-up simulation
+            const secondsOffline = Math.floor((Date.now() - lastUpdated.getTime()) / 1000);
+            const catchUpSeconds = secondsOffline > 5 ? secondsOffline : 0;
+
+            // 3. Initialize simulator with catch-up duration
+            const sim = new MarketSimulator();
+            simulatorRef.current = sim;
+            await sim.start(catchUpSeconds);
+
+            // 4. Get the latest state from the caught-up simulator
             const initialData = sim.getHistoricalData(timeframe);
             setInitialChartData(initialData);
             
             const latestCandle = sim.getLatestCandle(timeframe);
-            if (latestCandle && selectedInstrument) {
-                const livePrices = { [selectedInstrument.instrument_key]: latestCandle.close };
+            const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
+            setSelectedInstrument(initialInstrument);
+
+            // 5. Update the loaded portfolio with the latest price to reflect offline P&L changes
+            if (latestCandle) {
+                const livePrices: { [key: string]: number } = {};
+                loadedPortfolio.positions.forEach(pos => {
+                     if (pos.instrument.instrument_key === initialInstrument.instrument_key) {
+                        livePrices[pos.instrument.instrument_key] = latestCandle.close;
+                    }
+                });
+                
+                loadedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
+                setLiveOhlc(latestCandle);
                  setInstruments(prev => prev.map(inst =>
-                    inst.instrument_key === selectedInstrument.instrument_key
+                    inst.instrument_key === initialInstrument.instrument_key
                         ? { ...inst, last_price: latestCandle.close }
                         : inst
                 ));
-                setPortfolio(prevPortfolio => updatePortfolioValue(prevPortfolio, livePrices));
-                setLiveOhlc(latestCandle);
             }
+            
+            // 6. Set the final state and enable live updates
+            setPortfolio(loadedPortfolio);
+            setIsPortfolioLoading(false);
             setIsLoading(false);
-        });
-
-        return () => {
-            sim.stop();
         };
-    }, []); // Empty dependency array ensures this runs only once
 
-    // Effect to show welcome message after loading
-    useEffect(() => {
-        if (!isLoading && !localStorage.getItem('hasSeenSimulatorWelcome')) {
-            const timer = setTimeout(() => {
-                setShowWelcome(true);
-            }, 500);
+        initializeSimulatorAndPortfolio();
+
+        // Show welcome message on first visit
+        if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
+            const timer = setTimeout(() => setShowWelcome(true), 500);
             return () => clearTimeout(timer);
         }
-    }, [isLoading]);
+
+        return () => {
+            simulatorRef.current?.stop();
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, []); // Main initialization runs only once on mount
+
 
     // Effect to manage timeframe subscriptions
     useEffect(() => {
-        const simulator = simulatorRef.current;
-        if (!simulator || isLoading) return;
+        // Guard against running during initial load
+        if (isLoading || isPortfolioLoading) return;
 
-        // 1. Get historical data for the new timeframe
+        const simulator = simulatorRef.current;
+        if (!simulator) return;
+
         const historicalData = simulator.getHistoricalData(timeframe);
         setInitialChartData(historicalData);
         
         const latestCandle = simulator.getLatestCandle(timeframe);
         setLiveOhlc(latestCandle ?? null);
 
-
-        // 2. Subscribe to live updates for this timeframe
         const handleTick = (candle: CandleData, isUpdate: boolean) => {
             setLiveOhlc(candle);
             chartComponentRef.current?.updateCandle(candle);
@@ -104,7 +158,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                         : inst
                 ));
                 setPortfolio(prevPortfolio => updatePortfolioValue(
-                    JSON.parse(JSON.stringify(prevPortfolio)),
+                    prevPortfolio, // No need for deep copy, state update handles it
                     livePrices
                 ));
             }
@@ -112,18 +166,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
         const unsubscribe = simulator.subscribe(timeframe, handleTick);
 
-        // 3. Return cleanup function
-        return () => {
-            unsubscribe();
-        };
-    }, [timeframe, isLoading, selectedInstrument]);
+        return () => unsubscribe();
+    }, [timeframe, isLoading, isPortfolioLoading, selectedInstrument]);
 
-    useEffect(() => {
-        const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
-        setSelectedInstrument(initialInstrument);
-    }, []);
 
-    // --- NEW: Function to open order dialog ---
     const handleOpenOrderDialog = (side: OrderSide) => {
         setOrderDialogSide(side);
         setIsOrderDialogOpen(true);
@@ -161,7 +207,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const positionToClose = portfolio.positions.find(p => p.instrument.instrument_key === instrumentKey);
         if (!positionToClose) return;
 
-        // Determine the correct side for closing the position: SELL for LONG, BUY for SHORT
         const closingSide: OrderSide = positionToClose.quantity > 0 ? 'SELL' : 'BUY';
         
         const closeOrder: Order = {
@@ -184,11 +229,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const instrument = instruments.find(i => i.instrument_key === position.instrument.instrument_key);
         if (!instrument) return;
     
-        // The order quantity to reverse is double the absolute position quantity.
-        // This closes the current position and opens an equal one on the opposite side.
         const reverseQuantity = Math.abs(position.quantity) * 2;
-        
-        // Determine the correct side for the reversing order.
         const reverseSide: OrderSide = position.quantity > 0 ? 'SELL' : 'BUY';
     
         const reverseOrder: Order = {
@@ -205,9 +246,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         setPortfolio(prevPortfolio => executeOrder(prevPortfolio, reverseOrder, executionPrice));
     };
 
-    const handleResetPortfolio = () => {
+    const handleResetPortfolio = async () => {
         if (window.confirm('Are you sure you want to reset your portfolio? This action cannot be undone.')) {
-            setPortfolio(createInitialPortfolio());
+            const newPortfolio = createInitialPortfolio();
+            setPortfolio(newPortfolio);
+            await savePortfolio(newPortfolio); // Persist the reset immediately
         }
     };
     
@@ -215,26 +258,20 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         const currentTotal = portfolio.totalValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
         const result = window.prompt(`Enter your desired total portfolio value.\nYour current value is ${currentTotal}.\nMinimum value is ₹1,00,000.`, portfolio.totalValue.toFixed(0));
         
-        if (result === null) return; // User cancelled
+        if (result === null) return;
 
         const newTotalValue = parseFloat(result);
 
-        if (isNaN(newTotalValue)) {
-            alert("Invalid input. Please enter a number.");
-            return;
-        }
-
-        if (newTotalValue < 100000) {
-            alert("The minimum portfolio value is ₹1,00,000.");
+        if (isNaN(newTotalValue) || newTotalValue < 100000) {
+            alert("Invalid input. Please enter a number greater than or equal to 1,00,000.");
             return;
         }
 
         setPortfolio(prevPortfolio => {
-            const portfolioCopy = JSON.parse(JSON.stringify(prevPortfolio));
-            const diff = newTotalValue - portfolioCopy.totalValue;
-            portfolioCopy.cash += diff;
-            // Recalculate total value to be precise
-            return updatePortfolioValue(portfolioCopy);
+            const diff = newTotalValue - prevPortfolio.totalValue;
+            const newCash = prevPortfolio.cash + diff;
+            const updatedPortfolio = { ...prevPortfolio, cash: newCash };
+            return updatePortfolioValue(updatedPortfolio);
         });
     };
 

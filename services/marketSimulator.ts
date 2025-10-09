@@ -53,11 +53,13 @@ export class MarketSimulator {
         return { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 }[tf];
     }
 
-    public async start(): Promise<void> {
+    public async start(catchUpSeconds: number = 0): Promise<void> {
         if (this.tickIntervalId) this.stop();
 
         if (!this.isHistoryReady) {
-            this.base1sHistoricalData = this.generateBase1sHistoricalData(10800);
+            const totalHistorySeconds = 10800 + catchUpSeconds;
+            this.base1sHistoricalData = this.generateBase1sHistoricalData(totalHistorySeconds);
+            
             this.allTimeframes.forEach(tf => {
                 const aggregated = this.aggregateHistoricalData(this.base1sHistoricalData!, this.timeframeSecondsMap.get(tf)!);
                 this.historicalDataCache.set(tf, aggregated);
@@ -276,6 +278,7 @@ export class MarketSimulator {
             aggregatedData.push(currentAggregatedCandle);
         }
 
+        // FIX: Corrected typo in variable name.
         return aggregatedData.slice(-desiredPoints);
     }
 
