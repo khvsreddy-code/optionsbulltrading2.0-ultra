@@ -11,38 +11,43 @@ interface PortfolioLoadResult {
 /**
  * Loads the user's portfolio from Supabase.
  * If no portfolio exists, creates and saves an initial one.
+ * This function now performs strict session validation to prevent data loss.
  * @returns {Promise<PortfolioLoadResult>} The user's portfolio and the last updated timestamp.
- * @throws Will throw an error if the database call fails.
+ * @throws Will throw an error if the session is invalid or the database call fails.
  */
 export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
     try {
-        // Use getSession() for more robust auth checking. It refreshes the token if needed.
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-            // No user logged in, return a temporary initial portfolio for guest sessions
-            console.warn("No user session found. Using a temporary portfolio.");
-            return { portfolio: createInitialPortfolio(), lastUpdated: new Date().toISOString() };
+        // Step 1: Perform a strict, explicit check for a valid session.
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.error("Authentication error during portfolio load:", sessionError);
+            // Throw a specific error if auth fails. This prevents the "guest portfolio" issue and data loss.
+            throw new Error("Your session is invalid. Please refresh the page or try logging in again.");
         }
 
         const user = session.user;
 
+        // Step 2: Attempt to fetch the existing portfolio.
         const { data, error } = await supabase
             .from('simulator_portfolios')
             .select('portfolio_data, updated_at')
             .eq('user_id', user.id)
             .single();
 
+        // Handle database errors (but allow 'not found' errors).
         if (error && error.code !== 'PGRST116') { // PGRST116 means no row was found
-            console.error('Error loading portfolio:', error);
-            throw error; // Propagate the error
+            console.error('Error loading portfolio from database:', error);
+            throw error; 
         }
 
+        // Step 3: If a portfolio exists, return it.
         if (data && data.portfolio_data) {
-            // Portfolio found, return it
             return { portfolio: data.portfolio_data as Portfolio, lastUpdated: data.updated_at };
-        } else {
-            // No portfolio found for this user, create a new one
-            console.log("No existing portfolio found. Creating a new one.");
+        } 
+        
+        // Step 4: If no portfolio exists, create and save a new one.
+        else {
+            console.log("No existing portfolio found for user. Creating a new one.");
             const initialPortfolio = createInitialPortfolio();
             const { error: insertError } = await supabase
                 .from('simulator_portfolios')
@@ -53,29 +58,29 @@ export const loadPortfolio = async (): Promise<PortfolioLoadResult> => {
             
             if (insertError) {
                 console.error('Error creating initial portfolio:', insertError);
-                throw insertError; // Propagate the error
+                throw insertError; 
             }
             return { portfolio: initialPortfolio, lastUpdated: new Date().toISOString() };
         }
     } catch (e) {
         console.error('An unexpected error occurred in loadPortfolio:', e);
-        // Re-throw a user-friendly error so the UI can handle it
-        throw new Error("Failed to load your portfolio from the database. Please check your connection and refresh.");
+        // Pass a more specific error message to the UI if available.
+        throw new Error(e.message || "Failed to load your portfolio from the database. Please check your connection and refresh.");
     }
 };
 
 
 /**
- * Saves the user's portfolio to Supabase.
+ * Saves the user's portfolio to Supabase with improved session checking.
  * @param {Portfolio} portfolio - The portfolio object to save.
  */
 export const savePortfolio = async (portfolio: Portfolio): Promise<void> => {
     try {
-        // Use getSession() for more robust auth checking.
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-            // Cannot save if no user is logged in
-            return;
+        // Perform a strict session check before attempting to save.
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.warn("Cannot save portfolio, no valid user session found.", sessionError);
+            return; // Fail silently to not interrupt user with errors on background saves.
         }
         
         const user = session.user;
