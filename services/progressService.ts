@@ -165,11 +165,12 @@ export const getModuleLessonCounts = (moduleId: string): { completed: number; to
  */
 export const getUserStats = async (): Promise<{ totalPnl: number }> => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log("No user session found for fetching stats.");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.error("No valid session found for fetching stats:", sessionError?.message);
             return { totalPnl: 0 };
         }
+        const user = session.user;
 
         const { data, error } = await supabase
             .from('profiles')
@@ -196,11 +197,12 @@ export const getUserStats = async (): Promise<{ totalPnl: number }> => {
  */
 export const updateUserPnl = async (pnlChange: number): Promise<void> => {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            console.log("No user session found for updating P&L.");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.warn("Cannot update PNL, no valid user session found.", sessionError?.message);
             return;
         }
+        const user = session.user;
 
         // We assume an RPC function `increment_pnl` exists in Supabase.
         // SQL: create function increment_pnl(user_id_in uuid, pnl_increment numeric) ...
