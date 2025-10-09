@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { Home, BookOpen, Swap, Briefcase, User } from '../common/Icons';
 import type { View } from '../../types';
@@ -68,7 +69,8 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
                         return (
                              <div 
                                 key={item.label}
-                                ref={el => itemRefs.current[index] = el}
+                                // FIX: The ref callback should return void. Using curly braces ensures this.
+                                ref={el => { itemRefs.current[index] = el; }}
                                 className="-mt-10 z-20"
                                 onClick={() => item.path && onTabChange(item.path)}
                             >
@@ -82,7 +84,8 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ activeView, onTabChange }) 
                     return (
                         <div 
                             key={item.label}
-                            ref={el => itemRefs.current[index] = el}
+                            // FIX: The ref callback should return void. Using curly braces ensures this.
+                            ref={el => { itemRefs.current[index] = el; }}
                             className="flex flex-col items-center justify-center h-full w-full cursor-pointer transition-transform duration-150 ease-in-out transform active:scale-90"
                             onClick={() => item.path && onTabChange(item.path)}
                             aria-label={item.label}

@@ -1,7 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
-import { ChevronRight } from '../../components/common/Icons';
+import { ChevronRight, CheckCircle } from '../../components/common/Icons';
+import { isSubChapterComplete, toggleSubChapterCompletion } from '../../services/progressService';
 
 interface LearningChapterViewProps {
     onNavigate: (path: string) => void;
@@ -10,6 +12,14 @@ interface LearningChapterViewProps {
 
 const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, chapterId }) => {
     const mainRef = useRef<HTMLElement>(null);
+    const [isComplete, setIsComplete] = useState(false);
+
+    useEffect(() => {
+        if (chapterId) {
+            setIsComplete(isSubChapterComplete(chapterId));
+        }
+    }, [chapterId]);
+
 
     useEffect(() => {
         if (mainRef.current) {
@@ -26,6 +36,13 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     const subChapter = learningCurriculum
         .flatMap(chapter => chapter.subChapters)
         .find(sub => sub.id === chapterId);
+        
+    const handleToggleComplete = () => {
+        if (subChapter) {
+            toggleSubChapterCompletion(subChapter.id);
+            setIsComplete(!isComplete);
+        }
+    };
 
     if (!subChapter) {
         return (
@@ -51,11 +68,25 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{subChapter.title}</h1>
             </header>
 
-            <main ref={mainRef} className="p-4">
+            <main ref={mainRef} className="p-4 pb-28">
                  <div className="prose max-w-none prose-p:text-text-secondary prose-h3:text-text-main prose-h4:text-text-main prose-strong:text-text-main prose-code:text-primary prose-code:bg-primary-light prose-headings:font-bold prose-table:bg-card prose-th:text-text-main prose-tr:border-border prose-td:text-text-secondary">
                     {subChapter.content}
                 </div>
             </main>
+            
+            <footer className="fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border z-20">
+                <button
+                    onClick={handleToggleComplete}
+                    className={`w-full flex items-center justify-center p-4 rounded-lg font-semibold transition-all button-press-feedback ${
+                        isComplete
+                            ? 'bg-primary-light text-primary border border-primary'
+                            : 'bg-primary text-white'
+                    }`}
+                >
+                    <CheckCircle size={20} className="mr-2" />
+                    <span>{isComplete ? 'Completed! Mark as Incomplete?' : 'Mark as Complete'}</span>
+                </button>
+            </footer>
         </div>
     );
 };

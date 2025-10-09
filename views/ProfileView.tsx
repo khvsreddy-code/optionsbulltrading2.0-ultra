@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 
 interface ProfileViewProps {

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 
 declare global {

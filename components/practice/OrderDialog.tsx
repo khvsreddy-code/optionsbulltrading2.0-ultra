@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import type { Instrument, OrderSide } from '../../types';
 

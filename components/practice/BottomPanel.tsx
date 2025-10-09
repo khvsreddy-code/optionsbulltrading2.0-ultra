@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import PortfolioPanel from './PortfolioPanel';
 import TradeHistoryPanel from './TradeHistoryPanel';

@@ -3,6 +3,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, GraduationCap, CandlestickChart } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 
 interface HomeViewProps {

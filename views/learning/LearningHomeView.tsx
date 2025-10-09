@@ -1,7 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+// FIX: Use a standard ES module import for animejs.
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
-import { ChevronRight } from '../../components/common/Icons';
+import { ChevronRight, CheckCircle } from '../../components/common/Icons';
+import { getCompletedCountForChapter, isSubChapterComplete } from '../../services/progressService';
 
 interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
@@ -21,6 +23,19 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const viewRef = useRef<HTMLDivElement>(null);
+    const [progressVersion, setProgressVersion] = useState(0);
+
+    // Listen for progress changes to trigger re-renders
+    useEffect(() => {
+        const handleProgressUpdate = () => {
+            setProgressVersion(v => v + 1);
+        };
+        window.addEventListener('progressUpdated', handleProgressUpdate);
+        return () => {
+            window.removeEventListener('progressUpdated', handleProgressUpdate);
+        };
+    }, []);
+
 
     useEffect(() => {
         if(viewRef.current) {
@@ -47,6 +62,12 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const basicsModule = learningCurriculum.find(c => c.id === 'ch1');
     const otherModules = learningCurriculum.filter(c => c.id !== 'ch1');
 
+    // Calculate progress for basics module
+    const basicsCompletedCount = basicsModule ? getCompletedCountForChapter(basicsModule.id) : 0;
+    const basicsTotalCount = basicsModule ? basicsModule.subChapters.length : 0;
+    const basicsProgress = basicsTotalCount > 0 ? (basicsCompletedCount / basicsTotalCount) * 100 : 0;
+
+
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">
             <header className="flex items-center mb-6 anim-child">
@@ -58,32 +79,44 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
 
             <main>
                 <div className="space-y-8">
-                    {/* Render Basics Module Separately */}
+                    {/* Render Basics Module Separately with Progress */}
                     {basicsModule && (
                         <div>
-                            <div className="anim-child">
-                                <ImageCard
-                                    title={basicsModule.title.split(': ')[1] || basicsModule.title}
-                                    image={basicsModule.image}
-                                    onClick={() => onNavigate('/learning')}
-                                    className="w-full h-40 mb-4"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                {basicsModule.subChapters.map((subChapter) => (
-                                    <div key={subChapter.id} className="anim-child">
-                                        <button
-                                            onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-                                            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
-                                        >
-                                            <div>
-                                                <p className="font-semibold text-text-main">{subChapter.title}</p>
-                                                <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
-                                            </div>
-                                            <ChevronRight size={20} className="text-text-secondary" />
-                                        </button>
+                            <div className="pro-card rounded-2xl overflow-hidden anim-child">
+                                <div className="relative w-full h-40">
+                                    <img src={basicsModule.image} alt={basicsModule.title} className="absolute inset-0 w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40"></div>
+                                    <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{basicsModule.title.split(': ')[1] || basicsModule.title}</h3>
+                                </div>
+                                <div className="p-4 bg-card">
+                                    <p className="text-sm font-semibold text-text-secondary">{basicsCompletedCount} of {basicsTotalCount} lessons completed</p>
+                                    <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
+                                        <div className="bg-primary h-2.5 rounded-full" style={{ width: `${basicsProgress}%`, transition: 'width 0.5s ease-in-out' }}></div>
                                     </div>
-                                ))}
+                                </div>
+                            </div>
+                            <div className="space-y-3 mt-4">
+                                {basicsModule.subChapters.map((subChapter) => {
+                                    const isComplete = isSubChapterComplete(subChapter.id);
+                                    return (
+                                        <div key={subChapter.id} className="anim-child">
+                                            <button
+                                                onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
+                                                className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
+                                            >
+                                                <div>
+                                                    <p className={`font-semibold transition-colors ${isComplete ? 'text-text-secondary line-through' : 'text-text-main'}`}>{subChapter.title}</p>
+                                                    <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
+                                                </div>
+                                                {isComplete ? (
+                                                    <CheckCircle size={22} className="text-primary flex-shrink-0 ml-2" />
+                                                ) : (
+                                                    <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
