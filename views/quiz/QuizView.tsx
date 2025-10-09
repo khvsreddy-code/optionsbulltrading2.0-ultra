@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import anime from 'animejs';
-import { generateQuiz } from '../../services/quizService';
-import type { QuizQuestion } from '../../types';
+// FIX: The QuizTopic type is exported from `types.ts`, not `quizService.ts`.
+import { generateQuiz, quizTopics } from '../../services/quizService';
+import type { QuizQuestion, QuizTopic } from '../../types';
 import { ChevronRight, X } from '../../components/common/Icons';
 
 const LoaderIcon: React.FC<{className?: string}> = ({ className }) => (
@@ -16,21 +17,23 @@ interface QuizViewProps {
 }
 
 const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
-    const [quizState, setQuizState] = useState<'idle' | 'loading' | 'active' | 'error'>('idle');
+    const [quizState, setQuizState] = useState<'topicSelection' | 'loading' | 'active' | 'error'>('topicSelection');
     const [questions, setQuestions] = useState<QuizQuestion[]>([]);
     const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [selectedTopic, setSelectedTopic] = useState<QuizTopic | null>(null);
 
     const questionCardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         // Animate question card transitions
         if (quizState === 'active' && questionCardRef.current) {
+            anime.set(questionCardRef.current, { opacity: 0, translateX: 20 });
             anime({
                 targets: questionCardRef.current,
-                opacity: [0, 1],
-                translateX: [20, 0],
+                opacity: 1,
+                translateX: 0,
                 duration: 400,
                 easing: 'easeOutCubic'
             });
@@ -38,10 +41,11 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
     }, [currentQuestionIndex, quizState]);
 
     const handleStartQuiz = async () => {
+        if (!selectedTopic) return;
         setQuizState('loading');
         setError(null);
         try {
-            const quizQuestions = await generateQuiz();
+            const quizQuestions = await generateQuiz(selectedTopic);
             setQuestions(quizQuestions);
             setUserAnswers({});
             setCurrentQuestionIndex(0);
@@ -72,11 +76,25 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
     
     const handleExit = () => {
         if (quizState === 'active' && Object.keys(userAnswers).length > 0) {
-            if (confirm('Are you sure you want to exit? You can view your results for the questions answered so far.')) {
+            if (confirm('Are you sure you want to exit? Your progress will be saved and you can view your results.')) {
                 handleFinish();
             }
         } else {
             onNavigate('/home');
+        }
+    };
+
+    const handleBackToSelection = () => {
+        setQuizState('topicSelection');
+        setSelectedTopic(null);
+        setError(null);
+    };
+    
+    const handleRetry = () => {
+        if (selectedTopic) {
+            handleStartQuiz();
+        } else {
+            handleBackToSelection();
         }
     };
 
@@ -95,9 +113,14 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
                     <div className="text-center p-6 bg-red-500/10 rounded-lg">
                         <h2 className="text-2xl font-bold text-red-500">Oops! Something went wrong.</h2>
                         <p className="text-text-secondary mt-2 mb-6">{error}</p>
-                        <button onClick={handleStartQuiz} className="px-6 py-3 bg-primary text-white font-semibold rounded-lg">
-                            Try Again
-                        </button>
+                         <div className="flex justify-center gap-4">
+                            <button onClick={handleBackToSelection} className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg">
+                                Choose Topic
+                            </button>
+                            <button onClick={handleRetry} className="px-6 py-3 bg-primary text-white font-semibold rounded-lg">
+                                Try Again
+                            </button>
+                        </div>
                     </div>
                 );
             case 'active':
@@ -155,13 +178,31 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
                         </div>
                     </>
                 );
-            case 'idle':
+            case 'topicSelection':
             default:
                 return (
-                    <div className="text-center flex flex-col items-center">
+                    <div className="text-center">
                          <h1 className="text-3xl font-bold text-text-main">AI Smart Quiz</h1>
-                         <p className="text-lg text-text-secondary mt-2 mb-8 max-w-md">Test your knowledge with an AI-generated quiz based on our entire learning library. Ready to challenge yourself?</p>
-                         <button onClick={handleStartQuiz} className="px-8 py-4 bg-primary text-white font-bold rounded-lg text-lg button-press-feedback">
+                         <p className="text-lg text-text-secondary mt-2 mb-8 max-w-lg mx-auto">Select a topic to test your knowledge with an AI-generated quiz.</p>
+                         
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            {quizTopics.map(topic => (
+                                <button 
+                                    key={topic.id}
+                                    onClick={() => setSelectedTopic(topic.id)}
+                                    className={`p-4 rounded-lg border-2 text-left transition-all button-press-feedback ${selectedTopic === topic.id ? 'bg-primary-light border-primary' : 'bg-card border-border hover:border-primary/50'}`}
+                                >
+                                    <h3 className={`font-bold ${selectedTopic === topic.id ? 'text-primary' : 'text-text-main'}`}>{topic.name}</h3>
+                                    <p className="text-sm text-text-secondary">{topic.description}</p>
+                                </button>
+                            ))}
+                         </div>
+                         
+                         <button 
+                            onClick={handleStartQuiz} 
+                            disabled={!selectedTopic}
+                            className="w-full max-w-xs mx-auto px-8 py-4 bg-primary text-white font-bold rounded-lg text-lg button-press-feedback disabled:opacity-50 disabled:cursor-not-allowed"
+                         >
                             Start Quiz
                         </button>
                     </div>

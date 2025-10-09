@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import React from 'react';
-import type { QuizQuestion } from '../types';
+import type { QuizQuestion, QuizTopic } from '../types';
 
 // Import all content sources
 import { learningCurriculum } from '../data/learningContent';
@@ -8,6 +8,17 @@ import { bullishPatterns } from '../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../data/learning/technicalIndicatorsContent';
 import { fundamentalAnalysisTopics } from '../data/learning/fundamentalAnalysisContent';
+
+export type TopicDetails = { id: QuizTopic; name: string; description: string };
+
+export const quizTopics: TopicDetails[] = [
+    { id: 'all', name: 'Comprehensive Quiz', description: 'Test your knowledge across all learning categories.' },
+    { id: 'basics', name: 'Trading Basics', description: 'Questions on fundamental concepts of stocks and markets.' },
+    { id: 'bullish', name: 'Bullish Patterns', description: 'Identify and understand bullish candlestick patterns.' },
+    { id: 'bearish', name: 'Bearish Patterns', description: 'Identify and understand bearish candlestick patterns.' },
+    { id: 'indicators', name: 'Technical Indicators', description: 'Test your knowledge of popular technical indicators.' },
+    { id: 'fundamental', name: 'Fundamental Analysis', description: 'Questions on company valuation and economic analysis.' },
+];
 
 // Helper to extract text from React nodes
 const extractTextFromNode = (node: React.ReactNode): string => {
@@ -30,29 +41,56 @@ const extractTextFromNode = (node: React.ReactNode): string => {
     return '';
 };
 
-// Aggregate all learning content into a single string
-const getAggregatedContent = (): string => {
+const processContent = (items: { title: string; content: React.ReactNode }[]) => {
+    let text = '';
+    items.forEach(item => {
+        text += `Topic: ${item.title}\n`;
+        text += `${extractTextFromNode(item.content)}\n\n`;
+    });
+    return text;
+};
+
+// Aggregate learning content based on the selected topic
+const getAggregatedContent = (topic: QuizTopic): string => {
     let fullText = '';
 
-    const processContent = (items: { title: string; content: React.ReactNode }[]) => {
-        items.forEach(item => {
-            fullText += `Topic: ${item.title}\n`;
-            fullText += `${extractTextFromNode(item.content)}\n\n`;
-        });
-    };
-    
-    // Process main curriculum
-    learningCurriculum.forEach(chapter => {
-        chapter.subChapters.forEach(sub => {
-             fullText += `Topic: ${chapter.title} - ${sub.title}\n`;
-             fullText += `${extractTextFromNode(sub.content)}\n\n`;
-        });
-    });
-
-    processContent(bullishPatterns);
-    processContent(bearishPatterns);
-    processContent(technicalIndicators);
-    processContent(fundamentalAnalysisTopics);
+    switch (topic) {
+        case 'basics':
+            learningCurriculum.forEach(chapter => {
+                if (chapter.id === 'ch1') { // Only basics module
+                    chapter.subChapters.forEach(sub => {
+                         fullText += `Topic: ${chapter.title} - ${sub.title}\n`;
+                         fullText += `${extractTextFromNode(sub.content)}\n\n`;
+                    });
+                }
+            });
+            break;
+        case 'bullish':
+            fullText = processContent(bullishPatterns);
+            break;
+        case 'bearish':
+            fullText = processContent(bearishPatterns);
+            break;
+        case 'indicators':
+            fullText = processContent(technicalIndicators);
+            break;
+        case 'fundamental':
+            fullText = processContent(fundamentalAnalysisTopics);
+            break;
+        case 'all':
+        default:
+             learningCurriculum.forEach(chapter => {
+                chapter.subChapters.forEach(sub => {
+                     fullText += `Topic: ${chapter.title} - ${sub.title}\n`;
+                     fullText += `${extractTextFromNode(sub.content)}\n\n`;
+                });
+            });
+            fullText += processContent(bullishPatterns);
+            fullText += processContent(bearishPatterns);
+            fullText += processContent(technicalIndicators);
+            fullText += processContent(fundamentalAnalysisTopics);
+            break;
+    }
 
     // Naive text reduction to fit within context limits if needed.
     return fullText.replace(/\s+/g, ' ').trim();
@@ -60,22 +98,6 @@ const getAggregatedContent = (): string => {
 
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-const QUIZ_GENERATION_PROMPT = `
-You are an expert quizmaster specializing in stock market trading education. 
-Based on the following learning material, generate a challenging quiz of 50 multiple-choice questions. 
-Each question must have exactly 4 options, and only one correct answer.
-The questions should cover a wide and diverse range of topics from the provided material, from basic concepts to advanced analysis.
-Ensure the options are plausible and the correct answer is clearly identifiable from the source material.
-Do not make up information not present in the text.
-
-The output must be a JSON array of objects, strictly following the provided schema.
-
-Learning Material:
----
-{{CONTEXT}}
----
-`;
 
 const quizSchema = {
   type: Type.ARRAY,
@@ -102,9 +124,28 @@ const quizSchema = {
   },
 };
 
-export const generateQuiz = async (): Promise<QuizQuestion[]> => {
+export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> => {
     try {
-        const content = getAggregatedContent();
+        const topicName = quizTopics.find(t => t.id === topic)?.name || 'Stock Market Trading';
+        const numberOfQuestions = topic === 'all' ? 50 : 15;
+
+        const QUIZ_GENERATION_PROMPT = `
+You are an expert quizmaster specializing in stock market trading education. 
+Based on the following learning material on the topic of "${topicName}", generate a challenging quiz of ${numberOfQuestions} multiple-choice questions. 
+Each question must have exactly 4 options, and only one correct answer.
+The questions should cover a wide and diverse range of topics from the provided material.
+Ensure the options are plausible and the correct answer is clearly identifiable from the source material.
+Do not make up information not present in the text.
+
+The output must be a JSON array of objects, strictly following the provided schema.
+
+Learning Material:
+---
+{{CONTEXT}}
+---
+`;
+
+        const content = getAggregatedContent(topic);
         const prompt = QUIZ_GENERATION_PROMPT.replace('{{CONTEXT}}', content);
 
         const response = await ai.models.generateContent({
@@ -128,7 +169,7 @@ export const generateQuiz = async (): Promise<QuizQuestion[]> => {
             q.question && Array.isArray(q.options) && q.options.length === 4 && q.correctAnswer && q.options.includes(q.correctAnswer)
         );
 
-        if(validatedData.length < 10) { // Expect at least 10 valid questions
+        if(validatedData.length < (numberOfQuestions / 2)) { // Expect at least half the requested questions
              throw new Error("AI returned too few valid questions.");
         }
 

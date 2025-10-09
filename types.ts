@@ -100,6 +100,8 @@ export interface Portfolio {
 }
 
 // Quiz related types
+export type QuizTopic = 'all' | 'basics' | 'bullish' | 'bearish' | 'indicators' | 'fundamental';
+
 export interface QuizQuestion {
   question: string;
   options: string[];
