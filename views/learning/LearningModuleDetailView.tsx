@@ -103,7 +103,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
     }
 
     const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
-    const moduleTitle = module.title.split(': ')[1] || module.title;
+    const moduleTitle = module.shortTitle;
 
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">

@@ -12,9 +12,9 @@ const PortfolioDisplay: React.FC<PortfolioDisplayProps> = ({ portfolio, onManage
     const pnlColor = totalPnl >= 0 ? 'text-green-500' : 'text-red-500';
 
     const StatItem: React.FC<{ label: string; value: string; color?: string; isCurrency?: boolean }> = ({ label, value, color, isCurrency = true }) => (
-        <div className="flex items-baseline">
-            <span className="text-xs text-slate-400 mr-2">{label}</span>
-            <span className={`font-semibold font-mono ${color || 'text-white'}`}>
+        <div className="flex items-baseline space-x-2">
+            <span className="text-xs text-slate-400">{label}</span>
+            <span className={`font-semibold font-mono text-sm ${color || 'text-white'}`}>
                 {isCurrency && '₹'}{value}
             </span>
         </div>
@@ -29,7 +29,7 @@ const PortfolioDisplay: React.FC<PortfolioDisplayProps> = ({ portfolio, onManage
                 />
                  <button 
                     onClick={onManageFunds} 
-                    className="ml-2 p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                    className="ml-1.5 p-1 rounded-full text-slate-500 hover:bg-slate-700 hover:text-white transition-colors"
                     aria-label="Manage portfolio funds"
                 >
                     <Pencil size={12} />

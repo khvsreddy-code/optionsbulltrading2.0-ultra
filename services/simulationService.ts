@@ -143,17 +143,18 @@ export const updatePortfolioValue = (portfolio: Portfolio, livePrices?: { [instr
     newPortfolio.positions.forEach((pos: Position) => {
         const currentPrice = livePrices && livePrices[pos.instrument.instrument_key] !== undefined ? livePrices[pos.instrument.instrument_key] : pos.lastPrice;
         
-        pos.lastPrice = currentPrice;
-        // P&L calculation works for both long (positive qty) and short (negative qty)
-        pos.pnl = (currentPrice - pos.averagePrice) * pos.quantity;
+        // BUG FIX: Ensure all values are treated as numbers to prevent calculation errors.
+        pos.lastPrice = Number(currentPrice);
+        const priceDiff = Number(currentPrice) - Number(pos.averagePrice);
+        const quantity = Number(pos.quantity);
         
-        // Correct P&L Percentage calculation for both long and short positions
-        const investedValue = pos.averagePrice * Math.abs(pos.quantity);
+        pos.pnl = priceDiff * quantity;
+        
+        // BUG FIX: Use Math.abs(quantity) for invested value to correctly calculate P&L % for short positions.
+        const investedValue = Number(pos.averagePrice) * Math.abs(quantity);
         pos.pnlPercent = investedValue > 0 ? (pos.pnl / investedValue) * 100 : 0;
 
-        // The market value of a position contributes to the total equity.
-        // For shorts, this correctly subtracts the current value from the cash received.
-        positionsValue += currentPrice * pos.quantity;
+        positionsValue += pos.lastPrice * quantity;
     });
 
     newPortfolio.totalValue = newPortfolio.cash + positionsValue;
