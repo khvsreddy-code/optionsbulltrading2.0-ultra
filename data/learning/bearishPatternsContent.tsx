@@ -21,11 +21,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'shooting-star',
     title: 'Shooting Star',
     emoji: '☄️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/shootingstar_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/shootingstar_diagram.png',
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/shootingstar_context.png" 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/shootingstar_context.png" 
             alt="Shooting Star pattern on a chart" 
             caption="A Shooting Star forms after an uptrend, signaling a potential price peak."
         />
@@ -42,7 +42,7 @@ export const bearishPatterns: Pattern[] = [
         </ul>
 
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/shootingstar_diagram.png"
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/shootingstar_diagram.png"
             alt="Shooting Star pattern diagram"
         />
 
@@ -64,11 +64,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-engulfing',
     title: 'Bearish Engulfing',
     emoji: '🔴',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishengulfing_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishengulfing_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bearishengulfing_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/bearishengulfing_context.png" 
                 alt="Bearish Engulfing pattern on a chart" 
                 caption="A large red candle engulfs the prior green candle, reversing the uptrend."
             />
@@ -83,7 +83,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishengulfing_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishengulfing_diagram.png"
                 alt="Bearish Engulfing pattern diagram"
             />
             
@@ -109,11 +109,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'dark-cloud-cover',
     title: 'Dark Cloud Cover',
     emoji: '☁️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/darkcloud_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/darkcloud_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/darkcloud_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/darkcloud_context.png" 
                 alt="Dark Cloud Cover pattern on a chart" 
                 caption="A red candle opens higher but closes deep into the prior green candle's body."
             />
@@ -128,7 +128,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/darkcloud_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/darkcloud_diagram.png"
                 alt="Dark Cloud Cover pattern diagram"
             />
             
@@ -147,11 +147,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'evening-star',
     title: 'Evening Star',
     emoji: '🌃',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/eveningstar_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/eveningstar_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/eveningstar_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/eveningstar_context.png" 
                 alt="Evening Star pattern on a chart" 
                 caption="A three-candle pattern signaling a bearish reversal after a period of indecision at the top."
             />
@@ -167,7 +167,7 @@ export const bearishPatterns: Pattern[] = [
             </ol>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/eveningstar_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/eveningstar_diagram.png"
                 alt="Evening Star pattern diagram"
             />
             
@@ -186,11 +186,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'three-black-crows',
     title: 'Three Black Crows',
     emoji: '🐦🐦🐦',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3blackcrows_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/3blackcrows_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3blackcrows_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/3blackcrows_context.png" 
                 alt="Three Black Crows pattern on a chart" 
                 caption="Three consecutive long red candles signal a strong and steady bearish reversal."
             />
@@ -207,7 +207,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3blackcrows_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/3blackcrows_diagram.png"
                 alt="Three Black Crows pattern diagram"
             />
 
@@ -226,11 +226,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-harami',
     title: 'Bearish Harami',
     emoji: '🤰',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishharami_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishharami_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bearishharami_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/bearishharami_context.png" 
                 alt="Bearish Harami pattern on a chart" 
                 caption="A small red candle forms inside the prior green candle, showing bullish momentum is fading."
             />
@@ -244,7 +244,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishharami_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishharami_diagram.png"
                 alt="Bearish Harami pattern diagram"
             />
             
@@ -261,11 +261,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'three-inside-down',
     title: 'Three Inside Down',
     emoji: '🔽',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsidedown_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/threeinsidedown_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/threeinsidedown_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/threeinsidedown_context.png" 
                 alt="Three Inside Down pattern on a chart" 
                 caption="A bearish harami is followed by a red candle closing lower, confirming the reversal."
             />
@@ -280,7 +280,7 @@ export const bearishPatterns: Pattern[] = [
             </ol>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsidedown_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/threeinsidedown_diagram.png"
                 alt="Three Inside Down pattern diagram"
             />
             
@@ -299,11 +299,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'tweezer-top',
     title: 'Tweezer Top',
     emoji: '🥢',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezertop_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/tweezertop_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/tweezertop_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/tweezertop_context.png" 
                 alt="Tweezer Top pattern on a chart" 
                 caption="Two candles with matching highs signal a strong resistance level and a potential reversal."
             />
@@ -318,7 +318,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezertop_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/tweezertop_diagram.png"
                 alt="Tweezer Top pattern diagram"
             />
             
@@ -332,11 +332,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-kicker',
     title: 'Bearish Kicker',
     emoji: '📉',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishkicker_diagram.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishkicker_diagram.png',
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bearishkicker_context.png" 
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/bearishkicker_context.png" 
                 alt="Bearish Kicker pattern on a chart" 
                 caption="A sudden gap down creates a powerful bearish signal, trapping bulls."
             />
@@ -350,7 +350,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishkicker_diagram.png"
+                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app images/patterns/bearishkicker_diagram.png"
                 alt="Bearish Kicker pattern diagram"
             />
             
