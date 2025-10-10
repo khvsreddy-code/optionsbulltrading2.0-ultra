@@ -16,6 +16,7 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     const mainRef = useRef<HTMLElement>(null);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
     const [confettiTrigger, setConfettiTrigger] = useState(0);
+    const [isCompleting, setIsCompleting] = useState(false); // New state to prevent double-clicks
     
     const profile = useProfileData();
 
@@ -43,17 +44,17 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         : null;
         
     const handleToggleComplete = async () => {
-        if (subChapter) {
+        if (subChapter && !isCompleting) {
+            setIsCompleting(true);
             const wasJustCompleted = !isComplete;
             
-            // This will persist the change and trigger a global state update.
-            // The `isComplete` variable will automatically update on re-render.
             await toggleSubChapterCompletion(subChapter.id);
 
             if (wasJustCompleted) {
                 setIsCompletionDialogOpen(true);
                 setConfettiTrigger(c => c + 1); // Trigger confetti animation
             }
+            setIsCompleting(false);
         }
     };
     
@@ -104,14 +105,17 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
             <footer className="fixed bottom-0 left-0 right-0 p-4 bg-card border-t border-border z-20">
                 <button
                     onClick={handleToggleComplete}
+                    disabled={isCompleting}
                     className={`w-full flex items-center justify-center p-4 rounded-lg font-semibold transition-all button-press-feedback ${
-                        isComplete
+                        isCompleting 
+                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                            : isComplete
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'bg-primary text-white'
                     }`}
                 >
                     <CheckCircle size={20} className="mr-2" />
-                    <span>{isComplete ? 'Completed!' : 'Mark as Complete'}</span>
+                    <span>{isCompleting ? 'Saving...' : isComplete ? 'Completed!' : 'Mark as Complete'}</span>
                 </button>
             </footer>
             

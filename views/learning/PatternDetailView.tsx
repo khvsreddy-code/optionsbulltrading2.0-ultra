@@ -19,6 +19,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const mainRef = useRef<HTMLElement>(null);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
     const [confettiTrigger, setConfettiTrigger] = useState(0);
+    const [isCompleting, setIsCompleting] = useState(false); // New state to prevent double-clicks
     
     const profile = useProfileData();
 
@@ -52,16 +53,17 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
         : null;
     
     const handleToggleComplete = async () => {
-        if (pattern) {
+        if (pattern && !isCompleting) {
+            setIsCompleting(true);
             const wasJustCompleted = !isComplete;
 
-            // Persist change and trigger global state update
             await toggleSubChapterCompletion(pattern.id);
 
             if (wasJustCompleted) {
                 setIsCompletionDialogOpen(true);
                 setConfettiTrigger(c => c + 1); // Trigger confetti animation
             }
+            setIsCompleting(false);
         }
     };
     
@@ -125,14 +127,17 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
             <footer className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-border p-4 flex items-center justify-between gap-4">
                 <button
                     onClick={handleToggleComplete}
+                    disabled={isCompleting}
                     className={`flex-1 flex items-center justify-center p-3 rounded-lg font-semibold transition-all button-press-feedback text-sm ${
-                        isComplete
+                        isCompleting
+                            ? 'bg-gray-400 text-white cursor-not-allowed'
+                            : isComplete
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'bg-primary text-white'
                     }`}
                 >
                     <CheckCircle size={20} className="mr-2" />
-                    <span>{isComplete ? 'Completed' : 'Mark as Complete'}</span>
+                    <span>{isCompleting ? 'Saving...' : isComplete ? 'Completed' : 'Mark as Complete'}</span>
                 </button>
                 <button
                     onClick={handleNextLesson}

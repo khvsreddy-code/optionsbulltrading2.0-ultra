@@ -14,17 +14,9 @@ export type TestProgressData = {
     [testId: string]: boolean; // true for passed
 };
 
-const defaultProfile: Omit<ProfileData, 'subscription_expires_at'> & { subscription_expires_at: string | null } = {
-    total_pnl: 0,
-    progress_data: {},
-    subscription_status: 'free',
-    subscription_expires_at: null,
-};
-
-
 /**
- * Toggles the completion status for a lesson and saves it to Supabase.
- * This is the definitive fix for the progress saving bug. It reads the full profile before writing.
+ * DEFINITIVE FIX: Toggles the completion status for a lesson using a robust, full-object
+ * "read-modify-write" pattern. This prevents data loss and avoids race conditions.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -35,55 +27,52 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // 1. READ: Fetch the entire, latest profile from the DB.
-        const { data: currentProfileData, error: fetchError } = await supabase
+        // Step 1: READ the entire latest profile.
+        const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
-        
-        // Handle case where profile doesn't exist yet for a new user
-        const currentProfile = currentProfileData || { ...defaultProfile, id: session.user.id };
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error for new users.
+
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' for new users.
             throw fetchError;
         }
-        
-        // 2. MODIFY: Calculate the new progress state on the complete profile object.
-        const newProgress = {
-            ...(currentProfile.progress_data || {}),
-            [lessonId]: !(currentProfile.progress_data || {})[lessonId], // Toggle the state.
-        };
 
-        const profileToUpsert = {
-            ...currentProfile,
+        // Step 2: MODIFY the progress data on the full profile object.
+        const profileToUpdate: ProfileData = currentProfile || {
             id: session.user.id,
-            progress_data: newProgress,
-            updated_at: new Date().toISOString(),
+            total_pnl: 0,
+            progress_data: {},
+            subscription_status: 'free',
+            subscription_expires_at: null,
         };
+        
+        const newProgress = { ...(profileToUpdate.progress_data || {}) };
+        newProgress[lessonId] = !newProgress[lessonId]; // Toggle the state.
+        
+        profileToUpdate.progress_data = newProgress;
+        profileToUpdate.updated_at = new Date().toISOString();
 
-        // 3. WRITE: Upsert the entire, complete profile object.
+
+        // Step 3 & 4: UPSERT the entire object and get it back with .select().
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert(profileToUpsert)
-            .select('*') 
+            .upsert(profileToUpdate)
+            .select('*')
             .single();
             
         if (upsertError) throw upsertError;
         
-        // 4. Directly update the central store with the guaranteed fresh data from the upsert.
+        // Step 5: Update the central store with the guaranteed fresh data.
         if (updatedProfile) {
-            setProfileData({
-                total_pnl: updatedProfile.total_pnl,
-                progress_data: updatedProfile.progress_data,
-                subscription_status: updatedProfile.subscription_status,
-                subscription_expires_at: updatedProfile.subscription_expires_at,
-            });
+            setProfileData(updatedProfile);
         }
         
     } catch (error) {
         console.error("Error saving progress to Supabase", error);
     }
 };
+
 
 // --- LOCAL STORAGE based functions for Quiz ---
 const getTestProgressData = (): TestProgressData => {

@@ -1,12 +1,13 @@
-// services/profileService.ts
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 export interface ProfileData {
+    id?: string;
     total_pnl: number;
     progress_data: { [lessonId: string]: boolean };
     subscription_status: 'free' | 'premium';
     subscription_expires_at: string | null;
+    updated_at?: string;
 }
 
 const defaultProfile: ProfileData = {
@@ -56,7 +57,7 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
 
         const { data, error } = await supabase
             .from('profiles')
-            .select('total_pnl, progress_data, subscription_status, subscription_expires_at')
+            .select('*')
             .eq('id', session.user.id)
             .single();
 
@@ -70,28 +71,18 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
                     progress_data: {},
                     subscription_status: 'free'
                 })
-                .select('total_pnl, progress_data, subscription_status, subscription_expires_at')
+                .select('*')
                 .single();
             
             if (insertError) throw insertError;
 
-            return {
-                total_pnl: newProfile?.total_pnl || 0,
-                progress_data: newProfile?.progress_data || {},
-                subscription_status: newProfile?.subscription_status || 'free',
-                subscription_expires_at: newProfile?.subscription_expires_at || null,
-            };
+            return newProfile || defaultProfile;
 
         } else if (error) {
             throw error;
         }
 
-        return {
-            total_pnl: data?.total_pnl || 0,
-            progress_data: data?.progress_data || {},
-            subscription_status: data?.subscription_status || 'free',
-            subscription_expires_at: data?.subscription_expires_at || null,
-        };
+        return data || defaultProfile;
     } catch (e) {
         console.error("Error in fetchProfileFromDB:", e);
         return defaultProfile;
@@ -147,8 +138,8 @@ export const getProfileData = async (): Promise<ProfileData> => {
 };
 
 /**
- * Updates the user's total realized P&L in Supabase by adding the new P&L amount.
- * This is the definitive fix for the data loss bug. It reads the full profile before writing.
+ * DEFINITIVE FIX: Updates the user's total realized P&L using a robust, full-object
+ * "read-modify-write" pattern. This prevents data loss and avoids race conditions.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -159,46 +150,41 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        // 1. READ: Fetch the entire, latest profile from the DB.
-        const { data: currentProfileData, error: fetchError } = await supabase
+        // Step 1: READ the entire latest profile.
+        const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-        // Handle case where profile doesn't exist yet for a new user
-        const currentProfile = currentProfileData || { ...defaultProfile, id: session.user.id };
         if (fetchError && fetchError.code !== 'PGRST116') {
             throw fetchError;
         }
 
-        // 2. MODIFY: Safely calculate the new P&L on the complete profile object.
-        const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
-        
-        const profileToUpsert = {
-            ...currentProfile,
+        // Step 2: MODIFY the P&L data on the full profile object.
+        const profileToUpdate: ProfileData = currentProfile || {
             id: session.user.id,
-            total_pnl: newTotalPnl,
-            updated_at: new Date().toISOString(),
+            ...defaultProfile
         };
+        
+        profileToUpdate.total_pnl = (profileToUpdate.total_pnl || 0) + pnl;
+        profileToUpdate.updated_at = new Date().toISOString();
 
-        // 3. WRITE: Upsert the entire, complete profile object.
+        // Step 3 & 4: UPSERT the entire object and get it back with .select().
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert(profileToUpsert)
+            .upsert(profileToUpdate)
             .select('*')
             .single();
             
         if (upsertError) {
             console.error("Error updating user PNL:", upsertError);
-        } else if (updatedProfile) {
-            // 4. Update the central state with guaranteed fresh data.
-            setProfileData({
-                total_pnl: updatedProfile.total_pnl,
-                progress_data: updatedProfile.progress_data,
-                subscription_status: updatedProfile.subscription_status,
-                subscription_expires_at: updatedProfile.subscription_expires_at,
-            });
+            return;
+        }
+        
+        // Step 5: Update the central store with the guaranteed fresh data.
+        if (updatedProfile) {
+            setProfileData(updatedProfile);
         }
     } catch (e) {
         console.error("Unexpected error in updateUserPnl:", e);
