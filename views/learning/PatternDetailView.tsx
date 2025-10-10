@@ -17,18 +17,13 @@ interface PatternDetailViewProps {
 
 const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patternId }) => {
     const mainRef = useRef<HTMLElement>(null);
-    const [isComplete, setIsComplete] = useState(false);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
     const [confettiTrigger, setConfettiTrigger] = useState(0);
     
     const profile = useProfileData();
 
-    useEffect(() => {
-        // Sync local state with the source of truth from the hook
-        if (profile && patternId) {
-            setIsComplete(!!profile.progress_data[patternId]);
-        }
-    }, [profile, patternId]);
+    // DERIVE completion status directly from the profile data. No local state.
+    const isComplete = !!(profile && patternId && profile.progress_data[patternId]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -59,8 +54,8 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const handleToggleComplete = async () => {
         if (pattern) {
             const wasJustCompleted = !isComplete;
-            setIsComplete(wasJustCompleted); // Optimistic UI update
 
+            // Persist change and trigger global state update
             await toggleSubChapterCompletion(pattern.id);
 
             if (wasJustCompleted) {
@@ -70,20 +65,31 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
         }
     };
     
-    const handleNextLesson = () => {
-        setIsCompletionDialogOpen(false);
-        if (nextLesson) {
-            onNavigate(`/learning/pattern/${nextLesson.id}`);
-        } else {
-            onNavigate('/learning');
-        }
-    };
-    
     const backTargetPath = fundamentalAnalysisTopics.some(p => p.id === patternId) ? '/learning/fundamental'
                          : technicalIndicators.some(p => p.id === patternId) ? '/learning/indicators'
                          : bearishPatterns.some(p => p.id === patternId) ? '/learning/bearish'
                          : bullishPatterns.some(p => p.id === patternId) ? '/learning/bullish'
                          : '/learning';
+                         
+    const handleNextLesson = () => {
+        setIsCompletionDialogOpen(false);
+        if (nextLesson && nextLesson.id) { // Ensure next lesson has an id
+            // Check if the next lesson is in the same category
+             const isNextInSameCategory = (
+                (bullishPatterns.some(p => p.id === patternId) && bullishPatterns.some(p => p.id === nextLesson.id)) ||
+                (bearishPatterns.some(p => p.id === patternId) && bearishPatterns.some(p => p.id === nextLesson.id)) ||
+                (technicalIndicators.some(p => p.id === patternId) && technicalIndicators.some(p => p.id === nextLesson.id)) ||
+                (fundamentalAnalysisTopics.some(p => p.id === patternId) && fundamentalAnalysisTopics.some(p => p.id === nextLesson.id))
+            );
+
+            if (isNextInSameCategory) {
+                 onNavigate(`/learning/pattern/${nextLesson.id}`);
+                 return;
+            }
+        }
+        // If no next lesson or it's in a different category, go back to the list
+        onNavigate(backTargetPath);
+    };
 
     if (!pattern) {
         return (
@@ -121,7 +127,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                     onClick={handleToggleComplete}
                     className={`flex-1 flex items-center justify-center p-3 rounded-lg font-semibold transition-all button-press-feedback text-sm ${
                         isComplete
-                            ? 'bg-primary-light text-primary'
+                            ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'bg-primary text-white'
                     }`}
                 >
@@ -141,7 +147,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
                 isOpen={isCompletionDialogOpen}
                 onClose={() => setIsCompletionDialogOpen(false)}
                 onNext={handleNextLesson}
-                nextLessonTitle={nextLesson ? nextLesson.title : "Back to Library"}
+                nextLessonTitle={"Back to Library"}
             />
         </div>
     );

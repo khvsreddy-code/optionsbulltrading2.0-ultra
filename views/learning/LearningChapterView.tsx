@@ -14,18 +14,13 @@ interface LearningChapterViewProps {
 
 const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, chapterId }) => {
     const mainRef = useRef<HTMLElement>(null);
-    const [isComplete, setIsComplete] = useState(false);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
     const [confettiTrigger, setConfettiTrigger] = useState(0);
     
     const profile = useProfileData();
 
-    useEffect(() => {
-        // Sync local state with the source of truth from the hook
-        if (profile && chapterId) {
-            setIsComplete(!!profile.progress_data[chapterId]);
-        }
-    }, [profile, chapterId]);
+    // DERIVE completion status directly from the profile data. No local state needed.
+    const isComplete = !!(profile && chapterId && profile.progress_data[chapterId]);
     
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -50,9 +45,9 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     const handleToggleComplete = async () => {
         if (subChapter) {
             const wasJustCompleted = !isComplete;
-            setIsComplete(wasJustCompleted); // Optimistic UI update
             
-            // This will persist the change and trigger a global state update
+            // This will persist the change and trigger a global state update.
+            // The `isComplete` variable will automatically update on re-render.
             await toggleSubChapterCompletion(subChapter.id);
 
             if (wasJustCompleted) {
@@ -64,10 +59,12 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     
     const handleNextLesson = () => {
         setIsCompletionDialogOpen(false); // Close dialog
-        if (nextSubChapter) {
-            onNavigate(`/learning/chapter/${nextSubChapter.id}`);
+        // Navigate back to the module detail view instead of the next lesson
+        const parentModule = learningCurriculum.find(c => c.subChapters.some(sc => sc.id === chapterId));
+        if (parentModule) {
+            onNavigate(`/learning/module/${parentModule.id}`);
         } else {
-            onNavigate('/learning'); // Go back to library if it's the last lesson
+            onNavigate('/learning');
         }
     };
 
@@ -86,11 +83,13 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         );
     }
     
+    const parentModule = learningCurriculum.find(c => c.subChapters.some(sc => sc.id === chapterId));
+
     return (
         <div className="bg-background text-text-main min-h-screen font-sans">
             <Confetti trigger={confettiTrigger} />
             <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
-                 <button onClick={() => onNavigate('/learning/module/ch1')} className="p-2 -ml-2" aria-label="Back to curriculum list">
+                 <button onClick={() => parentModule ? onNavigate(`/learning/module/${parentModule.id}`) : onNavigate('/learning')} className="p-2 -ml-2" aria-label="Back to curriculum list">
                     <ChevronRight size={24} className="transform rotate-180 text-text-secondary" />
                 </button>
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{subChapter.title}</h1>
@@ -107,7 +106,7 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
                     onClick={handleToggleComplete}
                     className={`w-full flex items-center justify-center p-4 rounded-lg font-semibold transition-all button-press-feedback ${
                         isComplete
-                            ? 'bg-primary-light text-primary border border-primary'
+                            ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'bg-primary text-white'
                     }`}
                 >
@@ -120,7 +119,7 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
                 isOpen={isCompletionDialogOpen}
                 onClose={() => setIsCompletionDialogOpen(false)}
                 onNext={handleNextLesson}
-                nextLessonTitle={nextSubChapter ? nextSubChapter.title : "Back to Library"}
+                nextLessonTitle={"Back to Library"}
             />
         </div>
     );

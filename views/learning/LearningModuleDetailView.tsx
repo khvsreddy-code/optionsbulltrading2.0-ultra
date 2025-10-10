@@ -1,11 +1,7 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
-import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
-import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
-import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
-import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
-import { ChevronRight, CheckCircle } from '../../components/common/Icons';
+import { ChevronRight, CheckCircle, GraduationCap } from '../../components/common/Icons';
 import { useProfileData } from '../../services/profileService';
 
 interface LearningModuleDetailViewProps {
@@ -17,22 +13,23 @@ interface LessonItemProps {
     subChapter: { id: string; title: string; readingTime: string; };
     isComplete: boolean;
     onNavigate: (path: string) => void;
+    moduleTitle: string;
 }
 
-const LessonItem: React.FC<LessonItemProps> = ({ subChapter, isComplete, onNavigate }) => {
+const LessonItem: React.FC<LessonItemProps> = ({ subChapter, isComplete, onNavigate, moduleTitle }) => {
     return (
         <button
             onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
-            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
+            className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-background button-press-feedback flex justify-between items-center border border-border"
         >
             <div>
                 <p className={`font-semibold transition-colors ${isComplete ? 'text-text-secondary line-through' : 'text-text-main'}`}>{subChapter.title}</p>
-                <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime}</p>
+                <p className="text-sm text-text-secondary mt-1">{subChapter.readingTime} · {moduleTitle}</p>
             </div>
             {isComplete ? (
-                <CheckCircle size={22} className="text-primary flex-shrink-0 ml-2" />
+                <CheckCircle size={24} className="text-primary flex-shrink-0 ml-2" />
             ) : (
-                <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
+                <ChevronRight size={22} className="text-text-secondary flex-shrink-0 ml-2" />
             )}
         </button>
     );
@@ -87,28 +84,29 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
     const moduleTitle = module.shortTitle;
 
     return (
-        <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">
-            <header className="flex items-center mb-6 anim-child">
+        <div ref={viewRef} className="bg-background min-h-screen font-sans">
+            <header className="p-4 flex items-center anim-child">
                  <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to learning library">
                     <ChevronRight size={24} className="transform rotate-180" />
                 </button>
                 <h1 className="text-xl font-bold text-text-main ml-4">{moduleTitle}</h1>
             </header>
 
-            <main>
-                <div className="pro-card rounded-2xl overflow-hidden anim-child mb-6">
+            <main className="px-4">
+                {/* Redesigned Header Card */}
+                <div className="pro-card rounded-2xl overflow-hidden anim-child mb-6 bg-[#2B2E4A] text-white">
                     <div className="relative w-full h-40">
-                        <img src={module.image} alt={module.title} className="absolute inset-0 w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40"></div>
-                        <div className="absolute bottom-4 left-4 z-10">
-                            <h2 className="font-bold text-2xl text-white">{moduleTitle}</h2>
-                            <p className="text-white/80 font-semibold">{module.title}</p>
+                        <img src={module.image} alt={module.title} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                        <div className="absolute top-4 left-4 z-10">
+                            <h2 className="font-extrabold text-4xl text-white tracking-tight">{module.title.split(': ')[0]}</h2>
+                            <h3 className="font-bold text-3xl text-white/90">{module.shortTitle}</h3>
                         </div>
                     </div>
-                    <div className="p-4 bg-card">
-                        <p className="text-sm font-semibold text-text-secondary">{progress.completed} of {progress.total} lessons completed</p>
-                        <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
-                            <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
+                    <div className="p-4 bg-[#393D62]/50">
+                        <p className="text-sm font-semibold text-white/80">{progress.completed} of {progress.total} lessons completed</p>
+                        <div className="w-full bg-black/30 rounded-full h-2.5 mt-2">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
                         </div>
                     </div>
                 </div>
@@ -120,6 +118,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                                 subChapter={subChapter}
                                 isComplete={!!(profile && profile.progress_data[subChapter.id])}
                                 onNavigate={onNavigate}
+                                moduleTitle={module.title}
                            />
                         </div>
                     ))}
