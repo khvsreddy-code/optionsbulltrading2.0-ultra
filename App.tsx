@@ -27,6 +27,7 @@ import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsLis
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
 import ChatView from './views/ChatView';
+import FinanceView from './views/FinanceView';
 import { Sparkles } from './components/common/Icons';
 
 // Auth components
@@ -109,6 +110,7 @@ const App: React.FC = () => {
         else if (parts[0] === 'practice') view = 'practice';
         else if (parts[0] === 'profile') view = 'profile';
         else if (parts[0] === 'chat') view = 'chat';
+        else if (parts[0] === 'finance') view = 'finance';
         else if (parts[0] === 'quiz') {
             if (parts[1] === 'results') view = 'quizResults';
             else view = 'quiz';
@@ -190,6 +192,8 @@ const App: React.FC = () => {
                             return <ProfileView user={user} onNavigate={handleNavigate} />;
                         case 'chat':
                             return <ChatView onNavigate={handleNavigate} />;
+                        case 'finance':
+                            return <FinanceView onNavigate={handleNavigate} />;
                         case 'quiz':
                             return <Suspense fallback={<LoadingSpinner />}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
@@ -215,7 +219,7 @@ const App: React.FC = () => {
     }
     
     // Views that have their own full-page layout
-    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat'];
+    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }
@@ -248,9 +252,9 @@ const App: React.FC = () => {
             </div>
             
             <button
-                onClick={() => handleNavigate('/chat')}
+                onClick={() => handleNavigate('/finance')}
                 className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-transform transform hover:scale-110 button-press-feedback"
-                aria-label="Open Live Market Assistant"
+                aria-label="Open AI Finance Dashboard"
             >
                 <Sparkles size={28} />
             </button>
