@@ -1,5 +1,6 @@
+
 import { supabase } from './supabaseClient';
-import { forceRefetchProfileData, setProfileData } from './profileService';
+import { setProfileData } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -20,7 +21,8 @@ export type TestProgressData = {
 
 /**
  * Toggles the completion status for a lesson and saves it to Supabase.
- * This version is architected to be stateless and robust, preventing race conditions.
+ * This version is architected to use `upsert` to be robust for new users,
+ * fixing the primary progress-saving bug.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -31,39 +33,40 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // 1. Fetch the LATEST progress data directly from the DB to avoid race conditions.
+        // 1. Fetch the LATEST progress data to handle the toggle logic correctly.
         const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
             .select('progress_data')
             .eq('id', session.user.id)
             .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found'
-            console.error("Error fetching fresh progress before toggle:", fetchError);
-            return; 
+        
+        // Allow 'not found' error, as this is a valid state for a new user.
+        if (fetchError && fetchError.code !== 'PGRST116') { 
+            throw fetchError;
         }
 
         const currentProgress = currentProfile?.progress_data || {};
         
-        // 2. Calculate the new state based on the fresh data.
+        // 2. Calculate the new state.
         const newProgress = {
             ...currentProgress,
             [lessonId]: !currentProgress[lessonId], // Toggle the state.
         };
 
-        // 3. Update the database and immediately select the updated row.
-        // This is the key fix: it avoids any replication delay by getting the
-        // confirmed data directly from the update operation.
-        const { data: updatedProfile, error: updateError } = await supabase
+        // 3. Use UPSERT instead of UPDATE. This is the critical bug fix.
+        // It will create the profile with the first progress data if it doesn't exist.
+        const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .update({ progress_data: newProgress })
-            .eq('id', session.user.id)
-            .select('*')
+            .upsert({ 
+                id: session.user.id, 
+                progress_data: newProgress 
+            })
+            .select('*') // Select the full, potentially newly created, profile
             .single();
             
-        if (updateError) throw updateError;
+        if (upsertError) throw upsertError;
         
-        // 4. Directly update the central store with the guaranteed fresh data.
+        // 4. Directly update the central store with the guaranteed fresh data from the upsert.
         if (updatedProfile) {
             setProfileData({
                 total_pnl: updatedProfile.total_pnl || 0,

@@ -1,3 +1,4 @@
+
 // services/profileService.ts
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
@@ -43,7 +44,7 @@ export const setProfileData = (newProfile: ProfileData) => {
 
 /**
  * Fetches the complete profile for the currently authenticated user from Supabase.
- * If a profile doesn't exist, it creates one.
+ * If a profile doesn't exist, it creates one with proper default values.
  * This is the internal fetcher for our store.
  */
 const fetchProfileFromDB = async (): Promise<ProfileData> => {
@@ -61,9 +62,15 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
             .single();
 
         if (error && error.code === 'PGRST116') {
+            // FIX: Insert a new profile with correct default values.
             const { data: newProfile, error: insertError } = await supabase
                 .from('profiles')
-                .insert({ id: session.user.id })
+                .insert({ 
+                    id: session.user.id,
+                    total_pnl: 0,
+                    progress_data: {},
+                    subscription_status: 'free'
+                })
                 .select('total_pnl, progress_data, subscription_status, subscription_expires_at')
                 .single();
             
@@ -117,6 +124,9 @@ export const useProfileData = (): ProfileData | null => {
         // Initial fetch if state is not yet populated
         if (!profileState) {
             forceRefetchProfileData();
+        } else {
+            // Sync with latest state on mount if it's already available
+            setProfile(profileState);
         }
 
         return () => unsubscribe();
@@ -139,6 +149,7 @@ export const getProfileData = async (): Promise<ProfileData> => {
 
 /**
  * Updates the user's total realized P&L in Supabase by adding the new P&L amount.
+ * Uses `upsert` to be robust for new users.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -152,10 +163,14 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
         const currentProfile = await getProfileData();
         const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
 
+        // BUG FIX: Use `upsert` instead of `update` to handle the case where a new user's first
+        // action is a trade, and their profile row hasn't been created yet.
         const { data: updatedProfile, error } = await supabase
             .from('profiles')
-            .update({ total_pnl: newTotalPnl })
-            .eq('id', session.user.id)
+            .upsert({ 
+                id: session.user.id, 
+                total_pnl: newTotalPnl 
+            })
             .select('*')
             .single();
             
