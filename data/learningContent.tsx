@@ -10,7 +10,9 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
-  image: string; // Replaced icon and bgColor with a single image URL
+  category: string;
+  shortTitle: string;
+  image: string;
   isExternalLink?: boolean; 
   subChapters: SubChapter[];
 }
@@ -19,7 +21,9 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
     title: 'Module 1: Basics',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png',
+    category: 'Market Basics',
+    shortTitle: 'Basics',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning-card-basics.png',
     subChapters: [
       { 
         id: '1.1', 
@@ -48,28 +52,36 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullish%20candlestickpatterns.jpg',
+    category: 'Bullish Candlestick Patterns',
+    shortTitle: 'Bullish Candlesticks',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning-card-bullish.png',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png',
+    category: 'Bearish Candlestick Patterns',
+    shortTitle: 'Bearish Candlesticks',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning-card-bearish.png',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png',
+    category: 'Technical Indicators',
+    shortTitle: 'Technical Analysis',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning-card-technical.png',
     isExternalLink: true,
     subChapters: []
   },
   {
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png',
+    category: 'Fundamental Analysis',
+    shortTitle: 'Fundamental Analysis',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/learning-card-fundamental.png',
     isExternalLink: true,
     subChapters: []
   },

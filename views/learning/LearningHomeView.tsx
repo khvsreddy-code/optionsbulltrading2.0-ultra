@@ -11,18 +11,23 @@ interface LearningHomeViewProps {
 const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => void; }> = ({ chapter, onNavigate }) => {
     const [progress, setProgress] = useState({ completed: 0, total: 0 });
     const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
-    const title = chapter.title.split(': ')[1] || chapter.title;
 
     useEffect(() => {
         const fetchProgress = async () => {
             const counts = await getModuleLessonCounts(chapter.id);
             setProgress(counts);
         };
+        
         fetchProgress();
 
-        const handleProgressUpdate = () => fetchProgress();
-        window.addEventListener('progressUpdated', handleProgressUpdate);
-        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+        // Add listeners to refetch progress on custom events or when tab is re-focused
+        window.addEventListener('progressUpdated', fetchProgress);
+        window.addEventListener('focus', fetchProgress);
+        
+        return () => {
+            window.removeEventListener('progressUpdated', fetchProgress);
+            window.removeEventListener('focus', fetchProgress);
+        };
     }, [chapter.id]);
 
 
@@ -39,18 +44,30 @@ const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => voi
 
     return (
         <div 
-            className="pro-card rounded-2xl overflow-hidden cursor-pointer group"
+            className="bg-card rounded-xl shadow-md overflow-hidden cursor-pointer transition-transform hover:-translate-y-1"
             onClick={() => onNavigate(getPathForModule(chapter.id))}
         >
-            <div className="relative w-full aspect-video group-hover:scale-105 transition-transform duration-300">
-                <img src={chapter.image} alt={chapter.title} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40"></div>
-                <h3 className="absolute bottom-4 left-4 font-bold text-lg text-white z-10">{title}</h3>
+            {/* Top part */}
+            <div className="relative p-5 h-40" style={{ backgroundColor: '#2d3450' }}>
+                <img 
+                    src={chapter.image} 
+                    alt={chapter.title} 
+                    className="absolute right-0 top-0 h-full w-2/3 object-contain" 
+                />
+                <div className="relative h-full flex flex-col justify-start text-white">
+                    <h4 className="text-lg font-normal text-white/80 w-1/2">{chapter.category}</h4>
+                    <h3 className="text-xl font-bold mt-1 w-1/2">{chapter.shortTitle}</h3>
+                </div>
             </div>
-            <div className="p-4 bg-card">
-                <p className="text-sm font-semibold text-text-secondary">{progress.completed} of {progress.total} lessons completed</p>
-                <div className="w-full bg-primary-light rounded-full h-2.5 mt-2">
-                    <div className="bg-primary h-2.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
+
+            {/* Bottom part */}
+            <div className="p-4">
+                <p className="text-sm text-gray-600">{progress.completed} of {progress.total} lessons completed</p>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                    <div 
+                        className="bg-green-400 h-1.5 rounded-full" 
+                        style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}
+                    ></div>
                 </div>
             </div>
         </div>

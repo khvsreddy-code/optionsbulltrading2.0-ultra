@@ -26,7 +26,11 @@ const LessonItem: React.FC<LessonItemProps> = ({ subChapter, onNavigate }) => {
 
         const handleProgressUpdate = () => checkCompletion();
         window.addEventListener('progressUpdated', handleProgressUpdate);
-        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+        window.addEventListener('focus', handleProgressUpdate); // Also check on focus
+        return () => {
+            window.removeEventListener('progressUpdated', handleProgressUpdate);
+            window.removeEventListener('focus', handleProgressUpdate);
+        };
     }, [subChapter.id]);
 
     return (
@@ -60,9 +64,12 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
         };
         fetchProgress();
 
-        const handleProgressUpdate = () => fetchProgress();
-        window.addEventListener('progressUpdated', handleProgressUpdate);
-        return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
+        window.addEventListener('progressUpdated', fetchProgress);
+        window.addEventListener('focus', fetchProgress);
+        return () => {
+            window.removeEventListener('progressUpdated', fetchProgress);
+            window.removeEventListener('focus', fetchProgress);
+        };
     }, [moduleId]);
 
     useEffect(() => {
@@ -96,7 +103,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
     }
 
     const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
-    const moduleTitle = module.title.split(': ')[1] || module.title;
+    const moduleTitle = module.shortTitle;
 
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">
@@ -113,8 +120,8 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                         <img src={module.image} alt={module.title} className="absolute inset-0 w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40"></div>
                         <div className="absolute bottom-4 left-4 z-10">
-                            <h2 className="font-bold text-2xl text-white">{moduleTitle}</h2>
-                            <p className="text-white/80 font-semibold">{module.title.split(':')[0]}</p>
+                            <h2 className="font-bold text-2xl text-white">{module.shortTitle}</h2>
+                            <p className="text-white/80 font-semibold">{module.category}</p>
                         </div>
                     </div>
                     <div className="p-4 bg-card">
