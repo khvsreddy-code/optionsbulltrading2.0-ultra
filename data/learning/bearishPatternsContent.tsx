@@ -16,11 +16,6 @@ const Diagram: React.FC<{src: string, alt: string}> = ({ src, alt }) => (
     </div>
 );
 
-const BASE_URL = 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/';
-
-const generatePatternUrl = (name: string) => `${BASE_URL}${name.toLowerCase().replace(/ /g, '%20')}.png`;
-const generateExampleUrl = (name: string) => `${BASE_URL}${name.toLowerCase().replace(/ /g, '%20')}%20example.png`;
-
 export const bearishPatterns: Pattern[] = [
   {
     id: 'shooting-star',
@@ -156,7 +151,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src={generateExampleUrl('Evening Star')}
+                src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Evening-Doji-Star-example.jpg'}
                 alt="Evening Star pattern on a chart" 
                 caption="A three-candle pattern signaling a bearish reversal after a period of indecision at the top."
             />
@@ -191,11 +186,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'three-black-crows',
     title: 'Three Black Crows',
     emoji: '🐦🐦🐦',
-    image: generatePatternUrl('Three Black Crows'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Three-Falling-Method-Candlestick-Pattern-1024x1024.png',
     content: (
         <>
             <Image 
-                src={generateExampleUrl('Three Black Crows')}
+                src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Three-Falling-Method-Candlestick-Pattern-example-1024x756.png'}
                 alt="Three Black Crows pattern on a chart" 
                 caption="Three consecutive long red candles signal a strong and steady bearish reversal."
             />
@@ -212,7 +207,7 @@ export const bearishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src={generatePatternUrl('Three Black Crows')}
+                src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Three-Falling-Method-Candlestick-Pattern-1024x1024.png'}
                 alt="Three Black Crows pattern diagram"
             />
 
@@ -308,7 +303,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
         <>
             <Image 
-                src={generateExampleUrl('Tweezer Top')}
+                src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/tweezer-top.jpg'}
                 alt="Tweezer Top pattern on a chart" 
                 caption="Two candles with matching highs signal a strong resistance level and a potential reversal."
             />
@@ -374,11 +369,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'hanging-man',
     title: 'Hanging Man',
     emoji: ' T ',
-    image: generatePatternUrl('Hanging Man'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Hammer_candlestick_1_685c7ed629.webp',
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Hanging Man')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/inverted%20hammer%20example.jpg'}
             alt="Hanging Man pattern on a chart" 
             caption="A Hanging Man after an uptrend is a warning of potential weakness."
         />
@@ -392,7 +387,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Position in Trend:</strong> Must occur after a clear uptrend.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Hanging Man')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Hammer_candlestick_1_685c7ed629.webp'}
             alt="Hanging Man pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -404,7 +399,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'gravestone-doji',
     title: 'Gravestone Doji',
     emoji: ' T ',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby-example.jpg',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby.jpg',
     content: (
       <>
         <Image 
@@ -421,7 +416,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>No Lower Shadow:</strong> The low of the day is the same as the open and close, forming an inverted 'T' shape.</li>
         </ul>
         <Diagram 
-            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby-example.jpg'}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby.jpg'}
             alt="Gravestone Doji pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -461,7 +456,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-abandoned-baby',
     title: 'Bearish Abandoned Baby',
     emoji: '👶',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Bullish-abandoned-baby-1.jpg',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby.jpg',
     content: (
       <>
         <Image 
@@ -478,7 +473,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A long red (bearish) candle that gaps down, with no shadow overlap with the Doji.</li>
         </ul>
         <Diagram 
-            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Bullish-abandoned-baby-1.jpg'}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish-abandoned-baby.jpg'}
             alt="Bearish Abandoned Baby pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -548,11 +543,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'two-black-gapping',
     title: 'Two Black Gapping',
     emoji: '⚫⚫',
-    image: generatePatternUrl('Two Black Gapping'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Downside-Tasuki-1024x1024.png',
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Two Black Gapping')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Downside-Tasuki-Example-1024x756.png'}
             alt="Two Black Gapping pattern on a chart" 
             caption="The pattern confirms the continuation of a downtrend with strong bearish momentum."
         />
@@ -565,7 +560,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> Another red candle that opens inside the body of the first candle but closes lower, making a new low.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Two Black Gapping')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Downside-Tasuki-1024x1024.png'}
             alt="Two Black Gapping pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -694,7 +689,6 @@ export const bearishPatterns: Pattern[] = [
       </>
     ),
   },
-  // --- NEWLY ADDED 20 PATTERNS ---
   {
     id: 'bearish-marubozu',
     title: 'Bearish Marubozu',
@@ -756,7 +750,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-belt-hold',
     title: 'Bearish Belt Hold',
     emoji: '🥋',
-    image: generatePatternUrl('Bearish Belt Hold'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/BullishBeltHoldDiagram.jpg',
     content: (
       <>
         <Image 
@@ -772,7 +766,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Formation:</strong> The candle opens at its high for the day (no upper shadow) and then sells off for the rest of the session, forming a long red body and closing near its low.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Bearish Belt Hold')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/BullishBeltHoldDiagram.jpg'}
             alt="Bearish Belt Hold pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -816,7 +810,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Bearish Meeting Line')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/meeting%20lines%20example.webp'}
             alt="Bearish Meeting Line on a chart" 
             caption="A red candle sells off to 'meet' the prior day's close, forming a resistance level."
         />
@@ -868,11 +862,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-doji-star',
     title: 'Bearish Doji Star',
     emoji: '🌟',
-    image: generatePatternUrl('Bearish Doji Star'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Evening-Doji-Star.jpg',
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Bearish Doji Star')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Evening-Doji-Star-example.jpg'}
             alt="Bearish Doji Star on a chart" 
             caption="A doji gapping up from a green candle signals a stall in bullish momentum."
         />
@@ -884,7 +878,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A Doji that opens with a gap up from the body of the first candle.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Bearish Doji Star')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Evening-Doji-Star.jpg'}
             alt="Bearish Doji Star pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -958,7 +952,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Dumpling Top')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/dumpling%20tops%20pattern.jpg'}
             alt="Dumpling Top on a chart" 
             caption="A rounding top followed by a gap down signals a powerful bearish breakdown."
         />
@@ -987,7 +981,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Tower Top')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/tower%20top.webp'}
             alt="Tower Top on a chart" 
             caption="A sharp rise followed by consolidation and a sharp fall forms a 'tower' reversal."
         />
@@ -1016,7 +1010,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src={generateExampleUrl('On Neck Line')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/on-neck.png'}
             alt="On Neck Line on a chart" 
             caption="A weak rally that fails at the prior low signals strong bearish continuation."
         />
@@ -1044,7 +1038,7 @@ export const bearishPatterns: Pattern[] = [
     content: (
       <>
         <Image 
-            src={generateExampleUrl('In Neck Line')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/in-neck-pattern.png'}
             alt="In Neck Line on a chart" 
             caption="A feeble rally that closes just above the prior close is a bearish sign."
         />
@@ -1124,11 +1118,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'kicking-down',
     title: 'Kicking Down (Bearish Kicker)',
     emoji: '🦵',
-    image: generatePatternUrl('Kicking Down (Bearish Kicker)'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish%20kicker.jpg',
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Kicking Down (Bearish Kicker)')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish%20kicker%20example%20(2).jpg'}
             alt="Kicking Down on a chart" 
             caption="A gap between two opposite marubozu candles is an extremely powerful reversal signal."
         />
@@ -1140,7 +1134,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A red or black Marubozu that opens with a significant gap down from the first candle.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Kicking Down (Bearish Kicker)')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/bearish%20kicker.jpg'}
             alt="Kicking Down pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
@@ -1209,11 +1203,11 @@ export const bearishPatterns: Pattern[] = [
     id: 'concealing-baby-swallow-bearish',
     title: 'Concealing Baby Swallow (Bearish)',
     emoji: '🐦',
-    image: generatePatternUrl('Concealing Baby Swallow (Bearish)'),
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Concealing-Baby-Swallow-Pattern-4.webp',
     content: (
       <>
         <Image 
-            src={generateExampleUrl('Concealing Baby Swallow (Bearish)')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/JD-Concealing-Baby-Swallow-1024x610%20example.webp'}
             alt="Concealing Baby Swallow on a chart" 
             caption="An extremely rare but potent four-candle bearish reversal pattern."
         />
@@ -1226,7 +1220,7 @@ export const bearishPatterns: Pattern[] = [
             <li><strong>Fourth Candle:</strong> A long green candle that completely engulfs the third candle and makes a new high.</li>
         </ul>
         <Diagram 
-            src={generatePatternUrl('Concealing Baby Swallow (Bearish)')}
+            src={'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/Concealing-Baby-Swallow-Pattern-4.webp'}
             alt="Concealing Baby Swallow pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-red-500 pl-4">Pattern Psychology</h4>
