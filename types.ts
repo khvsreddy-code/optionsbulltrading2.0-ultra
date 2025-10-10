@@ -25,7 +25,8 @@ export type View =
   | 'technicalIndicatorsList'
   | 'fundamentalAnalysisList'
   | 'quiz'
-  | 'quizResults';
+  | 'quizResults'
+  | 'chat';
 
 // Financial data types
 export interface CandleData {

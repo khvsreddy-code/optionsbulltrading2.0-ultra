@@ -24,17 +24,22 @@ const Diagram: React.FC<{src: string, alt: string}> = ({ src, alt }) => (
     </div>
 );
 
+const BASE_URL = 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/candlestick%20patterns/';
+
+const generatePatternUrl = (name: string) => `${BASE_URL}${name.toLowerCase().replace(/ /g, '%20')}.png`;
+const generateExampleUrl = (name: string) => `${BASE_URL}${name.toLowerCase().replace(/ /g, '%20')}%20example.png`;
+
 
 export const bullishPatterns: Pattern[] = [
   {
     id: 'hammer',
     title: 'Hammer',
     emoji: '🔨',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/hammer_diagram.png',
+    image: generatePatternUrl('Hammer'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/hammer_context.png" 
+            src={generateExampleUrl('Hammer')}
             alt="Hammer pattern on a chart" 
             caption="A Hammer forms after a downtrend, signaling a potential price bottom."
         />
@@ -51,7 +56,7 @@ export const bullishPatterns: Pattern[] = [
         </ul>
 
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/hammer_diagram.png"
+            src={generatePatternUrl('Hammer')}
             alt="Hammer pattern diagram"
         />
 
@@ -75,11 +80,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-engulfing',
     title: 'Bullish Engulfing',
     emoji: '🟢',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishengulfing_diagram.png',
+    image: generatePatternUrl('Bullish Engulfing'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishengulfing_context.png" 
+                src={generateExampleUrl('Bullish Engulfing')}
                 alt="Bullish Engulfing pattern on a chart" 
                 caption="A large green candle engulfs the prior red candle, reversing the downtrend."
             />
@@ -94,7 +99,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishengulfing_diagram.png"
+                src={generatePatternUrl('Bullish Engulfing')}
                 alt="Bullish Engulfing pattern diagram"
             />
             
@@ -120,11 +125,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'morning-star',
     title: 'Morning Star',
     emoji: '⭐',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningstar_diagram.png',
+    image: generatePatternUrl('Morning Star'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/morningstar_context.png" 
+                src={generateExampleUrl('Morning Star')}
                 alt="Morning Star pattern on a chart" 
                 caption="A three-candle pattern signaling a bullish reversal after a period of indecision."
             />
@@ -140,7 +145,7 @@ export const bullishPatterns: Pattern[] = [
             </ol>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningstar_diagram.png"
+                src={generatePatternUrl('Morning Star')}
                 alt="Morning Star pattern diagram"
             />
             
@@ -162,11 +167,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'piercing-pattern',
     title: 'Piercing Pattern',
     emoji: '🗡️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/piercing_diagram.png',
+    image: generatePatternUrl('Piercing Pattern'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/piercing_context.png" 
+                src={generateExampleUrl('Piercing Pattern')}
                 alt="Piercing Pattern on a chart" 
                 caption="A green candle opens lower but 'pierces' more than halfway into the prior red candle."
             />
@@ -181,7 +186,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/piercing_diagram.png"
+                src={generatePatternUrl('Piercing Pattern')}
                 alt="Piercing Pattern diagram"
             />
 
@@ -207,11 +212,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-white-soldiers',
     title: 'Three White Soldiers',
     emoji: '🧍🧍🧍',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3whitesoldiers_diagram.png',
+    image: generatePatternUrl('Three White Soldiers'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/3whitesoldiers_context.png" 
+                src={generateExampleUrl('Three White Soldiers')}
                 alt="Three White Soldiers pattern on a chart" 
                 caption="Three consecutive long green candles signal a strong and steady reversal."
             />
@@ -228,7 +233,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3whitesoldiers_diagram.png"
+                src={generatePatternUrl('Three White Soldiers')}
                 alt="Three White Soldiers pattern diagram"
             />
 
@@ -247,11 +252,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-harami',
     title: 'Bullish Harami',
     emoji: '🤰',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharami_diagram.png',
+    image: generatePatternUrl('Bullish Harami'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishharami_context.png" 
+                src={generateExampleUrl('Bullish Harami')}
                 alt="Bullish Harami pattern on a chart" 
                 caption="A small green candle inside the prior red candle signals a potential end to the selling pressure."
             />
@@ -265,7 +270,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharami_diagram.png"
+                src={generatePatternUrl('Bullish Harami')}
                 alt="Bullish Harami pattern diagram"
             />
             
@@ -282,11 +287,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-inside-up',
     title: 'Three Inside Up',
     emoji: '🔼',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsideup_diagram.png',
+    image: generatePatternUrl('Three Inside Up'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/threeinsideup_context.png" 
+                src={generateExampleUrl('Three Inside Up')}
                 alt="Three Inside Up pattern on a chart" 
                 caption="A bullish harami followed by a strong green candle confirms the reversal."
             />
@@ -301,7 +306,7 @@ export const bullishPatterns: Pattern[] = [
             </ol>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsideup_diagram.png"
+                src={generatePatternUrl('Three Inside Up')}
                 alt="Three Inside Up pattern diagram"
             />
             
@@ -320,11 +325,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'tweezer-bottom',
     title: 'Tweezer Bottom',
     emoji: '🥢',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezerbottom_diagram.png',
+    image: generatePatternUrl('Tweezer Bottom'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/tweezerbottom_context.png" 
+                src={generateExampleUrl('Tweezer Bottom')}
                 alt="Tweezer Bottom pattern on a chart" 
                 caption="Two candles with matching lows signal a strong support level and potential reversal."
             />
@@ -339,7 +344,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezerbottom_diagram.png"
+                src={generatePatternUrl('Tweezer Bottom')}
                 alt="Tweezer Bottom pattern diagram"
             />
             
@@ -353,11 +358,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-kicker',
     title: 'Bullish Kicker',
     emoji: '🚀',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishkicker_diagram.png',
+    image: generatePatternUrl('Bullish Kicker'),
     content: (
         <>
             <Image 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishkicker_context.png" 
+                src={generateExampleUrl('Bullish Kicker')}
                 alt="Bullish Kicker pattern on a chart" 
                 caption="A sudden gap up creates a powerful bullish signal, leaving bears trapped."
             />
@@ -371,7 +376,7 @@ export const bullishPatterns: Pattern[] = [
             </ul>
 
             <Diagram 
-                src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishkicker_diagram.png"
+                src={generatePatternUrl('Bullish Kicker')}
                 alt="Bullish Kicker pattern diagram"
             />
             
@@ -390,11 +395,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'inverted-hammer',
     title: 'Inverted Hammer',
     emoji: ' T ',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_diagram.png',
+    image: generatePatternUrl('Inverted Hammer'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_context.png" 
+            src={generateExampleUrl('Inverted Hammer')}
             alt="Inverted Hammer pattern on a chart" 
             caption="An Inverted Hammer forms after a downtrend, showing an attempt by bulls to push prices higher."
         />
@@ -410,7 +415,7 @@ export const bullishPatterns: Pattern[] = [
         </ul>
 
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_diagram.png"
+            src={generatePatternUrl('Inverted Hammer')}
             alt="Inverted Hammer pattern diagram"
         />
 
@@ -429,11 +434,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'dragonfly-doji',
     title: 'Dragonfly Doji',
     emoji: ' T ',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_diagram.png',
+    image: generatePatternUrl('Dragonfly Doji'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_context.png" 
+            src={generateExampleUrl('Dragonfly Doji')}
             alt="Dragonfly Doji on a chart" 
             caption="A Dragonfly Doji at the bottom of a downtrend is a strong sign of price rejection."
         />
@@ -446,7 +451,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>No Upper Shadow:</strong> The high of the day is the same as the open and close, forming a 'T' shape.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_diagram.png"
+            src={generatePatternUrl('Dragonfly Doji')}
             alt="Dragonfly Doji pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -458,11 +463,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-counterattack',
     title: 'Bullish Counterattack',
     emoji: '⚔️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_diagram.png',
+    image: generatePatternUrl('Bullish Counterattack'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_context.png" 
+            src={generateExampleUrl('Bullish Counterattack')}
             alt="Bullish Counterattack on a chart" 
             caption="Two candles with the same closing price signal a stalemate and potential reversal."
         />
@@ -474,7 +479,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A long green (bullish) candle that opens with a significant gap down but then rallies to close at or very near the close of the first candle. The two closing prices are the same, hence "meeting line."</li>
         </ul>
          <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_diagram.png"
+            src={generatePatternUrl('Bullish Counterattack')}
             alt="Bullish Counterattack pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -486,11 +491,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-abandoned-baby',
     title: 'Bullish Abandoned Baby',
     emoji: '👶',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_diagram.png',
+    image: generatePatternUrl('Bullish Abandoned Baby'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_context.png" 
+            src={generateExampleUrl('Bullish Abandoned Baby')}
             alt="Bullish Abandoned Baby on a chart" 
             caption="A doji gapping below and then away from the trend signals a powerful reversal."
         />
@@ -503,7 +508,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A long green (bullish) candle that gaps up, with its shadows not overlapping with the Doji's shadows.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_diagram.png"
+            src={generatePatternUrl('Bullish Abandoned Baby')}
             alt="Bullish Abandoned Baby pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -515,11 +520,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'morning-doji-star',
     title: 'Morning Doji Star',
     emoji: '✨',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_diagram.png',
+    image: generatePatternUrl('Morning Doji Star'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_context.png" 
+            src={generateExampleUrl('Morning Doji Star')}
             alt="Morning Doji Star on a chart" 
             caption="A Morning Star with a Doji in the middle is a stronger reversal signal."
         />
@@ -532,7 +537,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A long green (bullish) candle that closes well into the body of the first candle (ideally above the 50% mark).</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_diagram.png"
+            src={generatePatternUrl('Morning Doji Star')}
             alt="Morning Doji Star pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -544,11 +549,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'homing-pigeon',
     title: 'Homing Pigeon',
     emoji: '🕊️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_diagram.png',
+    image: generatePatternUrl('Homing Pigeon'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_context.png" 
+            src={generateExampleUrl('Homing Pigeon')}
             alt="Homing Pigeon on a chart" 
             caption="A smaller red candle inside a larger one shows selling pressure is decreasing."
         />
@@ -560,7 +565,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A small red (bearish) candle whose body is completely contained within the body of the first candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_diagram.png"
+            src={generatePatternUrl('Homing Pigeon')}
             alt="Homing Pigeon pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -572,11 +577,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'stick-sandwich',
     title: 'Stick Sandwich',
     emoji: '🥪',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_diagram.png',
+    image: generatePatternUrl('Stick Sandwich'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_context.png" 
+            src={generateExampleUrl('Stick Sandwich')}
             alt="Stick Sandwich on a chart" 
             caption="Two red candles 'sandwich' a green one at a matching support level."
         />
@@ -589,7 +594,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A red (bearish) candle whose closing price is the same as the first candle's close, forming the sandwich.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_diagram.png"
+            src={generatePatternUrl('Stick Sandwich')}
             alt="Stick Sandwich pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -601,11 +606,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'matching-low',
     title: 'Matching Low',
     emoji: '==',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_diagram.png',
+    image: generatePatternUrl('Matching Low'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_context.png" 
+            src={generateExampleUrl('Matching Low')}
             alt="Matching Low on a chart" 
             caption="Two red candles with the same closing price signal seller exhaustion."
         />
@@ -617,7 +622,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> Another red (bearish) candle that has the exact same closing price as the first candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_diagram.png"
+            src={generatePatternUrl('Matching Low')}
             alt="Matching Low pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -629,11 +634,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-stars-in-the-south',
     title: 'Three Stars in the South',
     emoji: ' T ',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_diagram.png',
+    image: generatePatternUrl('Three Stars in the South'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_context.png" 
+            src={generateExampleUrl('Three Stars in the South')}
             alt="Three Stars in the South on a chart" 
             caption="A complex pattern showing a gradual deceleration of bearish momentum."
         />
@@ -646,7 +651,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A small red marubozu (no shadows) that is contained within the range of the second candle's body.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_diagram.png"
+            src={generatePatternUrl('Three Stars in the South')}
             alt="Three Stars in the South pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -658,11 +663,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'concealing-baby-swallow',
     title: 'Concealing Baby Swallow',
     emoji: '🐦',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_diagram.png',
+    image: generatePatternUrl('Concealing Baby Swallow'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_context.png" 
+            src={generateExampleUrl('Concealing Baby Swallow')}
             alt="Concealing Baby Swallow on a chart" 
             caption="An extremely rare but powerful four-candle reversal pattern."
         />
@@ -675,7 +680,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Fourth Candle:</strong> A long red candle that completely engulfs the third candle, making a new low.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_diagram.png"
+            src={generatePatternUrl('Concealing Baby Swallow')}
             alt="Concealing Baby Swallow pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -687,11 +692,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'ladder-bottom',
     title: 'Ladder Bottom',
     emoji: '🪜',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_diagram.png',
+    image: generatePatternUrl('Ladder Bottom'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_context.png" 
+            src={generateExampleUrl('Ladder Bottom')}
             alt="Ladder Bottom on a chart" 
             caption="A five-candle pattern ending with a gap up confirms a bullish reversal."
         />
@@ -704,7 +709,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Fifth Candle:</strong> A green candle that opens with a gap up above the body of the fourth candle and continues to rally.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_diagram.png"
+            src={generatePatternUrl('Ladder Bottom')}
             alt="Ladder Bottom pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -717,11 +722,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-marubozu',
     title: 'Bullish Marubozu',
     emoji: '🟩',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_diagram.png',
+    image: generatePatternUrl('Bullish Marubozu'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_context.png" 
+            src={generateExampleUrl('Bullish Marubozu')}
             alt="Bullish Marubozu on a chart" 
             caption="A candle with no wicks shows complete control by buyers for the entire session."
         />
@@ -734,7 +739,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Close and High are Equal:</strong> The closing price is the high of the day.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_diagram.png"
+            src={generatePatternUrl('Bullish Marubozu')}
             alt="Bullish Marubozu pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -746,11 +751,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'rising-window',
     title: 'Rising Window (Gap Up)',
     emoji: '↗️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_diagram.png',
+    image: generatePatternUrl('Rising Window (Gap Up)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_context.png" 
+            src={generateExampleUrl('Rising Window (Gap Up)')}
             alt="Rising Window on a chart" 
             caption="A gap between two candles acts as a strong support zone."
         />
@@ -762,7 +767,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Continuation:</strong> The second candle continues to trade higher, away from the gap, confirming the bullish sentiment.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_diagram.png"
+            src={generatePatternUrl('Rising Window (Gap Up)')}
             alt="Rising Window pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -774,11 +779,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'rising-three-methods',
     title: 'Rising Three Methods',
     emoji: '⏯️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_diagram.png',
+    image: generatePatternUrl('Rising Three Methods'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_context.png" 
+            src={generateExampleUrl('Rising Three Methods')}
             alt="Rising Three Methods on a chart" 
             caption="A brief pause within an uptrend confirms the trend's strength when it resumes."
         />
@@ -791,7 +796,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Fifth Candle:</strong> A long green candle that closes above the close of the first candle, making a new high and resuming the trend.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_diagram.png"
+            src={generatePatternUrl('Rising Three Methods')}
             alt="Rising Three Methods pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -803,11 +808,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-belt-hold',
     title: 'Bullish Belt Hold',
     emoji: '🥋',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_diagram.png',
+    image: generatePatternUrl('Bullish Belt Hold'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_context.png" 
+            src={generateExampleUrl('Bullish Belt Hold')}
             alt="Bullish Belt Hold on a chart" 
             caption="Opening at the low and rallying all day shows a powerful sentiment shift."
         />
@@ -819,7 +824,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Formation:</strong> The candle opens at its low for the day (no lower shadow) and then rallies for the rest of the session, forming a long green body and closing near its high.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_diagram.png"
+            src={generatePatternUrl('Bullish Belt Hold')}
             alt="Bullish Belt Hold pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -831,11 +836,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-separating-lines',
     title: 'Bullish Separating Lines',
     emoji: 'LINES',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_diagram.png',
+    image: generatePatternUrl('Bullish Separating Lines'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_context.png" 
+            src={generateExampleUrl('Bullish Separating Lines')}
             alt="Bullish Separating Lines on a chart" 
             caption="A green marubozu opens at the same level as the prior red candle, negating the pullback."
         />
@@ -847,7 +852,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A long green (bullish) Marubozu that opens at the same price as the first candle's open.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_diagram.png"
+            src={generatePatternUrl('Bullish Separating Lines')}
             alt="Bullish Separating Lines pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -859,11 +864,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-meeting-line',
     title: 'Bullish Meeting Line',
     emoji: '🤝',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_diagram.png',
+    image: generatePatternUrl('Bullish Meeting Line'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_context.png" 
+            src={generateExampleUrl('Bullish Meeting Line')}
             alt="Bullish Meeting Line on a chart" 
             caption="A green candle rallies to 'meet' the prior day's close, forming a support level."
         />
@@ -875,7 +880,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A long green (bullish) candle that opens with a gap down but rallies to close at the same price as the first candle's close.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_diagram.png"
+            src={generatePatternUrl('Bullish Meeting Line')}
             alt="Bullish Meeting Line pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -887,11 +892,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-tri-star',
     title: 'Bullish Tri-Star',
     emoji: '✨✨✨',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_diagram.png',
+    image: generatePatternUrl('Bullish Tri-Star'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_context.png" 
+            src={generateExampleUrl('Bullish Tri-Star')}
             alt="Bullish Tri-Star on a chart" 
             caption="Three consecutive dojis at a low point signal extreme indecision and reversal."
         />
@@ -903,7 +908,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Middle Doji:</strong> The second Doji gaps down below the first and third, forming the low point of the pattern.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_diagram.png"
+            src={generatePatternUrl('Bullish Tri-Star')}
             alt="Bullish Tri-Star pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -915,11 +920,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-doji-star',
     title: 'Bullish Doji Star',
     emoji: '🌟',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_diagram.png',
+    image: generatePatternUrl('Bullish Doji Star'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_context.png" 
+            src={generateExampleUrl('Bullish Doji Star')}
             alt="Bullish Doji Star on a chart" 
             caption="A doji gapping down from a red candle signals a stall in bearish momentum."
         />
@@ -931,7 +936,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A Doji that opens with a gap down from the body of the first candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_diagram.png"
+            src={generatePatternUrl('Bullish Doji Star')}
             alt="Bullish Doji Star pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -943,11 +948,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'tasuki-gap-up',
     title: 'Upside Tasuki Gap',
     emoji: 'GAP',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_diagram.png',
+    image: generatePatternUrl('Upside Tasuki Gap'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_context.png" 
+            src={generateExampleUrl('Upside Tasuki Gap')}
             alt="Upside Tasuki Gap on a chart" 
             caption="A minor pullback into a gap that holds as support is a bullish continuation signal."
         />
@@ -960,7 +965,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A red candle that opens inside the body of the second candle and closes inside the gap, but does not fully close it.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_diagram.png"
+            src={generatePatternUrl('Upside Tasuki Gap')}
             alt="Upside Tasuki Gap pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -972,11 +977,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'side-by-side-white-lines-bullish',
     title: 'Side-by-Side White Lines (Bullish)',
     emoji: '||',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_diagram.png',
+    image: generatePatternUrl('Side-by-Side White Lines (Bullish)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_context.png" 
+            src={generateExampleUrl('Side-by-Side White Lines (Bullish)')}
             alt="Side-by-Side White Lines on a chart" 
             caption="Two similar green candles after a gap up show strong underlying support."
         />
@@ -989,7 +994,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A third green candle that opens at or near the open of the second candle and closes at or near the close of the second candle. The second and third candles are roughly the same size and appear "side-by-side."</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_diagram.png"
+            src={generatePatternUrl('Side-by-Side White Lines (Bullish)')}
             alt="Side-by-Side White Lines pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1001,11 +1006,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'frypan-bottom',
     title: 'Frypan Bottom',
     emoji: '🍳',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_diagram.png',
+    image: generatePatternUrl('Frypan Bottom'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_context.png" 
+            src={generateExampleUrl('Frypan Bottom')}
             alt="Frypan Bottom on a chart" 
             caption="A rounding bottom followed by a gap up signals a powerful bullish breakout."
         />
@@ -1018,7 +1023,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Breakout:</strong> The pattern is confirmed by a final candle that gaps up and breaks above the resistance level formed by the rim of the "pan."</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_diagram.png"
+            src={generatePatternUrl('Frypan Bottom')}
             alt="Frypan Bottom pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1030,11 +1035,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'tower-bottom',
     title: 'Tower Bottom',
     emoji: '🗼',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_diagram.png',
+    image: generatePatternUrl('Tower Bottom'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_context.png" 
+            src={generateExampleUrl('Tower Bottom')}
             alt="Tower Bottom on a chart" 
             caption="A sharp fall followed by consolidation and a sharp rise forms a 'tower' reversal."
         />
@@ -1047,7 +1052,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Final Candle:</strong> A long green candle that breaks out above the consolidation range, forming the second "tower" and often closing near the open of the first red candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_diagram.png"
+            src={generatePatternUrl('Tower Bottom')}
             alt="Tower Bottom pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1059,11 +1064,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'on-neck-line-bullish',
     title: 'On Neck Line (Bullish Context)',
     emoji: 'NECK',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_diagram.png',
+    image: generatePatternUrl('On Neck Line (Bullish Context)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_context.png" 
+            src={generateExampleUrl('On Neck Line (Bullish Context)')}
             alt="On Neck Line Bullish Context on a chart" 
             caption="The failure of a bearish pattern to follow through can be a bullish signal."
         />
@@ -1076,7 +1081,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Bullish Trigger:</strong> A third candle that is strongly bullish and breaks above the high of the two-candle pattern.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_diagram.png"
+            src={generatePatternUrl('On Neck Line (Bullish Context)')}
             alt="On Neck Line Bullish pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1088,11 +1093,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'in-neck-line-bullish',
     title: 'In Neck Line (Bullish Context)',
     emoji: 'NECK',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_diagram.png',
+    image: generatePatternUrl('In Neck Line (Bullish Context)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_context.png" 
+            src={generateExampleUrl('In Neck Line (Bullish Context)')}
             alt="In Neck Line Bullish Context on a chart" 
             caption="A failed bearish continuation can lead to a strong reversal."
         />
@@ -1105,7 +1110,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Bullish Trigger:</strong> A subsequent strong green candle that breaks the high of the pattern.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_diagram.png"
+            src={generatePatternUrl('In Neck Line (Bullish Context)')}
             alt="In Neck Line Bullish pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1117,11 +1122,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'thrusting-line-bullish',
     title: 'Thrusting Line (Bullish Context)',
     emoji: 'THRUST',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_diagram.png',
+    image: generatePatternUrl('Thrusting Line (Bullish Context)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_context.png" 
+            src={generateExampleUrl('Thrusting Line (Bullish Context)')}
             alt="Thrusting Line Bullish Context on a chart" 
             caption="A deep push by bulls, even if it fails, can set the stage for a reversal."
         />
@@ -1134,7 +1139,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Bullish Trigger:</strong> A strong bullish candle on day three that follows through to the upside.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_diagram.png"
+            src={generatePatternUrl('Thrusting Line (Bullish Context)')}
             alt="Thrusting Line Bullish pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1146,11 +1151,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-harami-cross',
     title: 'Bullish Harami Cross',
     emoji: '✝️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_diagram.png',
+    image: generatePatternUrl('Bullish Harami Cross'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_context.png" 
+            src={generateExampleUrl('Bullish Harami Cross')}
             alt="Bullish Harami Cross on a chart" 
             caption="A doji inside a red candle signals a powerful moment of indecision at the bottom."
         />
@@ -1162,7 +1167,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A Doji candle whose entire range (high to low) is contained within the real body of the first candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_diagram.png"
+            src={generatePatternUrl('Bullish Harami Cross')}
             alt="Bullish Harami Cross pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1174,11 +1179,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-river-bottom',
     title: 'Three River Bottom',
     emoji: '🏞️',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_diagram.png',
+    image: generatePatternUrl('Three River Bottom'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_context.png" 
+            src={generateExampleUrl('Three River Bottom')}
             alt="Three River Bottom on a chart" 
             caption="A complex three-candle pattern showing the final exhaustion of sellers."
         />
@@ -1191,7 +1196,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A small green candle that opens above the low of the second candle and closes below its close. Its body is contained within the range of the second candle's body.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_diagram.png"
+            src={generatePatternUrl('Three River Bottom')}
             alt="Three River Bottom pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1203,11 +1208,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'unique-three-river-bottom',
     title: 'Unique Three River Bottom',
     emoji: '🏞️✨',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_diagram.png',
+    image: generatePatternUrl('Unique Three River Bottom'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_context.png" 
+            src={generateExampleUrl('Unique Three River Bottom')}
             alt="Unique Three River Bottom on a chart" 
             caption="A very rare variation of the Three River Bottom that is a strong reversal indicator."
         />
@@ -1220,7 +1225,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Third Candle:</strong> A short green candle with a close below the close of the second day's Doji, but which fails to make a new low.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_diagram.png"
+            src={generatePatternUrl('Unique Three River Bottom')}
             alt="Unique Three River Bottom pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
@@ -1232,11 +1237,11 @@ export const bullishPatterns: Pattern[] = [
     id: 'kicking-up',
     title: 'Kicking Up (Bullish Kicker)',
     emoji: '🦵',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_diagram.png',
+    image: generatePatternUrl('Kicking Up (Bullish Kicker)'),
     content: (
       <>
         <Image 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_context.png" 
+            src={generateExampleUrl('Kicking Up (Bullish Kicker)')}
             alt="Kicking Up on a chart" 
             caption="A gap between two opposite marubozu candles is an extremely powerful signal."
         />
@@ -1248,7 +1253,7 @@ export const bullishPatterns: Pattern[] = [
             <li><strong>Second Candle:</strong> A green or white Marubozu that opens with a significant gap up from the first candle.</li>
         </ul>
         <Diagram 
-            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_diagram.png"
+            src={generatePatternUrl('Kicking Up (Bullish Kicker)')}
             alt="Kicking Up pattern diagram"
         />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>

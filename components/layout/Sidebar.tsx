@@ -1,6 +1,6 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, MessageSquare } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 

@@ -26,6 +26,8 @@ import PatternDetailView from './views/learning/PatternDetailView';
 import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsListView';
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
+import ChatView from './views/ChatView';
+import { Star } from './components/common/Icons';
 
 // Auth components
 import AuthLayout from './components/auth/AuthLayout';
@@ -106,6 +108,7 @@ const App: React.FC = () => {
         if (parts[0] === 'pricing') view = 'pricing';
         else if (parts[0] === 'practice') view = 'practice';
         else if (parts[0] === 'profile') view = 'profile';
+        else if (parts[0] === 'chat') view = 'chat';
         else if (parts[0] === 'quiz') {
             if (parts[1] === 'results') view = 'quizResults';
             else view = 'quiz';
@@ -185,6 +188,8 @@ const App: React.FC = () => {
                             return <PracticeView onNavigate={handleNavigate} theme={'dark'} />; // Keep simulator dark
                         case 'profile':
                             return <ProfileView user={user} onNavigate={handleNavigate} />;
+                        case 'chat':
+                            return <ChatView onNavigate={handleNavigate} />;
                         case 'quiz':
                             return <Suspense fallback={<LoadingSpinner />}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
@@ -210,7 +215,7 @@ const App: React.FC = () => {
     }
     
     // Views that have their own full-page layout
-    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults'];
+    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat'];
     if (noLayoutViews.includes(view)) {
         return renderView();
     }
@@ -241,6 +246,14 @@ const App: React.FC = () => {
                     {renderView()}
                 </main>
             </div>
+            
+            <button
+                onClick={() => handleNavigate('/chat')}
+                className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-transform transform hover:scale-110 button-press-feedback"
+                aria-label="Open AI Assistant"
+            >
+                <Star size={28} />
+            </button>
         </div>
     );
 };
