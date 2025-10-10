@@ -34,10 +34,12 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
             {/* Header */}
             <div className="p-4 border-b border-border flex items-center justify-between">
                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
-                        {userName.charAt(0)}
-                    </div>
-                    <span className="font-bold text-lg text-text-main">OptionsBull</span>
+                    <img
+                        src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png"
+                        alt="OptionsBull Logo"
+                        className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <span className="font-bold text-lg text-text-main">Options Bull Trading</span>
                 </div>
                  <button onClick={() => setIsOpen(false)} className="md:hidden p-1 text-text-secondary">
                     <X size={20} />

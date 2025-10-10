@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Zap, DollarSign, ChevronRight } from '../components/common/Icons';
+import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Sparkles, DollarSign, ChevronRight } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
@@ -187,7 +187,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
                     <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={DollarSign} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
-                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Zap} />
+                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Sparkles} />
                     <IconLink title="Paper Trading" onClick={() => onNavigate('/practice')} icon={CandlestickChart} />
                 </div>
             </div>
@@ -244,7 +244,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 >
                     <div className="flex items-center mb-4 md:mb-0 text-center md:text-left">
                         <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary rounded-xl mr-4">
-                            <Zap size={32} />
+                            <Sparkles size={32} />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold">AI Smart Quiz</h3>
@@ -283,7 +283,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-cyan-500/20" iconColor="text-cyan-400" />
                         <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
-                        <StatCard icon={Zap} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
+                        <StatCard icon={Sparkles} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
                         <StatCard 
                             icon={DollarSign} 
                             title="Money Earned" 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
-import { process } from '../env'; // Import the mock process.env object
+import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { Mic, StopCircle, X, MessageSquare } from '../components/common/Icons';
 import anime from 'animejs';
+
+// The `LiveSession` type is not exported from the library.
+// We infer the promise type directly from the `ai.live.connect` method for type safety.
+type LiveSessionPromise = ReturnType<GoogleGenAI['live']['connect']>;
 
 // Audio Encoding/Decoding functions as per guidelines
 function encode(bytes: Uint8Array): string {
@@ -68,7 +71,7 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
     const [error, setError] = useState<string | null>(null);
 
     const aiRef = useRef<GoogleGenAI | null>(null);
-    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromiseRef = useRef<LiveSessionPromise | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -82,6 +85,14 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
     const [isSpeaking, setIsSpeaking] = useState(false);
 
     useEffect(() => {
+        // As per project guidelines, the API key is expected to be in process.env.
+        // This assumes the execution environment has this variable pre-configured.
+        if (!process.env.API_KEY) {
+            console.error("CRITICAL: API_KEY environment variable not set. The application cannot function.");
+            setError("Configuration error: API Key is missing. Please contact support.");
+            setSessionState('error');
+            return;
+        }
         aiRef.current = new GoogleGenAI({ apiKey: process.env.API_KEY });
         return () => { // Cleanup on unmount
             sessionPromiseRef.current?.then(session => session.close());
@@ -120,6 +131,12 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
     const toggleSession = async () => {
         if (sessionState === 'active' || sessionState === 'connecting') {
             sessionPromiseRef.current?.then(session => session.close());
+            return;
+        }
+        
+        if (!aiRef.current) {
+            setError("AI Client not initialized. Check API Key configuration.");
+            setSessionState('error');
             return;
         }
 
