@@ -2,7 +2,7 @@
 import React from 'react';
 
 // NEW: Centralized Timeframe definition
-export type Timeframe = '1s' | '1m' | '5m' | '15m' | '30m' | '45m';
+export type Timeframe = '1m' | '5m' | '15m' | '30m' | '45m';
 
 // Navigation view types
 export type View =

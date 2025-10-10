@@ -24,12 +24,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }));
     
     useEffect(() => {
-        if (timeframe === '1s') {
-            setCountdown('');
-            return;
-        }
-
-        const timeframeMap: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
+        const timeframeMap: Record<Timeframe, number> = { '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
         const timeframeInSeconds = timeframeMap[timeframe];
         if (!timeframeInSeconds) return;
 
@@ -53,7 +48,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight,
             layout: { background: { type: ColorType.Solid, color: '#131722' }, textColor: '#D9D9D9' },
             grid: { vertLines: { color: '#2A2E39' }, horzLines: { color: '#2A2E39' } },
-            timeScale: { timeVisible: true, secondsVisible: timeframe === '1s', borderColor: '#485158' },
+            timeScale: { timeVisible: true, secondsVisible: false, borderColor: '#485158' },
             rightPriceScale: { borderColor: '#485158' },
             crosshair: { mode: CrosshairMode.Normal },
             handleScroll: { mouseWheel: true, pressedMouseMove: true },

@@ -24,34 +24,26 @@ interface ChartComponentHandle {
     updateCandle: (candle: CandleData) => void;
 }
 
-const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1s': 1, '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
+const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
 
-// Centralized aggregation logic to handle new volume data.
-const aggregateHistory = (ticks: CandleData[], timeframe: Timeframe): CandleData[] => {
-    if (timeframe === '1s') return [...ticks];
-    if (ticks.length === 0) return [];
+const aggregateHistory = (minuteBars: CandleData[], timeframe: Timeframe): CandleData[] => {
+    if (timeframe === '1m') return [...minuteBars];
+    if (minuteBars.length === 0) return [];
     
     const aggregated: CandleData[] = [];
     const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
     
     let currentCandle: CandleData | null = null;
-    for (const tick of ticks) {
-        const candleStartTime = tick.time - (tick.time % periodInSeconds);
+    for (const bar of minuteBars) {
+        const candleStartTime = bar.time - (bar.time % periodInSeconds);
         if (!currentCandle || currentCandle.time !== candleStartTime) {
             if (currentCandle) aggregated.push(currentCandle);
-            currentCandle = {
-                time: candleStartTime,
-                open: tick.open,
-                high: tick.high,
-                low: tick.low,
-                close: tick.close,
-                volume: tick.volume || 0,
-            };
+            currentCandle = { ...bar, time: candleStartTime };
         } else {
-            currentCandle.high = Math.max(currentCandle.high, tick.high);
-            currentCandle.low = Math.min(currentCandle.low, tick.low);
-            currentCandle.close = tick.close;
-            currentCandle.volume = (currentCandle.volume || 0) + (tick.volume || 0);
+            currentCandle.high = Math.max(currentCandle.high, bar.high);
+            currentCandle.low = Math.min(currentCandle.low, bar.low);
+            currentCandle.close = bar.close;
+            currentCandle.volume = (currentCandle.volume || 0) + (bar.volume || 0);
         }
     }
     if (currentCandle) aggregated.push(currentCandle);
@@ -69,7 +61,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-    const [timeframe, setTimeframe] = useState<Timeframe>('1m');
+    const [timeframe, setTimeframe] = useState<Timeframe>('15m'); // Default to 15m
     const [showWelcome, setShowWelcome] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -80,8 +72,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
     
-    const tickHistoryRef = useRef<CandleData[]>([]);
     const liveAggregatedCandleRef = useRef<CandleData | null>(null);
+    const prevLiveMinuteBarRef = useRef<CandleData | null>(null);
 
     // Debounced portfolio saving
     useEffect(() => {
@@ -111,8 +103,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                 const sim = new MarketSimulator(dailySeed);
                 simulatorRef.current = sim;
                 
-                const fullHistory = sim.getFullHistory();
-                tickHistoryRef.current = fullHistory;
+                const fullHistory = sim.getFullHistory(); // This is now an array of 1-minute bars
 
                 const currentPrice = fullHistory.length > 0 ? fullHistory[fullHistory.length - 1].close : 65000;
                 
@@ -154,40 +145,57 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
         };
     }, []); 
 
-    // Effect for handling live 1-second ticks
+    // Effect for handling live bar updates
     useEffect(() => {
         if (isLoading || !simulatorRef.current) return;
 
-        const handleTick = (tick: CandleData) => {
-            tickHistoryRef.current.push(tick);
-            if (tickHistoryRef.current.length > 50000) tickHistoryRef.current.shift();
-
-            const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
-            const candleStartTime = tick.time - (tick.time % periodInSeconds);
-            
-            let currentAggregatedCandle = liveAggregatedCandleRef.current;
-
-            if (currentAggregatedCandle && currentAggregatedCandle.time === candleStartTime) {
-                currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, tick.high);
-                currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, tick.low);
-                currentAggregatedCandle.close = tick.close;
-                currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + (tick.volume || 0);
-            } else {
-                currentAggregatedCandle = { ...tick };
-            }
-            liveAggregatedCandleRef.current = currentAggregatedCandle;
-            
-            chartComponentRef.current?.updateCandle(currentAggregatedCandle);
-            setLiveOhlc(currentAggregatedCandle);
-            
+        const handleTick = (liveMinuteBar: CandleData) => {
+            // Update portfolio and instrument price first
             if (selectedInstrument) {
                  setInstruments(prev => prev.map(inst =>
                     inst.instrument_key === selectedInstrument.instrument_key
-                        ? { ...inst, last_price: tick.close }
+                        ? { ...inst, last_price: liveMinuteBar.close }
                         : inst
                 ));
-                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: tick.close }));
+                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: liveMinuteBar.close }));
             }
+
+            const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
+            const candleStartTime = liveMinuteBar.time - (liveMinuteBar.time % periodInSeconds);
+            let currentAggregatedCandle = liveAggregatedCandleRef.current;
+            const prevLiveMinuteBar = prevLiveMinuteBarRef.current;
+
+            if (currentAggregatedCandle && currentAggregatedCandle.time === candleStartTime) {
+                // Update existing aggregated candle
+                currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, liveMinuteBar.high);
+                currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, liveMinuteBar.low);
+                currentAggregatedCandle.close = liveMinuteBar.close;
+
+                // Update volume by delta
+                if (prevLiveMinuteBar && prevLiveMinuteBar.time === liveMinuteBar.time) {
+                    const volumeDelta = (liveMinuteBar.volume || 0) - (prevLiveMinuteBar.volume || 0);
+                    currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + volumeDelta;
+                } else {
+                    // First tick of a new minute bar within the same aggregated candle
+                    currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + (liveMinuteBar.volume || 0);
+                }
+            } else {
+                // New aggregated candle starts
+                currentAggregatedCandle = {
+                    time: candleStartTime,
+                    open: liveMinuteBar.open,
+                    high: liveMinuteBar.high,
+                    low: liveMinuteBar.low,
+                    close: liveMinuteBar.close,
+                    volume: liveMinuteBar.volume
+                };
+            }
+            
+            liveAggregatedCandleRef.current = currentAggregatedCandle;
+            prevLiveMinuteBarRef.current = { ...liveMinuteBar }; // Store a copy for the next tick's delta calculation
+
+            chartComponentRef.current?.updateCandle(currentAggregatedCandle);
+            setLiveOhlc(currentAggregatedCandle);
         };
 
         const unsubscribe = simulatorRef.current.subscribe(handleTick);
@@ -197,17 +205,21 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
     // Effect for changing timeframe
     useEffect(() => {
-        if (isLoading) return;
+        if (isLoading || !simulatorRef.current) return;
         
-        let newAggregatedData = aggregateHistory(tickHistoryRef.current, timeframe);
+        // Fetch the most up-to-date history from the simulator
+        const fullHistory = simulatorRef.current.getFullHistory();
+        let newAggregatedData = aggregateHistory(fullHistory, timeframe);
 
-        if (timeframe === '1s' && newAggregatedData.length > 3600) {
-            newAggregatedData = newAggregatedData.slice(-3600);
+        const MAX_BARS_ON_CHART = 10000;
+        if (newAggregatedData.length > MAX_BARS_ON_CHART) {
+            newAggregatedData = newAggregatedData.slice(-MAX_BARS_ON_CHART);
         }
         
         setInitialChartData(newAggregatedData);
         const lastCandle = newAggregatedData.length > 0 ? newAggregatedData[newAggregatedData.length - 1] : null;
         liveAggregatedCandleRef.current = lastCandle;
+        prevLiveMinuteBarRef.current = null; // Reset for new aggregation
         setLiveOhlc(lastCandle);
     }, [timeframe, isLoading]);
     

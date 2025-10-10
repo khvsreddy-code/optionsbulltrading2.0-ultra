@@ -2,9 +2,9 @@ import type { CandleData } from '../types';
 
 /**
  * A hyper-realistic, deterministic, seeded pseudo-random market simulator.
- * This engine emulates the effects of an agent-based model by simulating
- * volatility clustering and correlating price movement with volume. It generates
- * high-fidelity 1-second OHLCV data that is perfectly reproducible for a given day.
+ * This engine now generates high-fidelity 1-MINUTE OHLCV bars, providing a vast
+ * historical dataset. It also simulates a live, in-progress 1-minute bar that
+ * updates every second for a real-time experience.
  */
 export class MarketSimulator {
     private subscribers: Set<(tick: CandleData) => void> = new Set();
@@ -12,7 +12,8 @@ export class MarketSimulator {
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
 
     private history: CandleData[] = [];
-    private lastTick: CandleData;
+    private lastFinalizedBar: CandleData;
+    private liveBar: CandleData | null = null;
     
     private seed: number = 0;
     private prng: () => number;
@@ -29,7 +30,8 @@ export class MarketSimulator {
         }
         this.prng = this.mulberry32(this.seed);
 
-        this.lastTick = { time: 0, open: 65000, high: 65000, low: 65000, close: 65000, volume: 0 };
+        // This property now represents the initial price before history generation
+        this.lastFinalizedBar = { time: 0, open: 65000, high: 65000, low: 65000, close: 65000, volume: 0 };
         this.generateInitialHistory();
     }
     
@@ -46,73 +48,69 @@ export class MarketSimulator {
         this.regimeCounter--;
         if (this.regimeCounter <= 0) {
             const rand = this.prng();
-            if (this.volatilityRegime !== 'HIGH' && rand < 0.05) { // 5% chance to switch to HIGH
+            if (this.volatilityRegime !== 'HIGH' && rand < 0.05) {
                 this.volatilityRegime = 'HIGH';
-                this.regimeCounter = Math.floor(this.prng() * 120) + 60; // Lasts 1-3 minutes
-            } else if (this.volatilityRegime !== 'LOW' && rand < 0.15) { // 10% chance to switch to LOW
+                this.regimeCounter = Math.floor(this.prng() * 120) + 60; 
+            } else if (this.volatilityRegime !== 'LOW' && rand < 0.15) {
                 this.volatilityRegime = 'LOW';
-                this.regimeCounter = Math.floor(this.prng() * 300) + 120; // Lasts 2-7 minutes
-            } else { // 85% chance to stay/switch to NORMAL
+                this.regimeCounter = Math.floor(this.prng() * 300) + 120;
+            } else { 
                 this.volatilityRegime = 'NORMAL';
-                this.regimeCounter = Math.floor(this.prng() * 600) + 300; // Lasts 5-15 minutes
+                this.regimeCounter = Math.floor(this.prng() * 600) + 300;
             }
         }
     }
 
-    private generateNextTick(lastTick: CandleData): CandleData {
-        this.updateVolatilityRegime();
+    private generateNextMinuteBar(lastBar: CandleData): CandleData {
+        const open = lastBar.close;
+        let high = open;
+        let low = open;
+        let volume = 0;
+        let currentPrice = open;
 
-        const baseVolatility = { LOW: 0.0002, NORMAL: 0.0005, HIGH: 0.0015 };
-        const volatility = baseVolatility[this.volatilityRegime];
+        // Simulate 60 seconds of ticks to build a realistic 1-minute bar
+        for (let i = 0; i < 60; i++) {
+            this.updateVolatilityRegime();
+            const baseVolatility = { LOW: 0.0001, NORMAL: 0.0003, HIGH: 0.0009 };
+            const effectiveVolatility = baseVolatility[this.volatilityRegime];
+            const change = (this.prng() - 0.5) * currentPrice * effectiveVolatility * 2;
+            currentPrice += change;
+            high = Math.max(high, currentPrice);
+            low = Math.min(low, currentPrice);
+            volume += Math.floor(this.prng() * 1e8);
+        }
         
-        // GARCH-like effect: volatility is influenced by the previous move's magnitude
-        const lastChange = Math.abs(lastTick.close - lastTick.open) / lastTick.open;
-        const effectiveVolatility = volatility * (1 + lastChange * 5);
-
-        const trend = (this.prng() - 0.49) * 0.00005; // Tiny random trend component
-        const rand = this.prng() - 0.5;
-        const change = rand * lastTick.close * effectiveVolatility + trend;
-        const newPrice = parseFloat((lastTick.close + change).toFixed(2));
-
-        // Simulate realistic intra-tick wicks based on volatility
-        const open = lastTick.close;
-        const high = Math.max(open, newPrice) + this.prng() * lastTick.close * effectiveVolatility * 0.5;
-        const low = Math.min(open, newPrice) - this.prng() * lastTick.close * effectiveVolatility * 0.5;
-
-        // Generate volume correlated with volatility and magnitude of price change, scaled to billions
-        const baseVolume = { LOW: 5e7, NORMAL: 2e8, HIGH: 8e8 };
-        const priceMoveMagnitude = Math.abs(newPrice - open);
-        let volume = (baseVolume[this.volatilityRegime] * (1 + priceMoveMagnitude * 20)) + (this.prng() * baseVolume[this.volatilityRegime]);
-        volume = Math.floor(volume * 1000); // Scale to billions
-
         return {
-            time: lastTick.time + 1,
+            time: lastBar.time + 60,
             open: parseFloat(open.toFixed(2)),
             high: parseFloat(high.toFixed(2)),
             low: parseFloat(low.toFixed(2)),
-            close: newPrice,
+            close: parseFloat(currentPrice.toFixed(2)),
             volume
         };
     }
 
     private generateInitialHistory(): void {
         const history: CandleData[] = [];
+        // Generate 100,000 minutes of data. This provides ~6,666 bars on a 15m chart.
+        const numMinutes = 100000;
         const now = Math.floor(Date.now() / 1000);
-        const startTime = now - (12 * 60 * 60); // 12 hours of history
+        // Align start time to the beginning of a minute
+        const startTime = (now - (now % 60)) - (numMinutes * 60);
 
-        let currentTick: CandleData = { 
-            time: startTime - 1,
-            open: this.lastTick.open, high: this.lastTick.open, 
-            low: this.lastTick.open, close: this.lastTick.open, 
+        let currentBar: CandleData = { 
+            time: startTime - 60,
+            open: this.lastFinalizedBar.open, high: this.lastFinalizedBar.open, 
+            low: this.lastFinalizedBar.open, close: this.lastFinalizedBar.close, 
             volume: 0 
         };
 
-        for (let t = startTime; t < now; t++) {
-            currentTick = this.generateNextTick(currentTick);
-            history.push(currentTick);
+        for (let i = 0; i < numMinutes; i++) {
+            currentBar = this.generateNextMinuteBar(currentBar);
+            history.push(currentBar);
         }
         this.history = history;
-        this.lastTick = history.length > 0 ? history[history.length - 1] : this.lastTick;
+        this.lastFinalizedBar = history.length > 0 ? history[history.length - 1] : this.lastFinalizedBar;
     }
 
     public start(): void {
@@ -133,18 +131,43 @@ export class MarketSimulator {
     }
     
     public tick(): void {
-        const now = Math.floor(Date.now() / 1000);
-        // Ensure time is always current to avoid drift
-        const currentTickWithCorrectTime = { ...this.lastTick, time: now - 1 };
-        const newTick = this.generateNextTick(currentTickWithCorrectTime);
-        
-        this.history.push(newTick);
-        if (this.history.length > 50000) { // Keep ~14 hours of 1s data
-            this.history.shift();
-        }
-        this.lastTick = newTick;
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const barStartTime = nowSeconds - (nowSeconds % 60);
 
-        this.notifySubscribers(newTick);
+        if (!this.liveBar || this.liveBar.time !== barStartTime) {
+            // Finalize the old bar if it exists
+            if (this.liveBar) {
+                this.history.push(this.liveBar);
+                if (this.history.length > 110000) this.history.shift(); // Keep buffer
+                this.lastFinalizedBar = this.liveBar;
+            }
+            // Start a new live bar
+            this.liveBar = {
+                time: barStartTime,
+                open: this.lastFinalizedBar.close,
+                high: this.lastFinalizedBar.close,
+                low: this.lastFinalizedBar.close,
+                close: this.lastFinalizedBar.close,
+                volume: 0,
+            };
+        }
+
+        // Simulate an intra-minute price update
+        this.updateVolatilityRegime(); // Update volatility every second
+        const baseVolatility = { LOW: 0.00005, NORMAL: 0.0001, HIGH: 0.0003 };
+        const rand = this.prng() - 0.5;
+        const change = rand * this.liveBar.close * baseVolatility[this.volatilityRegime];
+        
+        const newPrice = parseFloat((this.liveBar.close + change).toFixed(2));
+        
+        this.liveBar.close = newPrice;
+        this.liveBar.high = Math.max(this.liveBar.high, newPrice);
+        this.liveBar.low = Math.min(this.liveBar.low, newPrice);
+        
+        const volumeThisSecond = Math.floor(this.prng() * 1e7);
+        this.liveBar.volume = (this.liveBar.volume || 0) + volumeThisSecond;
+        
+        this.notifySubscribers(this.liveBar);
     }
 
     private notifySubscribers(tick: CandleData): void {
