@@ -3,7 +3,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { useProfileData } from '../services/profileService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 
 interface ProfileViewProps {
     user: SupabaseUser | null;
@@ -188,9 +188,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
             {isUpdating ? <LoadingSpinner/> : renderSubscriptionCard()}
 
             <div className="space-y-2">
-                <ProfileMenuItem icon={Star} label="My Subscriptions" className="profile-menu-item-anim" />
-                <ProfileMenuItem icon={Shield} label="Privacy Policy" className="profile-menu-item-anim" />
-                <ProfileMenuItem icon={FileText} label="Terms & Conditions" className="profile-menu-item-anim" />
+                <ProfileMenuItem icon={Star} label="My Subscriptions" onClick={() => onNavigate('/pricing')} className="profile-menu-item-anim" />
+                <ProfileMenuItem icon={Shield} label="Privacy Policy" onClick={() => onNavigate('/policies/privacy')} className="profile-menu-item-anim" />
+                <ProfileMenuItem icon={FileText} label="Terms & Conditions" onClick={() => onNavigate('/policies/terms')} className="profile-menu-item-anim" />
             </div>
             
             <div className="logout-btn-anim">

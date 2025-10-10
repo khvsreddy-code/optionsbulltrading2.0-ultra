@@ -5,7 +5,7 @@ import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Sparkles, Dolla
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 
 interface HomeViewProps {
     onNavigate: (path: string) => void;

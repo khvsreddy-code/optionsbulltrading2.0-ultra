@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
 import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';

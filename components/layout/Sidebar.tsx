@@ -1,6 +1,6 @@
 import React from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, MessageSquare } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 
@@ -17,11 +17,16 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
     const userEmail = user?.email;
     const userAvatar = user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=53AC53&color=fff`;
 
-    const navItems = [
+    const mainNavItems = [
         { label: 'Home', icon: Home, path: '/home', views: ['home'] },
         { label: 'Learn', icon: BookOpen, path: '/learning', views: ['learningHome', 'learningChapter', 'learningModuleDetail', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'technicalIndicatorsList', 'fundamentalAnalysisList'] },
         { label: 'Pricing', icon: DollarSign, path: '/pricing', views: ['pricing'] },
         { label: 'Portfolio', icon: Briefcase, path: '/home', views: [] }, // Placeholder
+    ];
+
+    const aiNavItems = [
+        { label: 'AI Dashboard', icon: Sparkles, path: '/finance', views: ['finance'] },
+        { label: 'AI Chat', icon: MessageSquare, path: '/chat', views: ['chat'] },
     ];
     
     const handleNavigation = (path: string) => {
@@ -59,23 +64,43 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
             </div>
 
             {/* Navigation */}
-            <nav className="flex-grow p-4 space-y-2">
-                {navItems.map(item => {
-                    const isActive = item.views.includes(activeView);
-                    return (
-                        <button 
-                            key={item.label}
-                            onClick={() => handleNavigation(item.path)}
-                            className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background hover:text-text-main'}`}
-                        >
-                            <item.icon size={22} />
-                            <span>{item.label}</span>
-                        </button>
-                    );
-                })}
+            <nav className="flex-grow p-4">
+                <div className="space-y-2">
+                    {mainNavItems.map(item => {
+                        const isActive = item.views.includes(activeView);
+                        return (
+                            <button 
+                                key={item.label}
+                                onClick={() => handleNavigation(item.path)}
+                                className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background hover:text-text-main'}`}
+                            >
+                                <item.icon size={22} />
+                                <span>{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                
+                <div className="pt-6">
+                    <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">AI Tools</h3>
+                    <div className="space-y-2">
+                         {aiNavItems.map(item => {
+                            const isActive = item.views.includes(activeView);
+                            return (
+                                <button 
+                                    key={item.label}
+                                    onClick={() => handleNavigation(item.path)}
+                                    className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background hover:text-text-main'}`}
+                                >
+                                    <item.icon size={22} />
+                                    <span>{item.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
 
-                {/* Exclusive Paper Trading Button */}
-                <div className="pt-4">
+                <div className="pt-6">
                      <button 
                         onClick={() => handleNavigation('/practice')}
                         className="w-full flex items-center justify-center p-3 space-x-3 text-white font-semibold rounded-lg bg-primary hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30 button-press-feedback"

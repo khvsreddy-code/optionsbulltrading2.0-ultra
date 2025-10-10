@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 import type { QuizQuestion } from '../../types';
 import { CheckCircle, X, ChevronRight, RotateCcw } from '../../components/common/Icons';
 

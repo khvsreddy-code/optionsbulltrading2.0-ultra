@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 import { generateQuiz, quizTopics, TopicDetails } from '../../services/quizService';
 import type { QuizQuestion, QuizTopic } from '../../types';
 import { ChevronRight, X, Sparkles } from '../../components/common/Icons';

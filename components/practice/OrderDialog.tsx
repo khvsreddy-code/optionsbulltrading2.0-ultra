@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 // FIX: Use a standard ES module import for animejs.
-import anime from 'animejs';
+import anime from 'animejs/lib/anime.es.js';
 import type { Instrument, OrderSide } from '../../types';
 
 interface OrderDialogProps {

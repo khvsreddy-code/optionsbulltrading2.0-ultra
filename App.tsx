@@ -250,14 +250,6 @@ const App: React.FC = () => {
                     {renderView()}
                 </main>
             </div>
-            
-            <button
-                onClick={() => handleNavigate('/finance')}
-                className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-transform transform hover:scale-110 button-press-feedback"
-                aria-label="Open AI Finance Dashboard"
-            >
-                <Sparkles size={28} />
-            </button>
         </div>
     );
 };

@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
-import anime from 'animejs';
+import PaymentCancelledDialog from '../components/pricing/PaymentCancelledDialog';
+import anime from 'animejs/lib/anime.es.js';
 import { supabase } from '../services/supabaseClient';
 
 declare global {
@@ -31,6 +32,7 @@ const plans = [
 
 const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     const viewRef = useRef<HTMLDivElement>(null);
+    const [isCancelledDialogOpen, setIsCancelledDialogOpen] = useState(false);
 
     useEffect(() => {
         if (viewRef.current) {
@@ -76,24 +78,25 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                 image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png',
                 order_id: orderData.id,
                 handler: async function (response: any) {
-                    // Step 3: Verify the payment on the backend
-                    const { data: verificationData, error: verificationError } = await supabase.functions.invoke('verify-payment', {
-                        body: {
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature,
-                            plan_duration_months: plan.duration,
-                        },
-                    });
+                    try {
+                        // Step 3: Verify the payment on the backend
+                        const { error: verificationError } = await supabase.functions.invoke('verify-payment', {
+                            body: {
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                plan_duration_months: plan.duration,
+                            },
+                        });
 
-                    if (verificationError) {
-                        alert(`Payment verification failed: ${verificationError.message}`);
-                    } else {
-                        alert(`Payment successful! Your subscription is now active.`);
-                        // Notify the app that subscription has changed so UI can update
-                        window.dispatchEvent(new CustomEvent('subscriptionUpdated'));
-                        // Navigate to profile to see updated status
-                        onNavigate('/profile'); 
+                        if (verificationError) {
+                            alert(`Payment verification failed: ${verificationError.message}`);
+                        } else {
+                            // On successful payment, redirect to the Telegram link.
+                            window.location.href = 'https://t.me/+rbWNf4Ig_3o4MDA1';
+                        }
+                    } catch (verificationError) {
+                         alert(`An error occurred during payment verification: ${verificationError.message}`);
                     }
                 },
                 prefill: {
@@ -102,6 +105,12 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                 },
                 theme: {
                     color: '#53AC53'
+                },
+                modal: {
+                    ondismiss: function() {
+                        // Show cancelled dialog if user closes the modal
+                        setIsCancelledDialogOpen(true);
+                    }
                 }
             };
             
@@ -142,6 +151,11 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                     </div>
                 </main>
             </div>
+            
+            <PaymentCancelledDialog 
+                isOpen={isCancelledDialogOpen} 
+                onClose={() => setIsCancelledDialogOpen(false)} 
+            />
         </div>
     );
 };
