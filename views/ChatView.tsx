@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
-import { Mic, StopCircle, X, Zap } from '../components/common/Icons';
+import { process } from '../env'; // Import the mock process.env object
+import { Mic, StopCircle, X, MessageSquare } from '../components/common/Icons';
 import anime from 'animejs';
 
 // Audio Encoding/Decoding functions as per guidelines
@@ -223,6 +224,7 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
                     responseModalities: [Modality.AUDIO],
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
+                    systemInstruction: 'You are a world-class trading expert and market analyst for OptionsBullTrading. Your name is Bull. Your purpose is to be a live market assistant and teacher. You must be friendly, encouraging, and an expert teacher. Explain complex trading concepts (like candlestick patterns, technical indicators, or fundamental analysis) in a simple, easy-to-understand way. You can also discuss current market sentiment or hypothetical trading scenarios. Always keep your answers concise and conversational, as you are speaking to the user in real-time.',
                 },
             });
 
@@ -267,7 +269,7 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
     return (
         <div className="min-h-screen bg-background font-sans flex flex-col">
             <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-border">
-                <h1 className="text-lg font-bold text-text-main">AI Assistant</h1>
+                <h1 className="text-lg font-bold text-text-main">Live Market Assistant</h1>
                 <button onClick={() => onNavigate('/home')} className="p-2 rounded-full hover:bg-border">
                     <X size={20} className="text-text-secondary" />
                 </button>
@@ -276,9 +278,9 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
             <main className="flex-grow flex flex-col p-4 overflow-hidden">
                 {transcript.length === 0 && sessionState !== 'active' && sessionState !== 'connecting' && (
                     <div className="flex-grow flex flex-col items-center justify-center text-center">
-                        <Zap size={48} className="text-primary opacity-50 mb-4"/>
-                        <h2 className="text-2xl font-bold text-text-main">Your AI Voice Assistant</h2>
-                        <p className="text-text-secondary mt-2 max-w-sm">Tap the microphone to start a real-time conversation. Ask questions, get explanations, and more.</p>
+                        <MessageSquare size={48} className="text-primary opacity-50 mb-4"/>
+                        <h2 className="text-2xl font-bold text-text-main">Welcome to Your AI Trading Coach</h2>
+                        <p className="text-text-secondary mt-2 max-w-sm">Tap the microphone to start a real-time conversation. Ask about trading concepts, market analysis, or anything else you're curious about.</p>
                     </div>
                 )}
 

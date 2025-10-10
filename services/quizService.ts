@@ -1,5 +1,7 @@
-import { supabase } from './supabaseClient';
+import { GoogleGenAI, Type } from '@google/genai';
+import { process } from '../env';
 import type { QuizQuestion, QuizTopic } from '../types';
+import { getTopicTitles, quizSchema } from '../data/quizContent';
 
 // The topic definitions remain on the client for the UI
 export type TopicDetails = { id: QuizTopic; name: string; description: string };
@@ -15,33 +17,44 @@ export const quizTopics: TopicDetails[] = [
 
 export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> => {
     try {
-        // First, ensure the user session is fresh to prevent authentication errors.
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session) {
-            console.error("Authentication error:", sessionError);
-            throw new Error("Authentication error. Please sign in again.");
+        if (!process.env.API_KEY || process.env.API_KEY.includes('PASTE')) {
+             throw new Error("API Key not found. Please add it to the env.ts file.");
         }
         
-        // Invoke the secure Supabase Edge Function instead of calling Gemini directly from the browser.
-        // The function's name ('finnhub-webhook') is determined by its folder name in the `supabase/functions` directory.
-        // This function now securely handles the API key and Gemini API call.
-        const { data, error } = await supabase.functions.invoke('finnhub-webhook', {
-            body: { topic },
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+        const topicName = quizTopics.find(t => t.id === topic)?.name || 'Stock Market Trading';
+        const numberOfQuestions = topic === 'all' ? 25 : 10;
+        
+        const QUIZ_GENERATION_PROMPT = `
+You are an expert quizmaster specializing in stock market trading education.
+Your task is to generate a challenging quiz of ${numberOfQuestions} multiple-choice questions on the general topic of "${topicName}".
+The specific concepts to be tested are included in the following list: {{CONTEXT}}.
+Each question must have exactly 4 options, and only one correct answer.
+The questions should be diverse and cover the concepts from the provided list.
+You must use your general knowledge about these trading concepts to formulate the questions and answers.
+The output must be a JSON array of objects, strictly following the provided schema.
+`;
+        
+        const content = getTopicTitles(topic);
+        const prompt = QUIZ_GENERATION_PROMPT.replace('{{CONTEXT}}', content);
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: quizSchema,
+            },
         });
 
-        if (error) {
-            console.error('Supabase function invocation error:', error);
-            throw new Error(`The AI Quiz server is unavailable. Please try again later.`);
-        }
-        
-        // The edge function returns the array of questions directly.
-        const quizData = data;
+        const jsonString = response.text.trim();
+        const quizData = JSON.parse(jsonString);
 
         if (!Array.isArray(quizData) || quizData.length === 0) {
             throw new Error("The AI returned empty or invalid quiz data. Please try again.");
         }
         
-        // Simple validation of the received data structure.
         const validatedData = quizData.filter(q => 
             q.question && Array.isArray(q.options) && q.options.length === 4 && q.correctAnswer && q.options.includes(q.correctAnswer)
         );
@@ -53,8 +66,15 @@ export const generateQuiz = async (topic: QuizTopic): Promise<QuizQuestion[]> =>
         return validatedData;
 
     } catch (error) {
-        console.error("Error generating quiz via Supabase function:", error);
-        // Re-throw a user-friendly error for the UI to display.
-        throw new Error(error.message || "Failed to generate the AI quiz. Please try again later.");
+        console.error("Error generating quiz on client-side:", error);
+        let errorMessage = "Failed to generate the AI quiz. Please try again later.";
+        if (error.message.includes('API Key')) {
+            errorMessage = "Invalid API Key. Please check the key in your env.ts file.";
+        } else if (error instanceof SyntaxError) {
+            errorMessage = "The AI returned an invalid response. Please try again.";
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        throw new Error(errorMessage);
     }
 };

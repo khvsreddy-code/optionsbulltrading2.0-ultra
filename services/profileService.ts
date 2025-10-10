@@ -119,7 +119,13 @@ export const useProfileData = (): ProfileData | null => {
             setProfile(profileState);
         }
 
-        return () => unsubscribe();
+        // The useEffect cleanup function must return void or undefined.
+        // The `subscribe` function returns `() => boolean` because `Set.delete()` returns a boolean.
+        // The original arrow function `() => unsubscribe()` would implicitly return that boolean.
+        // This version wraps the call in a block to ensure the function returns void.
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     return profile;

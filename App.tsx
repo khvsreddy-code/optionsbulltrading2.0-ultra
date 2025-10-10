@@ -27,7 +27,7 @@ import TechnicalIndicatorsListView from './views/learning/TechnicalIndicatorsLis
 import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisListView';
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
 import ChatView from './views/ChatView';
-import { Star } from './components/common/Icons';
+import { Sparkles } from './components/common/Icons';
 
 // Auth components
 import AuthLayout from './components/auth/AuthLayout';
@@ -250,9 +250,9 @@ const App: React.FC = () => {
             <button
                 onClick={() => handleNavigate('/chat')}
                 className="fixed bottom-6 right-6 z-40 w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-dark transition-transform transform hover:scale-110 button-press-feedback"
-                aria-label="Open AI Assistant"
+                aria-label="Open Live Market Assistant"
             >
-                <Star size={28} />
+                <Sparkles size={28} />
             </button>
         </div>
     );
