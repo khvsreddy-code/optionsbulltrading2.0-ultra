@@ -21,7 +21,7 @@ export const learningCurriculum: Chapter[] = [
     id: 'ch1',
     title: 'Module 1: Basics',
     shortTitle: 'Basics',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png',
     subChapters: [
       { 
         id: '1.1', 
@@ -51,7 +51,7 @@ export const learningCurriculum: Chapter[] = [
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
     shortTitle: 'Bullish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullish%20candlestickpatterns.jpg',
     isExternalLink: true,
     subChapters: []
   },
@@ -59,7 +59,7 @@ export const learningCurriculum: Chapter[] = [
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
     shortTitle: 'Bearish Candlesticks',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png',
     isExternalLink: true,
     subChapters: []
   },
@@ -67,7 +67,7 @@ export const learningCurriculum: Chapter[] = [
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
     shortTitle: 'Technical Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png',
     isExternalLink: true,
     subChapters: []
   },
@@ -75,7 +75,7 @@ export const learningCurriculum: Chapter[] = [
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
     shortTitle: 'Fundamental Analysis',
-    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png',
     isExternalLink: true,
     subChapters: []
   },

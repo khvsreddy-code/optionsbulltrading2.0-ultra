@@ -1,86 +1,51 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import anime from 'animejs';
-import { learningCurriculum, Chapter } from '../../data/learningContent';
-import { ChevronRight } from '../../components/common/Icons';
-import { getModuleLessonCounts } from '../../services/progressService';
 
 interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
 }
 
-const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => void; }> = ({ chapter, onNavigate }) => {
-    const [progress, setProgress] = useState({ completed: 0, total: 0 });
-    const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
+const StaticCard: React.FC<{ card: CardData; onNavigate: (path: string) => void; }> = ({ card, onNavigate }) => {
+    const isDark = card.theme === 'dark';
+    const isDisabled = !card.path;
 
-    useEffect(() => {
-        // Only fetch progress for modules that are not external links (i.e., have sub-chapters)
-        if (!chapter.isExternalLink) {
-            const fetchProgress = async () => {
-                const counts = await getModuleLessonCounts(chapter.id);
-                setProgress(counts);
-            };
-            
-            fetchProgress();
-            window.addEventListener('progressUpdated', fetchProgress);
-            window.addEventListener('focus', fetchProgress);
-            
-            return () => {
-                window.removeEventListener('progressUpdated', fetchProgress);
-                window.removeEventListener('focus', fetchProgress);
-            };
-        } else {
-             setProgress({ completed: 0, total: 0 });
-        }
-    }, [chapter.id, chapter.isExternalLink]);
-
-    const getPathForModule = (chapter: Chapter): string => {
-        if (!chapter.isExternalLink) {
-            return `/learning/module/${chapter.id}`;
-        }
-        // Handle external link paths based on ID
-        switch(chapter.id) {
-            case 'ch3': return '/learning/bullish';
-            case 'ch4': return '/learning/bearish';
-            case 'ch5': return '/learning/indicators';
-            case 'ch6': return '/learning/fundamental';
-            default: return '/learning';
+    const handleClick = () => {
+        if (card.path) {
+            onNavigate(card.path);
         }
     };
 
     return (
-        <div 
-            className="bg-card h-full rounded-xl shadow-md overflow-hidden cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-1 pro-card flex flex-col"
-            onClick={() => onNavigate(getPathForModule(chapter))}
+        <div
+            onClick={handleClick}
+            className={`pro-card rounded-2xl overflow-hidden flex items-center p-4 h-40 ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer transition-transform hover:-translate-y-1.5'} ${isDark ? 'bg-[#373B6B] text-white' : 'bg-card text-text-main'}`}
         >
-            <div className="aspect-video bg-background flex items-center justify-center p-2">
-                <img 
-                    src={chapter.image} 
-                    alt={chapter.title} 
-                    className="w-full h-full object-contain"
-                />
-            </div>
-            <div className="p-4 flex-grow flex flex-col justify-between">
-                <div>
-                    <h3 className="font-bold text-text-main text-base">{chapter.shortTitle}</h3>
-                    {progress.total > 0 && (
-                      <>
-                        <p className="text-sm text-text-secondary mt-1">{progress.completed} of {progress.total} lessons completed</p>
-                        <div className="w-full bg-border rounded-full h-1.5 mt-2">
-                            <div 
-                                className="bg-primary h-1.5 rounded-full" 
-                                style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}
-                            ></div>
-                        </div>
-                      </>
-                    )}
-                </div>
+            <h3 className="font-bold text-2xl w-1/2 pl-2">{card.title}</h3>
+            <div className="w-1/2 h-full flex items-center justify-center">
+                <img src={card.image} alt={card.title} className="max-h-full max-w-full object-contain" />
             </div>
         </div>
     );
 };
 
+
+interface CardData {
+    title: string;
+    image: string;
+    path: string | null;
+    theme: 'dark' | 'light';
+}
+
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const viewRef = useRef<HTMLDivElement>(null);
+
+    const staticCards: CardData[] = [
+        { title: "Courses", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png", path: "/learning/module/ch1", theme: 'dark' },
+        { title: "Telegram Subscriptions", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png", path: "/pricing", theme: 'dark' },
+        { title: "Paper Trading", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png", path: "/practice", theme: 'light' },
+        { title: "Daily Chart Analysis", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png", path: null, theme: 'dark' },
+        { title: "Upcoming Stock Events", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png", path: null, theme: 'dark' },
+    ];
     
     useEffect(() => {
         if(viewRef.current) {
@@ -88,27 +53,24 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
                 targets: viewRef.current.querySelectorAll('.anim-child'),
                 opacity: [0, 1],
                 translateY: [20, 0],
-                delay: anime.stagger(80),
-                duration: 500,
-                easing: 'easeOutSine'
+                delay: anime.stagger(100),
+                duration: 600,
+                easing: 'easeOutCubic'
             });
         }
     }, []);
     
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">
-            <header className="flex items-center mb-6 anim-child">
-                 <button onClick={() => onNavigate('/home')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to home">
-                    <ChevronRight size={24} className="transform rotate-180" />
-                </button>
-                <h1 className="text-xl font-bold text-text-main ml-4">Learning Library</h1>
+            <header className="mb-6 anim-child">
+                <h1 className="text-2xl font-bold text-text-main">Learning Library</h1>
             </header>
 
             <main>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {learningCurriculum.map(chapter => (
-                        <div key={chapter.id} className="anim-child">
-                            <ModuleCard chapter={chapter} onNavigate={onNavigate} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {staticCards.map(card => (
+                        <div key={card.title} className="anim-child">
+                            <StaticCard card={card} onNavigate={onNavigate} />
                         </div>
                     ))}
                 </div>
