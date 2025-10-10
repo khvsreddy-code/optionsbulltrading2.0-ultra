@@ -1,8 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
+import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
+import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
+import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
+import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
-import { getModuleLessonCounts, isSubChapterComplete } from '../../services/progressService';
+import { useProfileData } from '../../services/profileService';
 
 interface LearningModuleDetailViewProps {
     onNavigate: (path: string) => void;
@@ -11,28 +15,11 @@ interface LearningModuleDetailViewProps {
 
 interface LessonItemProps {
     subChapter: { id: string; title: string; readingTime: string; };
+    isComplete: boolean;
     onNavigate: (path: string) => void;
 }
 
-const LessonItem: React.FC<LessonItemProps> = ({ subChapter, onNavigate }) => {
-    const [isComplete, setIsComplete] = useState(false);
-
-    useEffect(() => {
-        const checkCompletion = async () => {
-            const completed = await isSubChapterComplete(subChapter.id);
-            setIsComplete(completed);
-        };
-        checkCompletion();
-
-        const handleProgressUpdate = () => checkCompletion();
-        window.addEventListener('progressUpdated', handleProgressUpdate);
-        window.addEventListener('focus', handleProgressUpdate); // Also check on focus
-        return () => {
-            window.removeEventListener('progressUpdated', handleProgressUpdate);
-            window.removeEventListener('focus', handleProgressUpdate);
-        };
-    }, [subChapter.id]);
-
+const LessonItem: React.FC<LessonItemProps> = ({ subChapter, isComplete, onNavigate }) => {
     return (
         <button
             onClick={() => onNavigate(`/learning/chapter/${subChapter.id}`)}
@@ -53,24 +40,20 @@ const LessonItem: React.FC<LessonItemProps> = ({ subChapter, onNavigate }) => {
 
 const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onNavigate, moduleId }) => {
     const viewRef = useRef<HTMLDivElement>(null);
-    const [progress, setProgress] = useState({ completed: 0, total: 0 });
+    const profile = useProfileData();
+    
+    const module = learningCurriculum.find(c => c.id === moduleId);
 
-    useEffect(() => {
-        const fetchProgress = async () => {
-            if (moduleId) {
-                const counts = await getModuleLessonCounts(moduleId);
-                setProgress(counts);
-            }
-        };
-        fetchProgress();
+    const progress = useMemo(() => {
+        if (!profile || !module || !module.subChapters) return { completed: 0, total: 0 };
+        
+        const lessons = module.subChapters;
+        const total = lessons.length;
+        if (total === 0) return { completed: 0, total: 0 };
 
-        window.addEventListener('progressUpdated', fetchProgress);
-        window.addEventListener('focus', fetchProgress);
-        return () => {
-            window.removeEventListener('progressUpdated', fetchProgress);
-            window.removeEventListener('focus', fetchProgress);
-        };
-    }, [moduleId]);
+        const completed = lessons.filter(lesson => profile.progress_data[lesson.id]).length;
+        return { completed, total };
+    }, [profile, moduleId, module]);
 
     useEffect(() => {
         if(viewRef.current) {
@@ -84,8 +67,6 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
             });
         }
     }, [moduleId]);
-
-    const module = learningCurriculum.find(c => c.id === moduleId);
 
     if (!module) {
         return (
@@ -135,7 +116,11 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                 <div className="space-y-3">
                     {module.subChapters.map((subChapter) => (
                         <div key={subChapter.id} className="anim-child">
-                           <LessonItem subChapter={subChapter} onNavigate={onNavigate} />
+                           <LessonItem 
+                                subChapter={subChapter}
+                                isComplete={!!(profile && profile.progress_data[subChapter.id])}
+                                onNavigate={onNavigate}
+                           />
                         </div>
                     ))}
                 </div>

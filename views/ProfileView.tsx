@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
-import { getProfileData } from '../services/profileService'; // <-- Use new service
+import { useProfileData } from '../services/profileService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
 import anime from 'animejs';
 
@@ -10,78 +10,70 @@ interface ProfileViewProps {
     onNavigate: (path: string) => void;
 }
 
-interface ProfileData {
-    subscription_status: string;
-    subscription_expires_at: string | null;
-}
+const LoadingSpinner: React.FC = () => (
+    <div className="flex items-center justify-center h-64">
+        <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </div>
+);
+
 
 const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
-    const [loading, setLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [userName, setUserName] = useState(user?.user_metadata?.full_name || 'Trader');
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=7065F0&color=fff`);
-    const [profileData, setProfileData] = useState<ProfileData | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const viewRef = useRef<HTMLDivElement>(null);
 
+    // Use the reactive hook to get profile data
+    const profileData = useProfileData();
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            setLoading(true);
-            const data = await getProfileData();
-            setProfileData(data);
-            setLoading(false);
+        if (viewRef.current && profileData) { // Animate when data is loaded
+             const backBtn = viewRef.current.querySelector('.back-btn-anim');
+            const profileHeader = viewRef.current.querySelector('.profile-header-anim');
+            const subCard = viewRef.current.querySelector('.sub-card-anim');
+            const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
+            const logoutBtn = viewRef.current.querySelector('.logout-btn-anim');
 
-            if (viewRef.current) {
-                 const backBtn = viewRef.current.querySelector('.back-btn-anim');
-                const profileHeader = viewRef.current.querySelector('.profile-header-anim');
-                const subCard = viewRef.current.querySelector('.sub-card-anim');
-                const menuItems = viewRef.current.querySelectorAll('.profile-menu-item-anim');
-                const logoutBtn = viewRef.current.querySelector('.logout-btn-anim');
-
-                anime.timeline({
-                    easing: 'easeOutExpo',
-                })
-                .add({
-                    targets: [backBtn, profileHeader],
-                    opacity: [0, 1],
-                    translateY: [-30, 0],
-                    duration: 600,
-                    delay: anime.stagger(50)
-                })
-                .add({
-                    targets: subCard,
-                    opacity: [0, 1],
-                    scale: [0.9, 1],
-                    duration: 500,
-                }, '-=400')
-                .add({
-                    targets: menuItems,
-                    opacity: [0, 1],
-                    translateX: [-20, 0],
-                    delay: anime.stagger(100),
-                    duration: 400,
-                }, '-=300')
-                 .add({
-                    targets: logoutBtn,
-                    opacity: [0, 1],
-                    translateY: [20, 0],
-                    duration: 500,
-                }, '-=300');
-            }
-        };
-
-        fetchProfile();
-
-        // Add event listener to refetch profile data after a successful payment
-        const handleSubscriptionUpdate = () => fetchProfile();
-        window.addEventListener('subscriptionUpdated', handleSubscriptionUpdate);
-        return () => window.removeEventListener('subscriptionUpdated', handleSubscriptionUpdate);
-
-    }, [user]);
+            anime.timeline({
+                easing: 'easeOutExpo',
+            })
+            .add({
+                targets: [backBtn, profileHeader],
+                opacity: [0, 1],
+                translateY: [-30, 0],
+                duration: 600,
+                delay: anime.stagger(50)
+            })
+            .add({
+                targets: subCard,
+                opacity: [0, 1],
+                scale: [0.9, 1],
+                duration: 500,
+            }, '-=400')
+            .add({
+                targets: menuItems,
+                opacity: [0, 1],
+                translateX: [-20, 0],
+                delay: anime.stagger(100),
+                duration: 400,
+            }, '-=300')
+             .add({
+                targets: logoutBtn,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: 500,
+            }, '-=300');
+        }
+    }, [profileData]); // Dependency on profileData ensures animation runs after data load
 
     const handleNameChange = async () => {
         const newName = prompt("Enter your new name:", userName);
         if (newName && newName !== userName && user) {
-            setLoading(true);
+            setIsUpdating(true);
             const { error } = await updateUserProfile(user.id, { full_name: newName });
             if (error) {
                 alert("Error updating name: " + error.message);
@@ -89,7 +81,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 setUserName(newName);
                 alert("Name updated successfully! The change will be fully reflected after your next login.");
             }
-            setLoading(false);
+            setIsUpdating(false);
         }
     };
 
@@ -97,7 +89,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
         const file = event.target.files?.[0];
         if (!file || !user) return;
 
-        setLoading(true);
+        setIsUpdating(true);
         const { publicURL, error } = await uploadAvatar(user.id, file);
 
         if (error) {
@@ -111,11 +103,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 alert("Avatar updated successfully! The change will be fully reflected after your next login.");
             }
         }
-        setLoading(false);
+        setIsUpdating(false);
     };
 
     const renderSubscriptionCard = () => {
-        if (!profileData) return null;
+        if (!profileData) return <LoadingSpinner />;
 
         const isPremium = profileData.subscription_status === 'premium';
         const expiryDate = profileData.subscription_expires_at ? new Date(profileData.subscription_expires_at) : null;
@@ -193,7 +185,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, onNavigate }) => {
                 <p className="text-sm text-text-secondary">{user?.email}</p>
             </div>
             
-            {loading ? <div className="h-24 flex items-center justify-center">...</div> : renderSubscriptionCard()}
+            {isUpdating ? <LoadingSpinner/> : renderSubscriptionCard()}
 
             <div className="space-y-2">
                 <ProfileMenuItem icon={Star} label="My Subscriptions" className="profile-menu-item-anim" />

@@ -1,9 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Zap, DollarSign, ChevronRight } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
-import { getProfileData } from '../services/profileService'; // <-- Use new centralized service
+import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
 import anime from 'animejs';
 
@@ -84,34 +84,21 @@ const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | nu
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const homeViewRef = useRef<HTMLDivElement>(null);
-    const [stats, setStats] = useState({ pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0, overallProgress: 0 });
+    const profile = useProfileData();
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            const profile = await getProfileData();
-            const lessonsLearned = Object.values(profile.progress_data || {}).filter(Boolean).length;
-            const testsPassed = getTestsPassedCount();
-            const totalLessons = getTotalLessonCount();
-            const initialPortfolio = 100000;
-            const pnlPercent = initialPortfolio > 0 ? (profile.total_pnl / initialPortfolio) * 100 : 0;
-            const overallProgress = totalLessons > 0 ? (lessonsLearned / totalLessons) * 100 : 0;
+    const stats = useMemo(() => {
+        if (!profile) {
+            return { pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0, overallProgress: 0 };
+        }
+        const lessonsLearned = Object.values(profile.progress_data || {}).filter(Boolean).length;
+        const testsPassed = getTestsPassedCount();
+        const totalLessons = getTotalLessonCount();
+        const initialPortfolio = 100000;
+        const pnlPercent = initialPortfolio > 0 ? (profile.total_pnl / initialPortfolio) * 100 : 0;
+        const overallProgress = totalLessons > 0 ? (lessonsLearned / totalLessons) * 100 : 0;
 
-            setStats({ pnl: profile.total_pnl, lessonsLearned, testsPassed, pnlPercent, overallProgress });
-        };
-
-        fetchStats();
-
-        window.addEventListener('progressUpdated', fetchStats);
-        window.addEventListener('testProgressUpdated', fetchStats);
-        // Also listen for subscription updates that might change view
-        window.addEventListener('subscriptionUpdated', fetchStats);
-
-        return () => {
-            window.removeEventListener('progressUpdated', fetchStats);
-            window.removeEventListener('testProgressUpdated', fetchStats);
-            window.removeEventListener('subscriptionUpdated', fetchStats);
-        };
-    }, []);
+        return { pnl: profile.total_pnl, lessonsLearned, testsPassed, pnlPercent, overallProgress };
+    }, [profile]);
 
     useEffect(() => {
         const container = homeViewRef.current;

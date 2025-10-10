@@ -5,7 +5,7 @@ interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
 }
 
-const StaticCard: React.FC<{ card: CardData; onNavigate: (path: string) => void; }> = ({ card, onNavigate }) => {
+const HubCard: React.FC<{ card: CardData; onNavigate: (path: string) => void; }> = ({ card, onNavigate }) => {
     const isDark = card.theme === 'dark';
     const isDisabled = !card.path;
 
@@ -18,9 +18,11 @@ const StaticCard: React.FC<{ card: CardData; onNavigate: (path: string) => void;
     return (
         <div
             onClick={handleClick}
-            className={`pro-card rounded-2xl overflow-hidden flex items-center p-4 h-40 ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer transition-transform hover:-translate-y-1.5'} ${isDark ? 'bg-[#373B6B] text-white' : 'bg-card text-text-main'}`}
+            className={`pro-card rounded-2xl overflow-hidden flex items-center p-4 h-44 ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer transition-transform hover:-translate-y-1.5'} ${isDark ? 'bg-[#373B6B] text-white' : 'bg-card text-text-main'}`}
         >
-            <h3 className="font-bold text-2xl w-1/2 pl-2">{card.title}</h3>
+            <div className="flex flex-col justify-between h-full w-1/2 pl-2 py-2">
+                 <h3 className="font-bold text-2xl leading-tight">{card.title}</h3>
+            </div>
             <div className="w-1/2 h-full flex items-center justify-center">
                 <img src={card.image} alt={card.title} className="max-h-full max-w-full object-contain" />
             </div>
@@ -39,7 +41,7 @@ interface CardData {
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     const viewRef = useRef<HTMLDivElement>(null);
 
-    const staticCards: CardData[] = [
+    const hubCards: CardData[] = [
         { title: "Courses", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png", path: "/learning/module/ch1", theme: 'dark' },
         { title: "Telegram Subscriptions", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png", path: "/pricing", theme: 'dark' },
         { title: "Paper Trading", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png", path: "/practice", theme: 'light' },
@@ -68,9 +70,9 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
 
             <main>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {staticCards.map(card => (
+                    {hubCards.map(card => (
                         <div key={card.title} className="anim-child">
-                            <StaticCard card={card} onNavigate={onNavigate} />
+                            <HubCard card={card} onNavigate={onNavigate} />
                         </div>
                     ))}
                 </div>

@@ -5,7 +5,8 @@ import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
 import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
-import { isSubChapterComplete, toggleSubChapterCompletion } from '../../services/progressService';
+import { toggleSubChapterCompletion } from '../../services/progressService';
+import { useProfileData } from '../../services/profileService';
 import CompletionDialog from '../../components/learning/CompletionDialog';
 
 interface PatternDetailViewProps {
@@ -17,19 +18,18 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const mainRef = useRef<HTMLElement>(null);
     const [isComplete, setIsComplete] = useState(false);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+    
+    const profile = useProfileData();
 
     useEffect(() => {
-        const checkCompletion = async () => {
-            if (patternId) {
-                const completed = await isSubChapterComplete(patternId);
-                setIsComplete(completed);
-            }
-        };
-        checkCompletion();
+        // Sync local state with the source of truth from the hook
+        if (profile && patternId) {
+            setIsComplete(!!profile.progress_data[patternId]);
+        }
+    }, [profile, patternId]);
+
+    useEffect(() => {
         window.scrollTo(0, 0);
-    }, [patternId]);
-
-    useEffect(() => {
         if (mainRef.current) {
             anime({
                 targets: mainRef.current,

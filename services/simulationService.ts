@@ -1,5 +1,5 @@
 import type { Order, Portfolio, Position, Trade } from '../types';
-import { updateUserPnl } from './progressService';
+import { updateUserPnl } from './profileService';
 
 const INITIAL_CASH = 100000; // Start with ₹1,00,000
 

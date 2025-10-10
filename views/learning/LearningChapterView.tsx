@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
-import { isSubChapterComplete, toggleSubChapterCompletion } from '../../services/progressService';
+import { toggleSubChapterCompletion } from '../../services/progressService';
+import { useProfileData } from '../../services/profileService';
 import CompletionDialog from '../../components/learning/CompletionDialog';
 
 interface LearningChapterViewProps {
@@ -14,20 +15,18 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
     const mainRef = useRef<HTMLElement>(null);
     const [isComplete, setIsComplete] = useState(false);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+    
+    const profile = useProfileData();
 
     useEffect(() => {
-        const checkCompletion = async () => {
-            if (chapterId) {
-                const completed = await isSubChapterComplete(chapterId);
-                setIsComplete(completed);
-            }
-        };
-        checkCompletion();
+        // Sync local state with the source of truth from the hook
+        if (profile && chapterId) {
+            setIsComplete(!!profile.progress_data[chapterId]);
+        }
+    }, [profile, chapterId]);
+    
+    useEffect(() => {
         window.scrollTo(0, 0);
-    }, [chapterId]);
-
-
-    useEffect(() => {
         if (mainRef.current) {
             anime({
                 targets: mainRef.current,
@@ -48,11 +47,10 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         
     const handleToggleComplete = async () => {
         if (subChapter) {
-            // Optimistically update UI
             const wasJustCompleted = !isComplete;
-            setIsComplete(wasJustCompleted);
+            setIsComplete(wasJustCompleted); // Optimistic UI update
             
-            // Persist change to the backend
+            // This will persist the change and trigger a global state update
             await toggleSubChapterCompletion(subChapter.id);
 
             if (wasJustCompleted) {

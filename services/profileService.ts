@@ -1,4 +1,5 @@
 // services/profileService.ts
+import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 export interface ProfileData {
@@ -15,34 +16,30 @@ const defaultProfile: ProfileData = {
     subscription_expires_at: null,
 };
 
-// --- NEW CACHING LOGIC ---
-let userProfileCache: ProfileData | null = null;
+// --- NEW STATE MANAGEMENT LOGIC ---
 
-/**
- * Invalidates the local user profile cache.
- * Should be called after any mutation to the profile data (e.g., updating progress, P&L, subscription).
- */
-export const invalidateUserProfileCache = () => {
-    userProfileCache = null;
+let profileState: ProfileData | null = null;
+const listeners = new Set<() => void>();
+
+const notify = () => {
+    listeners.forEach(listener => listener());
 };
-// --- END NEW CACHING LOGIC ---
 
+const subscribe = (callback: () => void) => {
+    listeners.add(callback);
+    return () => listeners.delete(callback);
+};
 
 /**
- * Fetches the complete profile for the currently authenticated user.
- * If a profile doesn't exist, it creates one. This function now uses a cache.
- * @returns {Promise<ProfileData>} A promise that resolves to the user's complete profile data.
+ * Fetches the complete profile for the currently authenticated user from Supabase.
+ * If a profile doesn't exist, it creates one.
+ * This is the internal fetcher for our store.
  */
-export const getProfileData = async (): Promise<ProfileData> => {
-    if (userProfileCache) {
-        return userProfileCache;
-    }
-    
+const fetchProfileFromDB = async (): Promise<ProfileData> => {
     try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.user) {
-            console.warn("No valid session for getProfileData");
-            invalidateUserProfileCache();
+            console.warn("No valid session for fetchProfileFromDB");
             return defaultProfile;
         }
 
@@ -52,49 +49,81 @@ export const getProfileData = async (): Promise<ProfileData> => {
             .eq('id', session.user.id)
             .single();
 
-        if (error && error.code === 'PGRST116') { // Case: Profile does not exist, create it.
-            console.log("No profile found, creating a new one for user:", session.user.id);
+        if (error && error.code === 'PGRST116') {
             const { data: newProfile, error: insertError } = await supabase
                 .from('profiles')
                 .insert({ id: session.user.id })
                 .select('total_pnl, progress_data, subscription_status, subscription_expires_at')
                 .single();
             
-            if (insertError) {
-                console.error("Error creating new profile:", insertError);
-                invalidateUserProfileCache();
-                return defaultProfile; 
-            }
+            if (insertError) throw insertError;
 
-            const createdProfileData = {
+            return {
                 total_pnl: newProfile?.total_pnl || 0,
                 progress_data: newProfile?.progress_data || {},
                 subscription_status: newProfile?.subscription_status || 'free',
                 subscription_expires_at: newProfile?.subscription_expires_at || null,
             };
-            userProfileCache = createdProfileData;
-            return createdProfileData;
 
-        } else if (error) { // Case: Other database error
-            console.error("Error fetching user profile:", error);
-            invalidateUserProfileCache();
-            return defaultProfile;
+        } else if (error) {
+            throw error;
         }
 
-        // Case: Profile exists, return its data
-        const profileData = {
+        return {
             total_pnl: data?.total_pnl || 0,
             progress_data: data?.progress_data || {},
             subscription_status: data?.subscription_status || 'free',
             subscription_expires_at: data?.subscription_expires_at || null,
         };
-        userProfileCache = profileData;
-        return profileData;
     } catch (e) {
-        console.error("Unexpected error in getProfileData:", e);
-        invalidateUserProfileCache();
+        console.error("Error in fetchProfileFromDB:", e);
         return defaultProfile;
     }
+};
+
+/**
+ * Forces a refetch of profile data, updates the store, and notifies all subscribers.
+ * This should be called after any mutation.
+ */
+export const forceRefetchProfileData = async () => {
+    profileState = await fetchProfileFromDB();
+    notify();
+};
+
+/**
+ * A custom hook that provides reactive access to the user's profile data.
+ * Components using this hook will automatically re-render when the profile data changes.
+ */
+export const useProfileData = (): ProfileData | null => {
+    const [profile, setProfile] = useState(profileState);
+
+    useEffect(() => {
+        // Subscribe to future changes
+        const unsubscribe = subscribe(() => {
+            setProfile(profileState);
+        });
+
+        // Initial fetch if state is not yet populated
+        if (!profileState) {
+            forceRefetchProfileData();
+        }
+
+        return () => unsubscribe();
+    }, []);
+
+    return profile;
+};
+
+/**
+ * Gets the current profile data from the store, fetching if necessary.
+ * Primarily for non-component logic. Components should use the hook.
+ */
+export const getProfileData = async (): Promise<ProfileData> => {
+    if (profileState) {
+        return profileState;
+    }
+    profileState = await fetchProfileFromDB();
+    return profileState;
 };
 
 /**
@@ -108,7 +137,7 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             console.warn("No session for updateUserPnl");
             return;
         }
-
+        
         const currentProfile = await getProfileData();
         const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
 
@@ -120,10 +149,8 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
         if (error) {
             console.error("Error updating user PNL:", error);
         } else {
-            invalidateUserProfileCache();
-            window.dispatchEvent(new CustomEvent('subscriptionUpdated'));
+            await forceRefetchProfileData(); // Refetch and notify all components
         }
-
     } catch (e) {
         console.error("Unexpected error in updateUserPnl:", e);
     }
