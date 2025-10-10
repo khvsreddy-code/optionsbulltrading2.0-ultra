@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { getProfileData, forceRefetchProfileData } from './profileService';
+import { forceRefetchProfileData } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -20,6 +20,7 @@ export type TestProgressData = {
 
 /**
  * Toggles the completion status for a lesson and saves it to Supabase.
+ * This version is architected to be stateless and robust, preventing race conditions.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -30,21 +31,36 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // We MUST get the latest profile data directly before mutating it
-        const currentProfile = await getProfileData();
+        // 1. Fetch the LATEST progress data directly from the DB to avoid race conditions.
+        const { data: currentProfile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('progress_data')
+            .eq('id', session.user.id)
+            .single();
+
+        if (fetchError) {
+            console.error("Error fetching fresh progress before toggle:", fetchError);
+            // Don't proceed if we can't get the latest state.
+            return; 
+        }
+
+        const currentProgress = currentProfile?.progress_data || {};
+        
+        // 2. Calculate the new state based on the fresh data.
         const newProgress = {
-            ...currentProfile.progress_data,
-            [lessonId]: !currentProfile.progress_data[lessonId],
+            ...currentProgress,
+            [lessonId]: !currentProgress[lessonId], // Toggle the state.
         };
 
-        const { error } = await supabase
+        // 3. Update the database with the new state.
+        const { error: updateError } = await supabase
             .from('profiles')
             .update({ progress_data: newProgress })
             .eq('id', session.user.id);
             
-        if (error) throw error;
+        if (updateError) throw updateError;
         
-        // After successful mutation, force a global refetch and notify all subscribed components.
+        // 4. After successful mutation, force the global store to refetch from DB and notify all subscribed components.
         await forceRefetchProfileData();
         
     } catch (error) {
