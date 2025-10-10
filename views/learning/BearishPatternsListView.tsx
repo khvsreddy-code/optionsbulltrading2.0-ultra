@@ -42,10 +42,17 @@ const BearishPatternsListView: React.FC<BearishPatternsListViewProps> = ({ onNav
                         <div key={pattern.id} className="anim-child">
                           <button
                               onClick={() => onNavigate(`/learning/pattern/${pattern.id}`)}
-                              className="w-full text-left p-4 bg-card rounded-lg transition-colors hover:bg-card/70 button-press-feedback flex justify-between items-center border border-border"
+                              className="w-full text-left p-3 bg-card rounded-lg transition-colors hover:bg-background button-press-feedback flex items-center border border-border"
                           >
-                              <p className="font-semibold text-text-main">{pattern.emoji} {pattern.title}</p>
-                              <ChevronRight size={20} className="text-text-secondary" />
+                              {pattern.image && (
+                                  <div className="w-16 h-12 flex-shrink-0 mr-4 bg-background rounded-md overflow-hidden flex items-center justify-center p-1">
+                                      <img src={pattern.image} alt={pattern.title} className="w-auto h-full object-contain" />
+                                  </div>
+                              )}
+                              <div className="flex-grow">
+                                  <p className="font-semibold text-text-main">{pattern.emoji} {pattern.title}</p>
+                              </div>
+                              <ChevronRight size={20} className="text-text-secondary flex-shrink-0 ml-2" />
                           </button>
                         </div>
                     ))}

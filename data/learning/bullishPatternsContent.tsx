@@ -6,6 +6,7 @@ export interface Pattern {
   emoji: string;
   icon?: React.FC<any>;
   content: React.ReactNode;
+  image?: string;
 }
 
 const Image: React.FC<{src: string, alt: string, caption?: string}> = ({ src, alt, caption }) => (
@@ -29,6 +30,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'hammer',
     title: 'Hammer',
     emoji: '🔨',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/hammer_diagram.png',
     content: (
       <>
         <Image 
@@ -73,6 +75,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-engulfing',
     title: 'Bullish Engulfing',
     emoji: '🟢',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishengulfing_diagram.png',
     content: (
         <>
             <Image 
@@ -117,6 +120,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'morning-star',
     title: 'Morning Star',
     emoji: '⭐',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningstar_diagram.png',
     content: (
         <>
             <Image 
@@ -158,6 +162,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'piercing-pattern',
     title: 'Piercing Pattern',
     emoji: '🗡️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/piercing_diagram.png',
     content: (
         <>
             <Image 
@@ -202,6 +207,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-white-soldiers',
     title: 'Three White Soldiers',
     emoji: '🧍🧍🧍',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3whitesoldiers_diagram.png',
     content: (
         <>
             <Image 
@@ -241,6 +247,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-harami',
     title: 'Bullish Harami',
     emoji: '🤰',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharami_diagram.png',
     content: (
         <>
             <Image 
@@ -275,6 +282,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-inside-up',
     title: 'Three Inside Up',
     emoji: '🔼',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsideup_diagram.png',
     content: (
         <>
             <Image 
@@ -312,6 +320,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'tweezer-bottom',
     title: 'Tweezer Bottom',
     emoji: '🥢',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezerbottom_diagram.png',
     content: (
         <>
             <Image 
@@ -344,6 +353,7 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-kicker',
     title: 'Bullish Kicker',
     emoji: '🚀',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishkicker_diagram.png',
     content: (
         <>
             <Image 

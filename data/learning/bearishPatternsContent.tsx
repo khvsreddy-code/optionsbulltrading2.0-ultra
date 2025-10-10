@@ -21,6 +21,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'shooting-star',
     title: 'Shooting Star',
     emoji: '☄️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/shootingstar_diagram.png',
     content: (
       <>
         <Image 
@@ -63,6 +64,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-engulfing',
     title: 'Bearish Engulfing',
     emoji: '🔴',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishengulfing_diagram.png',
     content: (
         <>
             <Image 
@@ -107,6 +109,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'dark-cloud-cover',
     title: 'Dark Cloud Cover',
     emoji: '☁️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/darkcloud_diagram.png',
     content: (
         <>
             <Image 
@@ -144,6 +147,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'evening-star',
     title: 'Evening Star',
     emoji: '🌃',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/eveningstar_diagram.png',
     content: (
         <>
             <Image 
@@ -182,6 +186,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'three-black-crows',
     title: 'Three Black Crows',
     emoji: '🐦🐦🐦',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/3blackcrows_diagram.png',
     content: (
         <>
             <Image 
@@ -221,6 +226,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-harami',
     title: 'Bearish Harami',
     emoji: '🤰',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishharami_diagram.png',
     content: (
         <>
             <Image 
@@ -255,6 +261,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'three-inside-down',
     title: 'Three Inside Down',
     emoji: '🔽',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeinsidedown_diagram.png',
     content: (
         <>
             <Image 
@@ -292,6 +299,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'tweezer-top',
     title: 'Tweezer Top',
     emoji: '🥢',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/tweezertop_diagram.png',
     content: (
         <>
             <Image 
@@ -324,6 +332,7 @@ export const bearishPatterns: Pattern[] = [
     id: 'bearish-kicker',
     title: 'Bearish Kicker',
     emoji: '📉',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bearishkicker_diagram.png',
     content: (
         <>
             <Image 
