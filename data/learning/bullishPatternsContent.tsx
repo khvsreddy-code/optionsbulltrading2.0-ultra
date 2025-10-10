@@ -390,19 +390,38 @@ export const bullishPatterns: Pattern[] = [
     id: 'inverted-hammer',
     title: 'Inverted Hammer',
     emoji: ' T ',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_context.png" 
+            alt="Inverted Hammer pattern on a chart" 
+            caption="An Inverted Hammer forms after a downtrend, showing an attempt by bulls to push prices higher."
+        />
         <h3 className="text-2xl font-bold mb-2">The Inverted Hammer Pattern</h3>
-        <p className="mb-6 text-lg">The Inverted Hammer is a single-candle bullish reversal pattern that, like the Hammer, appears at the bottom of a downtrend. While it looks like a bearish Shooting Star, its position in a downtrend gives it bullish implications.</p>
+        <p className="mb-6 text-lg">The Inverted Hammer is a single-candle bullish reversal pattern that signals a potential bottom in a downtrend. Visually identical to the bearish Shooting Star, its power comes entirely from its context: appearing after a decline. It indicates that buyers are starting to test the waters and that selling pressure may be waning.</p>
+
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>Small Real Body:</strong> The body is small and located at the lower end of the trading range.</li>
-            <li><strong>Long Upper Shadow:</strong> A long upper shadow that is at least twice the length of the real body.</li>
-            <li><strong>Little to No Lower Shadow:</strong> Ideally, there is no lower shadow.</li>
-            <li><strong>Position in Trend:</strong> Must occur after a downtrend.</li>
+            <li><strong>Context:</strong> Must appear after a sustained downtrend.</li>
+            <li><strong>Small Real Body:</strong> The candle has a small body (green or red) at the lower end of the trading range.</li>
+            <li><strong>Long Upper Shadow:</strong> Its defining feature is a long upper shadow, which should be at least twice the length of the real body.</li>
+            <li><strong>No Lower Shadow:</strong> Ideally, there is little to no lower shadow.</li>
         </ul>
+
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/invertedhammer_diagram.png"
+            alt="Inverted Hammer pattern diagram"
+        />
+
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The Inverted Hammer shows that buyers are beginning to test the waters. During the session, buyers pushed the price significantly higher, but sellers were still strong enough to push it back down near the open. The key insight is that the bears were unable to make a new low. The bulls' ability to rally the price so high intra-day, even if they couldn't hold it, is the first sign of buying interest and a potential shift in sentiment. Confirmation is required the next day.</p>
+        <p className="mb-4">The Inverted Hammer tells a story of a battle between emerging buyers and entrenched sellers:</p>
+        <h5 className="text-lg font-semibold mt-4 mb-2">An Attempted Rally</h5>
+        <p className="mb-4">After a period of selling, the session opens and buyers make a determined push, driving the price significantly higher. This is the first real sign of buying interest and creates the long upper shadow.</p>
+        <h5 className="text-lg font-semibold mt-4 mb-2">Sellers Push Back</h5>
+        <p className="mb-4">However, the sellers are not ready to give up control. They see the rally as an opportunity to sell at a better price and manage to push the price all the way back down to close near the open. </p>
+        <h5 className="text-lg font-semibold mt-4 mb-2">A Glimmer of Hope</h5>
+        <p className="mb-4">Despite the sellers' pushback, the key takeaway is that the bears were unable to create a new low. The bulls' ability to mount a significant rally, even if it failed to hold, shows that the balance of power may be shifting. The sellers are still present, but the bulls have shown their hand for the first time. This pattern requires bullish confirmation on the following day (such as a green candle or a gap up) to validate the reversal.</p>
       </>
     ),
   },
@@ -410,18 +429,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'dragonfly-doji',
     title: 'Dragonfly Doji',
     emoji: ' T ',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_context.png" 
+            alt="Dragonfly Doji on a chart" 
+            caption="A Dragonfly Doji at the bottom of a downtrend is a strong sign of price rejection."
+        />
         <h3 className="text-2xl font-bold mb-2">The Dragonfly Doji Pattern</h3>
-        <p className="mb-6 text-lg">A powerful single-candle bullish reversal pattern. It's a specific type of Doji where the open, high, and close prices are the same (or very close), and there is a long lower shadow.</p>
+        <p className="mb-6 text-lg">A powerful single-candle bullish reversal pattern. It's a specific type of Doji where the open, high, and close prices are the same (or very close), and there is a long lower shadow. Its appearance after a downtrend is a strong signal of capitulation and reversal.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>No Real Body:</strong> The open and close are at the same price, forming a horizontal line.</li>
-            <li><strong>Long Lower Shadow:</strong> A very long lower wick.</li>
-            <li><strong>No Upper Shadow:</strong> The high of the day is the same as the open and close.</li>
+            <li><strong>No Real Body:</strong> The open and close are at the same price, forming a horizontal line at the top of the range.</li>
+            <li><strong>Long Lower Shadow:</strong> A very long lower wick signifies a deep intraday sell-off.</li>
+            <li><strong>No Upper Shadow:</strong> The high of the day is the same as the open and close, forming a 'T' shape.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/dragonflydoji_diagram.png"
+            alt="Dragonfly Doji pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The Dragonfly Doji tells a story of a dramatic intra-day reversal. The market opens, and sellers take immediate control, pushing the price significantly lower. However, at the session's low, buying pressure emerges with incredible force, pushing the price all the way back up to the opening level by the close. This signifies a total rejection of lower prices by the market. The bears were decisively defeated, and the bulls managed to reclaim all lost ground, signaling a very strong potential bottom.</p>
+        <p>The Dragonfly Doji tells a story of a dramatic intra-day reversal. The market opens, and sellers take immediate and aggressive control, pushing the price significantly lower. This reflects the fear and capitulation typical at a market bottom. However, at the session's low, buying pressure emerges with incredible force, completely absorbing all sellers and pushing the price all the way back up to the opening level by the close. This signifies a total and decisive rejection of lower prices by the market. The bears were completely defeated, and the bulls managed to reclaim all lost ground, signaling a very strong potential bottom has been formed.</p>
       </>
     ),
   },
@@ -429,17 +458,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-counterattack',
     title: 'Bullish Counterattack',
     emoji: '⚔️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_context.png" 
+            alt="Bullish Counterattack on a chart" 
+            caption="Two candles with the same closing price signal a stalemate and potential reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Counterattack Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle bullish reversal pattern. It's similar to the Piercing Pattern but with a less stringent requirement for the second candle's close.</p>
+        <p className="mb-6 text-lg">A two-candle bullish reversal pattern, also known as a Bullish Meeting Line. It's similar to the Piercing Pattern but signifies a stalemate at a key level rather than a deep retracement.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle in a downtrend.</li>
-            <li><strong>Second Candle:</strong> A long green (bullish) candle that opens with a significant gap down but rallies to close at or very near the close of the first candle.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle continuing the downtrend.</li>
+            <li><strong>Second Candle:</strong> A long green (bullish) candle that opens with a significant gap down but then rallies to close at or very near the close of the first candle. The two closing prices are the same, hence "meeting line."</li>
         </ul>
+         <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishcounterattack_diagram.png"
+            alt="Bullish Counterattack pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern shows a stalemate after a period of bearish control. The first day is strongly bearish. The second day opens with panic selling (a large gap down), but buyers step in with force and "counterattack," driving the price all the way back up to the previous day's close. While they haven't completely overwhelmed the sellers (as in an Engulfing pattern), they have fought them to a draw, completely erasing the day's losses. This sudden halt to the downward momentum and the powerful bullish response signals that the downtrend is likely over.</p>
+        <p>This pattern shows a powerful bullish defense after a period of bearish control. The first day is strongly bearish. The second day opens with panic selling (a large gap down), but buyers step in with tremendous force and "counterattack," driving the price all the way back up to the previous day's close. While they haven't completely overwhelmed the sellers (as in an Engulfing pattern), they have fought them to a draw, completely erasing the day's losses. This sudden and powerful halt to the downward momentum, and the successful defense of the prior close, signals that the downtrend is likely over.</p>
       </>
     ),
   },
@@ -447,18 +486,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-abandoned-baby',
     title: 'Bullish Abandoned Baby',
     emoji: '👶',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_context.png" 
+            alt="Bullish Abandoned Baby on a chart" 
+            caption="A doji gapping below and then away from the trend signals a powerful reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Abandoned Baby Pattern</h3>
-        <p className="mb-6 text-lg">A rare but extremely powerful three-candle bullish reversal pattern. It is a more definitive version of the Morning Star.</p>
+        <p className="mb-6 text-lg">A rare but extremely powerful three-candle bullish reversal pattern. It is a more definitive and potent version of the Morning Star pattern due to the complete separation of the middle candle.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle.</li>
-            <li><strong>Second Candle:</strong> A Doji that gaps down, so its shadows do not overlap with the shadows of the first candle. This is the "abandoned baby."</li>
-            <li><strong>Third Candle:</strong> A long green (bullish) candle that gaps up, with no shadow overlap with the Doji.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle continuing the downtrend.</li>
+            <li><strong>Second Candle:</strong> A Doji that gaps down, such that its shadows do not overlap with the shadows of the first candle. This is the "abandoned baby."</li>
+            <li><strong>Third Candle:</strong> A long green (bullish) candle that gaps up, with its shadows not overlapping with the Doji's shadows.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishabandonedbaby_diagram.png"
+            alt="Bullish Abandoned Baby pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern represents complete panic selling followed by a total reversal. The gap down to the Doji shows extreme bearishness and capitulation. The market is so one-sided that it opens far from the previous close. The Doji itself represents a pause and total indecision. The subsequent gap up on the third day shows a complete and utter shift in sentiment overnight. The price has "gapped" away from the bottom, leaving the period of indecision completely isolated. This signifies a violent and decisive reversal.</p>
+        <p>This pattern represents complete panic selling followed by a total, violent reversal. The gap down to the Doji shows extreme bearishness and capitulation selling. The market is so one-sided that it opens far from the previous close. The Doji itself represents a pause and total indecision at the point of maximum pessimism. The subsequent gap up on the third day shows a complete and utter shift in sentiment overnight. The price has "gapped" away from the bottom, leaving the period of indecision completely isolated. This signifies a violent and decisive reversal, trapping all the late sellers.</p>
       </>
     ),
   },
@@ -466,18 +515,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'morning-doji-star',
     title: 'Morning Doji Star',
     emoji: '✨',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_context.png" 
+            alt="Morning Doji Star on a chart" 
+            caption="A Morning Star with a Doji in the middle is a stronger reversal signal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Morning Doji Star Pattern</h3>
-        <p className="mb-6 text-lg">A more potent variation of the standard Morning Star pattern. The key difference is that the middle candle is a Doji, not a spinning top.</p>
+        <p className="mb-6 text-lg">A more potent variation of the standard Morning Star pattern. The key difference is that the middle candle is a Doji, signifying maximum indecision, which makes the subsequent reversal more significant.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle.</li>
-            <li><strong>Second Candle:</strong> A Doji that gaps down from the first candle.</li>
-            <li><strong>Third Candle:</strong> A long green (bullish) candle that closes well into the body of the first candle.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle continuing a downtrend.</li>
+            <li><strong>Second Candle:</strong> A Doji that gaps down from the body of the first candle.</li>
+            <li><strong>Third Candle:</strong> A long green (bullish) candle that closes well into the body of the first candle (ideally above the 50% mark).</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/morningdojistar_diagram.png"
+            alt="Morning Doji Star pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The psychology is similar to the Morning Star, but the Doji in the middle makes the signal stronger. A Doji represents a moment of perfect equilibrium and maximum indecision—buyers and sellers are in a dead heat. After a long downtrend, this complete stall in selling pressure is more significant than a spinning top (which has a small body). When the third candle confirms a bullish move away from this point of perfect balance, it signals a more decisive and reliable reversal.</p>
+        <p>The psychology is similar to the Morning Star, but the Doji in the middle makes the signal stronger. A Doji represents a moment of perfect equilibrium and maximum indecision—buyers and sellers are in a dead heat. After a long downtrend, this complete stall in selling pressure is more significant than a spinning top (which has a small body and shows some price movement). When the third candle confirms a bullish move away from this point of perfect balance, it signals a more decisive and reliable reversal has taken place.</p>
       </>
     ),
   },
@@ -485,17 +544,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'homing-pigeon',
     title: 'Homing Pigeon',
     emoji: '🕊️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_context.png" 
+            alt="Homing Pigeon on a chart" 
+            caption="A smaller red candle inside a larger one shows selling pressure is decreasing."
+        />
         <h3 className="text-2xl font-bold mb-2">The Homing Pigeon Pattern</h3>
-        <p className="mb-6 text-lg">The Homing Pigeon is a two-candle bullish reversal pattern that is a weaker version of the Bullish Harami. It suggests a potential slowdown in the downtrend.</p>
+        <p className="mb-6 text-lg">The Homing Pigeon is a two-candle bullish reversal pattern that is often considered a weaker version of the Bullish Harami. It suggests a potential slowdown in the downtrend and that sellers are losing conviction.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle, part of an existing downtrend.</li>
             <li><strong>Second Candle:</strong> A small red (bearish) candle whose body is completely contained within the body of the first candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/homingpigeon_diagram.png"
+            alt="Homing Pigeon pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The Homing Pigeon signals that the selling pressure is waning. The first candle shows strong bearish control. The second candle, while still bearish (closing lower than its open), has a much smaller range and fails to make a new low. It's "homing" back towards the safety of the previous day's range. This indicates that the conviction of the sellers is significantly reduced, and the market is losing its downward momentum. It's a sign of a potential bottom, but requires strong bullish confirmation.</p>
+        <p>The Homing Pigeon signals that the selling pressure is waning significantly. The first candle shows strong bearish control. The second candle, while still bearish (closing lower than its open), has a much smaller trading range and fails to make a new low relative to the prior close. It's "homing" back towards the safety of the previous day's trading range. This indicates that the conviction of the sellers is significantly reduced, and the market is losing its downward momentum. It's a subtle sign of a potential bottom, but requires strong bullish confirmation on the next candle to be considered actionable.</p>
       </>
     ),
   },
@@ -503,18 +572,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'stick-sandwich',
     title: 'Stick Sandwich',
     emoji: '🥪',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_context.png" 
+            alt="Stick Sandwich on a chart" 
+            caption="Two red candles 'sandwich' a green one at a matching support level."
+        />
         <h3 className="text-2xl font-bold mb-2">The Stick Sandwich Pattern</h3>
-        <p className="mb-6 text-lg">A rare three-candle bullish reversal pattern where a middle candle is "sandwiched" between two outer candles with the same closing price.</p>
+        <p className="mb-6 text-lg">A rare three-candle bullish reversal pattern where a middle candle is "sandwiched" between two outer candles with the same closing price, indicating a strong support level has been found.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle during a downtrend.</li>
             <li><strong>Second Candle:</strong> A green (bullish) candle that trades above the close of the first candle.</li>
-            <li><strong>Third Candle:</strong> A red (bearish) candle whose closing price is the same as the first candle's close.</li>
+            <li><strong>Third Candle:</strong> A red (bearish) candle whose closing price is the same as the first candle's close, forming the sandwich.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sticksandwich_diagram.png"
+            alt="Stick Sandwich pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern identifies a key support level. The first day shows strong selling. The second day shows a bullish rally. On the third day, sellers try to regain control but are stopped dead at the exact same closing price as the first day. The market is refusing to close any lower than this level. This successful defense of a support level, creating the "sandwich," suggests that buyers are stepping in at this price and a reversal is likely.</p>
+        <p>This pattern identifies a key support level with high precision. The first day shows strong selling. The second day shows a bullish relief rally. On the third day, sellers try to regain control and push the price back down, but they are stopped dead at the exact same closing price as the first day. The market is staunchly refusing to close any lower than this specific price level. This successful defense of a support level, creating the "sandwich," suggests that buyers are stepping in with significant force at this price and a reversal is highly likely.</p>
       </>
     ),
   },
@@ -522,17 +601,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'matching-low',
     title: 'Matching Low',
     emoji: '==',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_context.png" 
+            alt="Matching Low on a chart" 
+            caption="Two red candles with the same closing price signal seller exhaustion."
+        />
         <h3 className="text-2xl font-bold mb-2">The Matching Low Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle bullish reversal pattern that, like the Tweezer Bottom, signifies a strong support level. It is considered a more reliable signal than some other two-stick patterns.</p>
+        <p className="mb-6 text-lg">A two-candle bullish reversal pattern that, like the Tweezer Bottom, signifies a strong support level. It is considered a more reliable signal than some other two-stick patterns because both candles are bearish, highlighting the sellers' failure.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red (bearish) candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> Another red (bearish) candle that has the exact same closing price as the first candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/matchinglow_diagram.png"
+            alt="Matching Low pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The Matching Low demonstrates a clear and definitive halt to selling pressure. After a strong bearish move on day one, sellers continue to push on day two. However, they are completely unable to push the price to a close below the previous day's close. This failure to achieve a lower close, despite a full session of trying, is a significant sign of exhaustion. The fact that buyers stepped in to hold the exact same closing price level demonstrates the establishment of a strong support floor, often leading to a reversal.</p>
+        <p>The Matching Low demonstrates a clear and definitive halt to selling pressure. After a strong bearish move on day one, sellers continue to push on day two. However, they are completely unable to push the price to a close below the previous day's close. This failure to achieve a lower close, despite a full session of trying, is a significant sign of seller exhaustion. The fact that buyers stepped in to hold the exact same closing price level demonstrates the establishment of a strong support floor, often leading to a sharp reversal as shorts cover their positions.</p>
       </>
     ),
   },
@@ -540,18 +629,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-stars-in-the-south',
     title: 'Three Stars in the South',
     emoji: ' T ',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_context.png" 
+            alt="Three Stars in the South on a chart" 
+            caption="A complex pattern showing a gradual deceleration of bearish momentum."
+        />
         <h3 className="text-2xl font-bold mb-2">The Three Stars in the South Pattern</h3>
-        <p className="mb-6 text-lg">A rare and complex three-candle bullish reversal pattern that shows a slow and grinding loss of bearish momentum.</p>
+        <p className="mb-6 text-lg">A rare and complex three-candle bullish reversal pattern that shows a slow and grinding loss of bearish momentum, culminating in seller exhaustion.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle with a long lower shadow.</li>
             <li><strong>Second Candle:</strong> A smaller red candle with a lower low than the first, but a higher close (its body is within the range of the first candle's lower shadow).</li>
             <li><strong>Third Candle:</strong> A small red marubozu (no shadows) that is contained within the range of the second candle's body.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threestarsinthesouth_diagram.png"
+            alt="Three Stars in the South pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern shows a gradual and definitive exhaustion of selling pressure. Each day, the bears make a new low, but their progress is less and less significant. The range of each candle gets progressively smaller, and the closes start to move up. The final, tiny marubozu shows the bears have run completely out of steam and are unable to push the price anywhere. This methodical deceleration of downward momentum signals that the trend is dying and a reversal is imminent.</p>
+        <p>This pattern shows a gradual and definitive exhaustion of selling pressure. Each day, the bears make a new low, but their progress is less and less significant. The range of each candle gets progressively smaller, and the closes start to move up. The first day's long lower shadow is an early warning. The second day fails to hold the lows. The final, tiny marubozu shows the bears have run completely out of steam and are unable to push the price anywhere. This methodical deceleration of downward momentum signals that the trend is dying and a reversal is imminent.</p>
       </>
     ),
   },
@@ -559,18 +658,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'concealing-baby-swallow',
     title: 'Concealing Baby Swallow',
     emoji: '🐦',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_context.png" 
+            alt="Concealing Baby Swallow on a chart" 
+            caption="An extremely rare but powerful four-candle reversal pattern."
+        />
         <h3 className="text-2xl font-bold mb-2">The Concealing Baby Swallow Pattern</h3>
-        <p className="mb-6 text-lg">An extremely rare four-candle bullish reversal pattern. Its complexity makes it hard to spot, but it is considered a very potent signal.</p>
+        <p className="mb-6 text-lg">An extremely rare four-candle bullish reversal pattern. Its complexity makes it hard to spot, but it is considered a very potent signal of a capitulation bottom.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Two Candles:</strong> Two long red marubozu candles, continuing a downtrend.</li>
             <li><strong>Third Candle:</strong> A red candle that opens with a gap down but rallies to close inside the body of the second candle (like an inverted hammer).</li>
             <li><strong>Fourth Candle:</strong> A long red candle that completely engulfs the third candle, making a new low.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/concealingbabyswallow_diagram.png"
+            alt="Concealing Baby Swallow pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern represents a final, exhaustive push by the bears that ultimately fails. The first two days are extremely bearish. The third day shows the first sign of life from bulls, who manage to push the price up intra-day. The fourth day appears to be a massive bearish victory, as it completely engulfs the prior day's action. However, this is often a "capitulation" move. All the remaining sellers have been flushed out in this final, dramatic push lower. With no sellers left, the market has nowhere to go but up. The sheer extremity of the final candle often signals the bottom.</p>
+        <p>This pattern represents a final, exhaustive push by the bears that ultimately fails and signals capitulation. The first two days are extremely bearish. The third day shows the first sign of life from bulls, who manage to push the price up intra-day. The fourth day appears to be a massive bearish victory, as it completely engulfs the prior day's action. However, this is often a "capitulation" move. All the remaining sellers have been flushed out in this final, dramatic push lower. With no sellers left, the market has nowhere to go but up. The sheer extremity of the final candle often signals the final exhaustion of the downtrend.</p>
       </>
     ),
   },
@@ -578,18 +687,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'ladder-bottom',
     title: 'Ladder Bottom',
     emoji: '🪜',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_context.png" 
+            alt="Ladder Bottom on a chart" 
+            caption="A five-candle pattern ending with a gap up confirms a bullish reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Ladder Bottom Pattern</h3>
-        <p className="mb-6 text-lg">A five-candle bullish reversal pattern indicating a potential bottom after a strong downtrend.</p>
+        <p className="mb-6 text-lg">A five-candle bullish reversal pattern indicating a potential bottom after a strong downtrend, culminating in a decisive shift in sentiment.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Three Candles:</strong> Three long red candles with progressively lower opens and closes (similar to Three Black Crows, but in a downtrend).</li>
-            <li><strong>Fourth Candle:</strong> A red candle with a long upper shadow (an inverted hammer shape).</li>
-            <li><strong>Fifth Candle:</strong> A green candle that opens with a gap up above the body of the fourth candle.</li>
+            <li><strong>First Three Candles:</strong> Three long red candles with progressively lower opens and closes (similar to Three Black Crows, but in a downtrend). These are the "ladder rungs."</li>
+            <li><strong>Fourth Candle:</strong> A red candle with a long upper shadow (an inverted hammer shape), showing the first sign of buying interest.</li>
+            <li><strong>Fifth Candle:</strong> A green candle that opens with a gap up above the body of the fourth candle and continues to rally.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/ladderbottom_diagram.png"
+            alt="Ladder Bottom pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The "ladder rungs" of the first three days show a strong, orderly decline. The fourth candle is the first sign of a problem for the bears; although the day closes lower, bulls managed an intra-day rally, showing their first signs of strength. The fifth day is the confirmation. The gap up shows a complete shift in sentiment overnight, and the subsequent bullish close confirms that buyers have taken control from the exhausted sellers.</p>
+        <p>The "ladder rungs" of the first three days show a strong, orderly decline. The fourth candle is the first sign of a problem for the bears; although the day closes lower, bulls managed an intra-day rally, showing their first signs of strength. The fifth day is the confirmation. The gap up shows a complete shift in sentiment overnight, and the subsequent bullish close confirms that buyers have taken decisive control from the exhausted sellers, kicking off a new uptrend.</p>
       </>
     ),
   },
@@ -598,18 +717,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-marubozu',
     title: 'Bullish Marubozu',
     emoji: '🟩',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_context.png" 
+            alt="Bullish Marubozu on a chart" 
+            caption="A candle with no wicks shows complete control by buyers for the entire session."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Marubozu Pattern</h3>
-        <p className="mb-6 text-lg">A single-candle pattern indicating extreme bullish sentiment. "Marubozu" means "bald head" in Japanese, referring to the lack of shadows (wicks).</p>
+        <p className="mb-6 text-lg">A single-candle pattern indicating extreme bullish sentiment. "Marubozu" means "bald head" in Japanese, referring to the lack of shadows (wicks). It is one of the most straightforward and powerful signs of buying pressure.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>Long Green Body:</strong> It consists of a single long green candle with no upper or lower shadows.</li>
             <li><strong>Open and Low are Equal:</strong> The opening price is the low of the day.</li>
             <li><strong>Close and High are Equal:</strong> The closing price is the high of the day.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmarubozu_diagram.png"
+            alt="Bullish Marubozu pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>A Bullish Marubozu demonstrates absolute control by the buyers from the opening bell to the closing bell. The price never trades below the open, and sellers are unable to push the price down from its high at any point. This signifies intense and unwavering buying pressure throughout the entire session. It can mark the start of a strong bullish move or act as a powerful continuation signal within an existing uptrend.</p>
+        <p>A Bullish Marubozu demonstrates absolute control by the buyers from the opening bell to the closing bell. The price never trades below the open, indicating that there was no selling pressure from the very start. Throughout the session, buyers consistently pushed the price higher, and sellers were unable to push the price down from its high at any point before the close. This signifies intense and unwavering buying pressure throughout the entire session. It can mark the start of a strong bullish move or act as a powerful continuation signal within an existing uptrend.</p>
       </>
     )
   },
@@ -617,17 +746,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'rising-window',
     title: 'Rising Window (Gap Up)',
     emoji: '↗️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_context.png" 
+            alt="Rising Window on a chart" 
+            caption="A gap between two candles acts as a strong support zone."
+        />
         <h3 className="text-2xl font-bold mb-2">The Rising Window (Gap Up) Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle pattern where the low of the second candle is above the high of the first candle, creating a "window" or gap in price action. This is a strong bullish continuation signal.</p>
+        <p className="mb-6 text-lg">A two-candle pattern where the low of the second candle is above the high of the first candle, creating a "window" or gap in price action. This is a strong bullish continuation signal, indicating a surge in buying momentum.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>Gap:</strong> A space exists between the high of the first candle and the low of the second candle.</li>
-            <li><strong>Continuation:</strong> The second candle continues to trade higher, away from the gap.</li>
+            <li><strong>Gap:</strong> A clear space exists between the high of the first candle and the low of the second candle.</li>
+            <li><strong>Continuation:</strong> The second candle continues to trade higher, away from the gap, confirming the bullish sentiment.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingwindow_diagram.png"
+            alt="Rising Window pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>A Rising Window signifies a powerful surge in buying interest, often triggered by overnight news. The market is so bullish that it opens at a price significantly higher than the previous day's entire trading range. The gap itself now acts as a strong support zone; the theory is that if the price were to fall back and "fill the gap," the bullish signal would be negated. A gap that remains unfilled is a sign of a very strong and healthy uptrend.</p>
+        <p>A Rising Window signifies a powerful surge in buying interest, often triggered by significant positive news or a change in sentiment overnight. The market is so bullish that it opens at a price significantly higher than the previous day's entire trading range, leaving no chance for traders to buy at the previous day's prices. The gap itself now acts as a strong psychological and technical support zone; the theory is that if the price were to fall back and "fill the gap," the bullish signal would be negated. A gap that remains unfilled is a sign of a very strong and healthy uptrend.</p>
       </>
     )
   },
@@ -635,18 +774,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'rising-three-methods',
     title: 'Rising Three Methods',
     emoji: '⏯️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_context.png" 
+            alt="Rising Three Methods on a chart" 
+            caption="A brief pause within an uptrend confirms the trend's strength when it resumes."
+        />
         <h3 className="text-2xl font-bold mb-2">The Rising Three Methods Pattern</h3>
-        <p className="mb-6 text-lg">A five-candle bullish continuation pattern that signals a temporary pause or consolidation within a strong uptrend before it resumes.</p>
+        <p className="mb-6 text-lg">A five-candle bullish continuation pattern that signals a temporary pause or healthy consolidation within a strong uptrend before it resumes its upward trajectory.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long green (bullish) candle.</li>
-            <li><strong>Next Three Candles:</strong> A series of three small red candles that trade within the range of the first candle's body.</li>
-            <li><strong>Fifth Candle:</strong> A long green candle that closes above the close of the first candle, making a new high.</li>
+            <li><strong>First Candle:</strong> A long green (bullish) candle that establishes the uptrend.</li>
+            <li><strong>Next Three Candles:</strong> A series of three small red candles that trade within the range of the first candle's body, representing a minor pullback.</li>
+            <li><strong>Fifth Candle:</strong> A long green candle that closes above the close of the first candle, making a new high and resuming the trend.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/risingthreemethods_diagram.png"
+            alt="Rising Three Methods pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern shows a healthy pause in a strong uptrend. The initial long green candle establishes bullish control. The three small red candles represent a weak counter-trend pullback or profit-taking. Crucially, this selling is unable to break below the low of the first green candle. The final long green candle shows that the bulls have reasserted control after the brief rest, breaking to a new high and signaling the continuation of the primary uptrend.</p>
+        <p>This pattern shows a healthy and sustainable uptrend. The initial long green candle establishes bullish control. The three small red candles represent weak counter-trend selling or profit-taking by early buyers. Crucially, this selling is contained and unable to break below the low of the first powerful green candle, showing that bulls are absorbing the selling pressure. The final long green candle shows that the bulls have reasserted control after the brief rest, breaking to a new high and signaling the confident continuation of the primary uptrend.</p>
       </>
     )
   },
@@ -654,17 +803,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-belt-hold',
     title: 'Bullish Belt Hold',
     emoji: '🥋',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_context.png" 
+            alt="Bullish Belt Hold on a chart" 
+            caption="Opening at the low and rallying all day shows a powerful sentiment shift."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Belt Hold Pattern</h3>
-        <p className="mb-6 text-lg">A single-candle bullish reversal pattern. It is essentially a green Marubozu that opens with a significant gap down.</p>
+        <p className="mb-6 text-lg">A single-candle bullish reversal pattern that appears in a downtrend. It is essentially a green Opening Marubozu that signifies a sharp and decisive rejection of lower prices.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>Context:</strong> Occurs after a downtrend.</li>
-            <li><strong>Formation:</strong> The candle opens at its low for the day (no lower shadow) and then rallies for the rest of the session, closing near its high. It looks like a tall green candle without a lower wick.</li>
+            <li><strong>Formation:</strong> The candle opens at its low for the day (no lower shadow) and then rallies for the rest of the session, forming a long green body and closing near its high.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishbelthold_diagram.png"
+            alt="Bullish Belt Hold pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The pattern shows a dramatic and sudden reversal of sentiment. The market opens with extreme bearishness, gapping down to a new low. However, from the very first trade of the day, buyers step in with overwhelming force. They "hold the belt" at the low and do not let the price fall any further, driving it up for the entire session. This complete rejection of the opening low and the sustained buying pressure throughout the day signals a powerful shift in control from bears to bulls.</p>
+        <p>The pattern shows a dramatic and sudden reversal of sentiment within a single day. The market opens with extreme bearishness, often gapping down to a new low. However, from the very first trade of the day, buyers step in with overwhelming force. They "hold the belt" at the low and do not let the price fall any further, driving it up for the entire session. This complete rejection of the opening low and the sustained buying pressure throughout the day signals a powerful shift in control from bears to bulls, often trapping sellers who expected the downtrend to continue.</p>
       </>
     )
   },
@@ -672,17 +831,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-separating-lines',
     title: 'Bullish Separating Lines',
     emoji: 'LINES',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_context.png" 
+            alt="Bullish Separating Lines on a chart" 
+            caption="A green marubozu opens at the same level as the prior red candle, negating the pullback."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Separating Lines Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle bullish continuation pattern found in an uptrend.</p>
+        <p className="mb-6 text-lg">A two-candle bullish continuation pattern found in an uptrend, showing that a minor pullback was decisively rejected and the primary trend has forcefully resumed.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red (bearish) candle against the primary uptrend.</li>
+            <li><strong>First Candle:</strong> A long red (bearish) candle representing a pullback against the primary uptrend.</li>
             <li><strong>Second Candle:</strong> A long green (bullish) Marubozu that opens at the same price as the first candle's open.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishseparatinglines_diagram.png"
+            alt="Bullish Separating Lines pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The first red candle represents profit-taking or a temporary pullback in an uptrend. The second day, however, opens with a powerful gap up to the same opening level as the prior day, completely erasing the previous day's negativity. The bulls then maintain control for the entire session, closing at the high. This shows that the pullback was insignificant and the dominant bullish trend has forcefully reasserted itself.</p>
+        <p>The first red candle represents profit-taking or a temporary pause in an uptrend. The second day, however, opens with a powerful gap up to the same opening level as the prior day, completely negating the previous day's negativity in an instant. The bulls then maintain complete control for the entire session, closing at the high (Marubozu). This powerful rejection of the pullback shows that the selling was insignificant and the dominant bullish trend has forcefully reasserted itself.</p>
       </>
     )
   },
@@ -690,17 +859,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-meeting-line',
     title: 'Bullish Meeting Line',
     emoji: '🤝',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_context.png" 
+            alt="Bullish Meeting Line on a chart" 
+            caption="A green candle rallies to 'meet' the prior day's close, forming a support level."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Meeting Line Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle bullish reversal pattern, similar to the Piercing Pattern but slightly weaker. It occurs at the bottom of a downtrend.</p>
+        <p className="mb-6 text-lg">A two-candle bullish reversal pattern, similar to the Piercing Pattern but slightly weaker. It occurs at the bottom of a downtrend and signals a potential stalemate.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red (bearish) candle.</li>
             <li><strong>Second Candle:</strong> A long green (bullish) candle that opens with a gap down but rallies to close at the same price as the first candle's close.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishmeetingline_diagram.png"
+            alt="Bullish Meeting Line pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern signifies a stalemate and a potential support level. The first day is strongly bearish. The second day opens with panic selling, but buyers step in and manage to drive the price all the way back up to the previous day's closing level. While they haven't managed to push into the prior day's body (like in a Piercing Pattern), they have successfully defended the closing price level. This shows that selling pressure has been fully absorbed at this level, indicating a potential bottom has formed.</p>
+        <p>This pattern signifies a stalemate and the formation of a potential support level. The first day is strongly bearish. The second day opens with panic selling, but buyers step in and manage to drive the price all the way back up to the previous day's closing level. While they haven't managed to push into the prior day's body (like in a Piercing Pattern), they have successfully defended the closing price level. This shows that selling pressure has been fully absorbed at this level, indicating a potential bottom has formed and the bears have lost control.</p>
       </>
     )
   },
@@ -708,17 +887,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-tri-star',
     title: 'Bullish Tri-Star',
     emoji: '✨✨✨',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_context.png" 
+            alt="Bullish Tri-Star on a chart" 
+            caption="Three consecutive dojis at a low point signal extreme indecision and reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Tri-Star Pattern</h3>
-        <p className="mb-6 text-lg">A rare but very significant three-candle bullish reversal pattern formed by three consecutive Doji candles at the bottom of a downtrend.</p>
+        <p className="mb-6 text-lg">A rare but very significant three-candle bullish reversal pattern formed by three consecutive Doji candles at the bottom of a downtrend. It signals extreme market indecision and seller exhaustion.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>Three Dojis:</strong> The pattern consists of three Doji candles in a row.</li>
-            <li><strong>Middle Doji:</strong> The second Doji gaps down below the first and third.</li>
+            <li><strong>Middle Doji:</strong> The second Doji gaps down below the first and third, forming the low point of the pattern.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishtristar_diagram.png"
+            alt="Bullish Tri-Star pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern represents extreme market indecision and exhaustion. After a downtrend, the market completely stalls for three consecutive sessions. The gap down on the second Doji shows a final attempt by bears, but it is met with immediate indecision. The third Doji gapping back up shows the bears are completely exhausted and unable to maintain the lower prices. This prolonged period of perfect equilibrium at a market low is a powerful sign that the trend has run its course and a reversal is imminent.</p>
+        <p>This pattern represents extreme market indecision and the exhaustion of the downtrend. After a decline, the market completely stalls for three consecutive sessions, unable to decide on a direction. The gap down on the second Doji shows a final attempt by bears to push the price lower, but it is met with immediate indecision. The third Doji gapping back up shows the bears are completely exhausted and unable to maintain the lower prices. This prolonged period of perfect equilibrium at a market low is a powerful sign that the trend has run its course and a reversal is imminent.</p>
       </>
     )
   },
@@ -726,17 +915,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-doji-star',
     title: 'Bullish Doji Star',
     emoji: '🌟',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_context.png" 
+            alt="Bullish Doji Star on a chart" 
+            caption="A doji gapping down from a red candle signals a stall in bearish momentum."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Doji Star Pattern</h3>
-        <p className="mb-6 text-lg">A two-candle bullish reversal pattern that is a precursor to the Morning Doji Star. It signals a potential bottom with strong indecision.</p>
+        <p className="mb-6 text-lg">A two-candle bullish reversal pattern that is a precursor to the Morning Doji Star. It signals a potential bottom with strong indecision, warning that the downtrend's momentum has faded.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red (bearish) candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A Doji that opens with a gap down from the body of the first candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishdojistar_diagram.png"
+            alt="Bullish Doji Star pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The first candle shows that bears are in control. The second day's gap down confirms this bearish sentiment. However, the market then goes nowhere, closing at the same price it opened. This Doji represents a moment of perfect indecision and equilibrium. The powerful selling pressure has suddenly and completely stalled. This halt in momentum is a significant warning to the bears that their control is slipping and a bullish reversal is possible, pending confirmation on the next candle.</p>
+        <p>The first candle shows that bears are in firm control. The second day's gap down confirms this bearish sentiment. However, the market then goes nowhere, closing at the same price it opened. This Doji represents a moment of perfect indecision and equilibrium. The powerful selling pressure has suddenly and completely stalled. This halt in momentum is a significant warning to the bears that their control is slipping and a bullish reversal is possible, pending confirmation on the next candle (which would complete a Morning Doji Star pattern).</p>
       </>
     )
   },
@@ -744,18 +943,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'tasuki-gap-up',
     title: 'Upside Tasuki Gap',
     emoji: 'GAP',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_context.png" 
+            alt="Upside Tasuki Gap on a chart" 
+            caption="A minor pullback into a gap that holds as support is a bullish continuation signal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Upside Tasuki Gap Pattern</h3>
-        <p className="mb-6 text-lg">A three-candle bullish continuation pattern that occurs within an uptrend.</p>
+        <p className="mb-6 text-lg">A three-candle bullish continuation pattern that occurs within an uptrend. It indicates a pause or minor profit-taking before the trend resumes.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long green candle in an uptrend.</li>
-            <li><strong>Second Candle:</strong> Another green candle that gaps up from the first.</li>
-            <li><strong>Third Candle:</strong> A red candle that opens inside the body of the second candle and closes inside the gap, but does not fully close the gap.</li>
+            <li><strong>Second Candle:</strong> Another green candle that gaps up from the first, creating a Rising Window.</li>
+            <li><strong>Third Candle:</strong> A red candle that opens inside the body of the second candle and closes inside the gap, but does not fully close it.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/upsidetasukigap_diagram.png"
+            alt="Upside Tasuki Gap pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The gap up between the first two candles shows strong bullish momentum. The third red candle represents a period of profit-taking. However, the selling pressure is not strong enough to close the gap. The fact that the gap holds as a support level confirms the underlying strength of the uptrend. This brief pause is seen as a buying opportunity before the trend is expected to resume its upward course.</p>
+        <p>The gap up between the first two candles shows strong bullish momentum and conviction. The third red candle represents a period of profit-taking. However, the selling pressure is not strong enough to close the gap created by the enthusiastic buyers. The fact that the gap holds as a support level confirms the underlying strength of the uptrend. This brief pullback is seen as a buying opportunity by trend-followers before the trend is expected to resume its upward course.</p>
       </>
     )
   },
@@ -763,18 +972,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'side-by-side-white-lines-bullish',
     title: 'Side-by-Side White Lines (Bullish)',
     emoji: '||',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_context.png" 
+            alt="Side-by-Side White Lines on a chart" 
+            caption="Two similar green candles after a gap up show strong underlying support."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Side-by-Side White Lines Pattern</h3>
-        <p className="mb-6 text-lg">A rare but reliable three-candle bullish continuation pattern.</p>
+        <p className="mb-6 text-lg">A rare but reliable three-candle bullish continuation pattern that shows strong support after a gap up in an uptrend.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A green candle in an uptrend.</li>
             <li><strong>Second Candle:</strong> A second green candle that gaps up from the first.</li>
             <li><strong>Third Candle:</strong> A third green candle that opens at or near the open of the second candle and closes at or near the close of the second candle. The second and third candles are roughly the same size and appear "side-by-side."</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/sidebysidewhitelinesbullish_diagram.png"
+            alt="Side-by-Side White Lines pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The initial gap up shows strong bullish sentiment. The third day opens surprisingly low, back at the previous day's open, which might cause some concern. However, buyers immediately step in at that level and drive the price right back up to the previous day's close, showing strong support and a refusal to let the price fall. This powerful defense of the previous day's gains confirms the strength of the bullish conviction and suggests the uptrend will continue.</p>
+        <p>The initial gap up shows strong bullish sentiment. The third day opens surprisingly low, back at the previous day's open, which might cause some concern among bulls. However, buyers immediately step in at that level and drive the price right back up to the previous day's close, showing strong support and a refusal to let the price fall. This powerful defense of the previous day's gains confirms the strength of the bullish conviction and suggests the uptrend will continue with force.</p>
       </>
     )
   },
@@ -782,18 +1001,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'frypan-bottom',
     title: 'Frypan Bottom',
     emoji: '🍳',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_context.png" 
+            alt="Frypan Bottom on a chart" 
+            caption="A rounding bottom followed by a gap up signals a powerful bullish breakout."
+        />
         <h3 className="text-2xl font-bold mb-2">The Frypan Bottom Pattern</h3>
-        <p className="mb-6 text-lg">A multi-candle bullish reversal pattern that is a variation of the "Rounding Bottom." It signifies a slow and gradual shift from a downtrend to an uptrend.</p>
+        <p className="mb-6 text-lg">A multi-candle bullish reversal pattern that is a variation of the classic "Rounding Bottom." It signifies a slow, gradual shift from a downtrend to an uptrend, culminating in a decisive breakout.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>Downtrend:</strong> A preceding downtrend leads into the pattern.</li>
-            <li><strong>Rounding Bottom:</strong> A series of small-bodied candles form a saucer or "U" shape, showing a gradual bottoming process.</li>
+            <li><strong>Rounding Bottom:</strong> A series of small-bodied candles form a saucer or "U" shape over a prolonged period, showing a gradual bottoming process.</li>
             <li><strong>Breakout:</strong> The pattern is confirmed by a final candle that gaps up and breaks above the resistance level formed by the rim of the "pan."</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/frypanbottom_diagram.png"
+            alt="Frypan Bottom pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The Frypan Bottom illustrates a slow death of bearish sentiment and a quiet accumulation phase by buyers. The initial downtrend gives way to a period of consolidation where selling pressure dries up, but buying pressure has not yet taken over. The candles become smaller and the price action flattens out. This is the "pan." The final gap up is the "handle" and signifies the definitive end of the consolidation. Buyers have finally absorbed all the sellers and now have enough control to force the price significantly higher, confirming the new uptrend.</p>
+        <p>The Frypan Bottom illustrates a slow death of bearish sentiment and a quiet accumulation phase by buyers. The initial downtrend gives way to a period of consolidation where selling pressure dries up, but buying pressure has not yet taken over. The candles become smaller and the price action flattens out. This is the "pan," where patient buyers absorb shares from tired sellers. The final gap up is the "handle" and signifies the definitive end of the consolidation. Buyers have finally absorbed all the sellers and now have enough control to force the price significantly higher, confirming the new uptrend has begun with conviction.</p>
       </>
     )
   },
@@ -801,18 +1030,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'tower-bottom',
     title: 'Tower Bottom',
     emoji: '🗼',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_context.png" 
+            alt="Tower Bottom on a chart" 
+            caption="A sharp fall followed by consolidation and a sharp rise forms a 'tower' reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Tower Bottom Pattern</h3>
-        <p className="mb-6 text-lg">A multi-candle bullish reversal pattern that shows a more volatile bottoming process than a Rounding Bottom.</p>
+        <p className="mb-6 text-lg">A multi-candle bullish reversal pattern that shows a more volatile and V-shaped bottoming process than a Rounding Bottom, framed by two tall candles.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
-            <li><strong>Consolidation:</strong> A series of smaller-bodied candles (red or green) that trade sideways, contained within the range of the initial red candle.</li>
-            <li><strong>Final Candle:</strong> A long green candle that breaks out above the consolidation range, often closing near the open of the first red candle. The tall candles on either side form the "towers."</li>
+            <li><strong>First Candle:</strong> A long red candle in a downtrend, forming the first "tower."</li>
+            <li><strong>Consolidation:</strong> A series of smaller-bodied candles (red or green) that trade sideways at the lows, contained within the range of the initial red candle.</li>
+            <li><strong>Final Candle:</strong> A long green candle that breaks out above the consolidation range, forming the second "tower" and often closing near the open of the first red candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/towerbottom_diagram.png"
+            alt="Tower Bottom pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The initial long red candle signifies a climax of selling pressure. This is followed by a period of confusion and indecision where neither bulls nor bears can gain control. This sideways chop allows sentiment to reset. The final long green candle shows that the period of indecision has been decisively resolved in favor of the bulls. They have absorbed all the remaining sellers and have started a new, powerful move upwards, reversing the initial decline.</p>
+        <p>The initial long red candle signifies a climax of selling pressure or capitulation. This is followed by a period of confusion and indecision where neither bulls nor bears can gain control. This sideways chop allows sentiment to reset and for buyers to accumulate shares. The final long green candle shows that the period of indecision has been decisively resolved in favor of the bulls. They have absorbed all the remaining sellers and have started a new, powerful move upwards, reversing the initial sharp decline.</p>
       </>
     )
   },
@@ -820,17 +1059,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'on-neck-line-bullish',
     title: 'On Neck Line (Bullish Context)',
     emoji: 'NECK',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_context.png" 
+            alt="On Neck Line Bullish Context on a chart" 
+            caption="The failure of a bearish pattern to follow through can be a bullish signal."
+        />
         <h3 className="text-2xl font-bold mb-2">The On Neck Line Pattern (Bullish Context)</h3>
-        <p className="mb-6 text-lg">While typically a bearish continuation pattern, in certain contexts, its failure can have bullish implications. The pattern itself is bearish, but a bullish move immediately following it is a sign of strength.</p>
+        <p className="mb-6 text-lg">While typically a bearish continuation pattern, in certain contexts, its failure can have powerful bullish implications. The pattern itself is bearish, but a strong bullish move immediately following it is a sign of underlying strength and a potential bear trap.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A small green candle that opens with a gap down but closes at or very near the low of the first candle.</li>
+            <li><strong>Bullish Trigger:</strong> A third candle that is strongly bullish and breaks above the high of the two-candle pattern.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/onnecklinebullish_diagram.png"
+            alt="On Neck Line Bullish pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The standard interpretation is bearish: bulls tried to rally but were so weak they couldn't even push the price above the previous day's low. However, the bullish insight comes from what happens next. The fact that the bears could not push the price any lower forms a temporary support level. If the next candle is strongly bullish and breaks above the high of this two-candle pattern, it signifies a "failed" bearish pattern. This failure traps the bears who shorted on the pattern, forcing them to cover and adding fuel to a new bullish rally.</p>
+        <p>The standard interpretation of the first two candles is bearish: bulls tried to rally but were so weak they couldn't even push the price above the previous day's low. However, the bullish insight comes from what happens next. The fact that the bears could not push the price any lower forms a temporary support level. If the next candle is strongly bullish and breaks above the high of this two-candle pattern, it signifies a "failed" bearish pattern. This failure traps the bears who shorted on the pattern, forcing them to cover and adding fuel to a new bullish rally. It's a reversal born from the failure of a continuation pattern.</p>
       </>
     )
   },
@@ -838,17 +1088,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'in-neck-line-bullish',
     title: 'In Neck Line (Bullish Context)',
     emoji: 'NECK',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_context.png" 
+            alt="In Neck Line Bullish Context on a chart" 
+            caption="A failed bearish continuation can lead to a strong reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The In Neck Line Pattern (Bullish Context)</h3>
-        <p className="mb-6 text-lg">Similar to the On Neck Line, the In Neck Line is technically a bearish continuation pattern whose failure can signal a bullish reversal.</p>
+        <p className="mb-6 text-lg">Similar to the On Neck Line, the In Neck Line is technically a bearish continuation pattern whose failure can signal a bullish reversal. The key is what happens after the two-candle pattern forms.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A small green candle that opens with a gap down but closes slightly inside the body of the first candle, just above the prior day's close.</li>
+            <li><strong>Bullish Trigger:</strong> A subsequent strong green candle that breaks the high of the pattern.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/innecklinebullish_diagram.png"
+            alt="In Neck Line Bullish pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The bearish view is that the bulls' rally was pathetic, barely closing above the prior day's close. The bullish reversal interpretation comes from the failure of this pattern. By closing just inside the prior day's body, the bulls have established a foothold. If they can build on this with a strong green candle on the third day that breaks the pattern's high, it shows that the bears' inability to create a new low was significant. This failure can trigger a short squeeze and a powerful reversal.</p>
+        <p>The bearish view is that the bulls' rally was pathetic, barely closing above the prior day's close. The bullish reversal interpretation comes from the failure of this pattern. By closing just inside the prior day's body, the bulls have established a small foothold. If they can build on this with a strong green candle on the third day that breaks the pattern's high, it shows that the bears' inability to create a new low was a significant event. This failure can trigger a short squeeze and a powerful reversal.</p>
       </>
     )
   },
@@ -856,17 +1117,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'thrusting-line-bullish',
     title: 'Thrusting Line (Bullish Context)',
     emoji: 'THRUST',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_context.png" 
+            alt="Thrusting Line Bullish Context on a chart" 
+            caption="A deep push by bulls, even if it fails, can set the stage for a reversal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Thrusting Line Pattern (Bullish Context)</h3>
-        <p className="mb-6 text-lg">A more potent version of the In Neck line. It is still considered a bearish continuation pattern by classical definition, but its failure is a stronger bullish signal.</p>
+        <p className="mb-6 text-lg">A more potent version of the In Neck line. It is still considered a bearish continuation pattern by classical definition, but its failure is a stronger bullish signal because it shows more initial buying power.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A green candle that opens with a gap down and "thrusts" upwards, closing well into the body of the first candle but below its midpoint.</li>
+            <li><strong>Bullish Trigger:</strong> A strong bullish candle on day three that follows through to the upside.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/thrustinglinebullish_diagram.png"
+            alt="Thrusting Line Bullish pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The standard view is that because the bulls failed to close above the 50% midpoint, the bears are still in control. However, the bullish interpretation focuses on the strength of the intra-day rally. The bulls showed significant power by pushing the price so far into the prior day's range. This action often shakes the confidence of the bears. If the next day sees a bullish follow-through, the Thrusting Line is re-categorized as the foundation of a reversal, marking the point where buyers showed their first sign of real strength.</p>
+        <p>The standard view is that because the bulls failed to close above the 50% midpoint, the bears are still in control. However, the bullish interpretation focuses on the strength of the intra-day rally. The bulls showed significant power by pushing the price so far into the prior day's range. This action often shakes the confidence of the bears. If the next day sees a bullish follow-through that breaks the pattern high, the Thrusting Line is re-categorized as the foundation of a reversal, marking the point where buyers showed their first sign of real strength and determination.</p>
       </>
     )
   },
@@ -874,17 +1146,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'bullish-harami-cross',
     title: 'Bullish Harami Cross',
     emoji: '✝️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_context.png" 
+            alt="Bullish Harami Cross on a chart" 
+            caption="A doji inside a red candle signals a powerful moment of indecision at the bottom."
+        />
         <h3 className="text-2xl font-bold mb-2">The Bullish Harami Cross Pattern</h3>
-        <p className="mb-6 text-lg">A more powerful and significant version of the standard Bullish Harami. It signals a more profound moment of indecision at the bottom of a downtrend.</p>
+        <p className="mb-6 text-lg">A more powerful and significant version of the standard Bullish Harami. It signals a more profound moment of indecision at the bottom of a downtrend, making a subsequent reversal more likely.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A large red (bearish) candle.</li>
+            <li><strong>First Candle:</strong> A large red (bearish) candle continuing the downtrend.</li>
             <li><strong>Second Candle:</strong> A Doji candle whose entire range (high to low) is contained within the real body of the first candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/bullishharamicross_diagram.png"
+            alt="Bullish Harami Cross pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern shows a more dramatic halt in momentum than a standard Harami. The Doji represents a moment of perfect equilibrium where buyers and sellers are in a dead heat. After a long downtrend characterized by strong selling, this sudden and complete pause is highly significant. It shows that selling pressure has not just weakened, but has been completely neutralized by buyers, even if only for one session. This moment of perfect balance often precedes a strong reversal as the market re-evaluates its direction.</p>
+        <p>This pattern shows a more dramatic halt in momentum than a standard Harami. The Doji represents a moment of perfect equilibrium where buyers and sellers are in a dead heat. After a long downtrend characterized by strong selling, this sudden and complete pause is highly significant. It shows that selling pressure has not just weakened, but has been completely neutralized by buyers, even if only for one session. This moment of perfect balance often precedes a strong reversal as the market re-evaluates its direction from a point of total uncertainty.</p>
       </>
     )
   },
@@ -892,18 +1174,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'three-river-bottom',
     title: 'Three River Bottom',
     emoji: '🏞️',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_context.png" 
+            alt="Three River Bottom on a chart" 
+            caption="A complex three-candle pattern showing the final exhaustion of sellers."
+        />
         <h3 className="text-2xl font-bold mb-2">The Three River Bottom Pattern</h3>
-        <p className="mb-6 text-lg">A rare but notable three-candle bullish reversal pattern. It is a complex pattern indicating a potential bottom.</p>
+        <p className="mb-6 text-lg">A rare but notable three-candle bullish reversal pattern. It is a complex pattern indicating that sellers are exhausted and unable to push the price to new lows.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A red Hammer that makes a new low.</li>
             <li><strong>Third Candle:</strong> A small green candle that opens above the low of the second candle and closes below its close. Its body is contained within the range of the second candle's body.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/threeriverbottom_diagram.png"
+            alt="Three River Bottom pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>This pattern shows a complex struggle at the lows. The first candle is bearish. The second candle is a Hammer, showing an intra-day rejection of lower prices, but it still closes bearish. The third day, bulls are unable to push the price much higher, but crucially, bears are unable to push it to a new low. This failure by the bears to capitalize on the weak bullish follow-through is the key. It shows that selling pressure is completely exhausted, even when the buyers are not yet strong. This exhaustion often leads to a bullish reversal.</p>
+        <p>This pattern shows a complex struggle at the lows. The first candle is bearish. The second candle is a Hammer, showing an intra-day rejection of lower prices, but it still closes bearish, indicating sellers are still present. The third day, bulls are unable to push the price much higher, but crucially, bears are unable to push it to a new low. This failure by the bears to capitalize on the weak bullish follow-through is the key. It shows that selling pressure is completely exhausted, even when the buyers are not yet strong. This exhaustion often leads to a bullish reversal.</p>
       </>
     )
   },
@@ -911,18 +1203,28 @@ export const bullishPatterns: Pattern[] = [
     id: 'unique-three-river-bottom',
     title: 'Unique Three River Bottom',
     emoji: '🏞️✨',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_context.png" 
+            alt="Unique Three River Bottom on a chart" 
+            caption="A very rare variation of the Three River Bottom that is a strong reversal indicator."
+        />
         <h3 className="text-2xl font-bold mb-2">The Unique Three River Bottom Pattern</h3>
-        <p className="mb-6 text-lg">A very specific and rare three-candle bullish reversal pattern that is a stronger variation of the standard Three River Bottom.</p>
+        <p className="mb-6 text-lg">A very specific and rare three-candle bullish reversal pattern that is a stronger variation of the standard Three River Bottom, featuring a Harami Cross.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
             <li><strong>First Candle:</strong> A long red candle in a downtrend.</li>
             <li><strong>Second Candle:</strong> A Bullish Harami Cross (a Doji inside the body of the first candle).</li>
-            <li><strong>Third Candle:</strong> A short green candle with a close below the close of the second day's Doji, but still showing bullish intent.</li>
+            <li><strong>Third Candle:</strong> A short green candle with a close below the close of the second day's Doji, but which fails to make a new low.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/uniquethreeriverbottom_diagram.png"
+            alt="Unique Three River Bottom pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The first candle establishes the downtrend. The second candle's Harami Cross signals a powerful moment of indecision and a halt to the bearish momentum. The third day, bears try to push the price down but fail to make a new low. The bulls then push back to close green. The inability of sellers to break the low after a clear Doji signal is a very strong sign that the downtrend has lost all its power. This pattern is considered a high-probability reversal signal due to this confirmed failure of the bears.</p>
+        <p>The first candle establishes the downtrend. The second candle's Harami Cross signals a powerful moment of indecision and a complete halt to the bearish momentum. The third day, bears try to push the price down but fail to make a new low. The bulls then push back to close green. The inability of sellers to break the low after a clear Doji signal is a very strong sign that the downtrend has lost all its power. This pattern is considered a high-probability reversal signal due to this confirmed failure of the bears to regain control.</p>
       </>
     )
   },
@@ -930,17 +1232,27 @@ export const bullishPatterns: Pattern[] = [
     id: 'kicking-up',
     title: 'Kicking Up (Bullish Kicker)',
     emoji: '🦵',
+    image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_diagram.png',
     content: (
       <>
+        <Image 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_context.png" 
+            alt="Kicking Up on a chart" 
+            caption="A gap between two opposite marubozu candles is an extremely powerful signal."
+        />
         <h3 className="text-2xl font-bold mb-2">The Kicking Up Pattern</h3>
-        <p className="mb-6 text-lg">Another name for the extremely powerful Bullish Kicker pattern. It involves two Marubozu candles gapping in opposite directions.</p>
+        <p className="mb-6 text-lg">Another name for the extremely powerful Bullish Kicker pattern. It involves two Marubozu candles gapping in opposite directions, signifying a violent and complete change in sentiment.</p>
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">What The Pattern Looks Like</h4>
         <ul className="space-y-4 mb-6 list-disc pl-5">
-            <li><strong>First Candle:</strong> A red or black Marubozu (no wicks).</li>
+            <li><strong>First Candle:</strong> A red or black Marubozu (no wicks) during a downtrend.</li>
             <li><strong>Second Candle:</strong> A green or white Marubozu that opens with a significant gap up from the first candle.</li>
         </ul>
+        <Diagram 
+            src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/patterns/kickingup_diagram.png"
+            alt="Kicking Up pattern diagram"
+        />
         <h4 className="text-xl font-semibold mt-8 mb-4 border-l-4 border-primary pl-4">Pattern Psychology</h4>
-        <p>The psychology is identical to the Bullish Kicker. It represents a sudden, violent, and complete reversal of sentiment, usually driven by a major news event. The lack of wicks on both candles signifies that one side was in complete control during each session. The gap between them shows the instantaneous shift in that control. There is no overlap, no indecision—just a clean break and a powerful new direction.</p>
+        <p>The psychology is identical to the Bullish Kicker. It represents a sudden, violent, and complete reversal of sentiment, usually driven by a major news event. The lack of wicks on both candles signifies that one side was in complete control during each session. The first day shows total bearish control. The second day shows total bullish control. The gap between them shows the instantaneous shift in that control. There is no overlap, no indecision—just a clean break and a powerful new direction, trapping all bears on the wrong side of the market.</p>
       </>
     )
   }
