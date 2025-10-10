@@ -1,4 +1,3 @@
-
 // services/profileService.ts
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
@@ -149,7 +148,7 @@ export const getProfileData = async (): Promise<ProfileData> => {
 
 /**
  * Updates the user's total realized P&L in Supabase by adding the new P&L amount.
- * Uses `upsert` to be robust for new users.
+ * This function now uses a targeted read-modify-write cycle to prevent data loss.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -160,28 +159,41 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        const currentProfile = await getProfileData();
-        const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
-
-        // BUG FIX: Use `upsert` instead of `update` to handle the case where a new user's first
-        // action is a trade, and their profile row hasn't been created yet.
-        const { data: updatedProfile, error } = await supabase
+        // 1. Fetch ONLY the specific data needed to avoid schema mismatch errors.
+        const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
-            .upsert({ 
-                id: session.user.id, 
-                total_pnl: newTotalPnl 
+            .select('total_pnl')
+            .eq('id', session.user.id)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
+            throw fetchError;
+        }
+
+        // 2. Safely calculate the new P&L.
+        const currentPnl = currentProfile?.total_pnl || 0;
+        const newTotalPnl = currentPnl + pnl;
+
+        // 3. Upsert ONLY the relevant field. This is more resilient to schema differences.
+        const { data: updatedProfile, error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({
+                id: session.user.id,
+                total_pnl: newTotalPnl,
+                updated_at: new Date().toISOString(),
             })
-            .select('*')
+            .select('*') // Still select everything to get the full fresh state back
             .single();
             
-        if (error) {
-            console.error("Error updating user PNL:", error);
+        if (upsertError) {
+            console.error("Error updating user PNL:", upsertError);
         } else if (updatedProfile) {
+            // 4. Update the central state with guaranteed fresh data.
             setProfileData({
-                total_pnl: updatedProfile.total_pnl || 0,
-                progress_data: updatedProfile.progress_data || {},
-                subscription_status: updatedProfile.subscription_status || 'free',
-                subscription_expires_at: updatedProfile.subscription_expires_at || null,
+                total_pnl: updatedProfile.total_pnl,
+                progress_data: updatedProfile.progress_data,
+                subscription_status: updatedProfile.subscription_status,
+                subscription_expires_at: updatedProfile.subscription_expires_at,
             });
         }
     } catch (e) {

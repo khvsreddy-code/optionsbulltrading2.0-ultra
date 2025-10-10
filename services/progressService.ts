@@ -1,4 +1,5 @@
 
+
 import { supabase } from './supabaseClient';
 import { setProfileData } from './profileService';
 
@@ -21,8 +22,7 @@ export type TestProgressData = {
 
 /**
  * Toggles the completion status for a lesson and saves it to Supabase.
- * This version is architected to use `upsert` to be robust for new users,
- * fixing the primary progress-saving bug.
+ * This version uses a targeted read-modify-write cycle to be robust and prevent data loss.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -33,35 +33,34 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // 1. Fetch the LATEST progress data to handle the toggle logic correctly.
+        // 1. Fetch ONLY the specific data needed to avoid schema mismatch errors.
         const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
             .select('progress_data')
             .eq('id', session.user.id)
             .single();
         
-        // Allow 'not found' error, as this is a valid state for a new user.
-        if (fetchError && fetchError.code !== 'PGRST116') { 
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error for new users.
             throw fetchError;
         }
 
         const currentProgress = currentProfile?.progress_data || {};
         
-        // 2. Calculate the new state.
+        // 2. Calculate the new progress state.
         const newProgress = {
             ...currentProgress,
             [lessonId]: !currentProgress[lessonId], // Toggle the state.
         };
 
-        // 3. Use UPSERT instead of UPDATE. This is the critical bug fix.
-        // It will create the profile with the first progress data if it doesn't exist.
+        // 3. Use upsert to update ONLY the relevant field. This is more resilient to schema differences.
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert({ 
-                id: session.user.id, 
-                progress_data: newProgress 
+            .upsert({
+                id: session.user.id,
+                progress_data: newProgress,
+                updated_at: new Date().toISOString(),
             })
-            .select('*') // Select the full, potentially newly created, profile
+            .select('*') // Still select everything to get the full fresh state back
             .single();
             
         if (upsertError) throw upsertError;
@@ -69,10 +68,10 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
         // 4. Directly update the central store with the guaranteed fresh data from the upsert.
         if (updatedProfile) {
             setProfileData({
-                total_pnl: updatedProfile.total_pnl || 0,
-                progress_data: updatedProfile.progress_data || {},
-                subscription_status: updatedProfile.subscription_status || 'free',
-                subscription_expires_at: updatedProfile.subscription_expires_at || null,
+                total_pnl: updatedProfile.total_pnl,
+                progress_data: updatedProfile.progress_data,
+                subscription_status: updatedProfile.subscription_status,
+                subscription_expires_at: updatedProfile.subscription_expires_at,
             });
         }
         
