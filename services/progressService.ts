@@ -1,7 +1,5 @@
-
-
 import { supabase } from './supabaseClient';
-import { setProfileData } from './profileService';
+import { setProfileData, ProfileData } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -16,13 +14,17 @@ export type TestProgressData = {
     [testId: string]: boolean; // true for passed
 };
 
-// This file is now for WRITE operations or STATIC calculations.
-// READ operations on profile data should happen in components via the useProfileData hook.
+const defaultProfile: Omit<ProfileData, 'subscription_expires_at'> & { subscription_expires_at: string | null } = {
+    total_pnl: 0,
+    progress_data: {},
+    subscription_status: 'free',
+    subscription_expires_at: null,
+};
 
 
 /**
  * Toggles the completion status for a lesson and saves it to Supabase.
- * This version uses a targeted read-modify-write cycle to be robust and prevent data loss.
+ * This is the definitive fix for the progress saving bug. It reads the full profile before writing.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -33,34 +35,37 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // 1. Fetch ONLY the specific data needed to avoid schema mismatch errors.
-        const { data: currentProfile, error: fetchError } = await supabase
+        // 1. READ: Fetch the entire, latest profile from the DB.
+        const { data: currentProfileData, error: fetchError } = await supabase
             .from('profiles')
-            .select('progress_data')
+            .select('*')
             .eq('id', session.user.id)
             .single();
         
+        // Handle case where profile doesn't exist yet for a new user
+        const currentProfile = currentProfileData || { ...defaultProfile, id: session.user.id };
         if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error for new users.
             throw fetchError;
         }
-
-        const currentProgress = currentProfile?.progress_data || {};
         
-        // 2. Calculate the new progress state.
+        // 2. MODIFY: Calculate the new progress state on the complete profile object.
         const newProgress = {
-            ...currentProgress,
-            [lessonId]: !currentProgress[lessonId], // Toggle the state.
+            ...(currentProfile.progress_data || {}),
+            [lessonId]: !(currentProfile.progress_data || {})[lessonId], // Toggle the state.
         };
 
-        // 3. Use upsert to update ONLY the relevant field. This is more resilient to schema differences.
+        const profileToUpsert = {
+            ...currentProfile,
+            id: session.user.id,
+            progress_data: newProgress,
+            updated_at: new Date().toISOString(),
+        };
+
+        // 3. WRITE: Upsert the entire, complete profile object.
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert({
-                id: session.user.id,
-                progress_data: newProgress,
-                updated_at: new Date().toISOString(),
-            })
-            .select('*') // Still select everything to get the full fresh state back
+            .upsert(profileToUpsert)
+            .select('*') 
             .single();
             
         if (upsertError) throw upsertError;

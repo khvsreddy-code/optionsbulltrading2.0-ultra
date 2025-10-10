@@ -148,7 +148,7 @@ export const getProfileData = async (): Promise<ProfileData> => {
 
 /**
  * Updates the user's total realized P&L in Supabase by adding the new P&L amount.
- * This function now uses a targeted read-modify-write cycle to prevent data loss.
+ * This is the definitive fix for the data loss bug. It reads the full profile before writing.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -159,30 +159,34 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        // 1. Fetch ONLY the specific data needed to avoid schema mismatch errors.
-        const { data: currentProfile, error: fetchError } = await supabase
+        // 1. READ: Fetch the entire, latest profile from the DB.
+        const { data: currentProfileData, error: fetchError } = await supabase
             .from('profiles')
-            .select('total_pnl')
+            .select('*')
             .eq('id', session.user.id)
             .single();
 
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
+        // Handle case where profile doesn't exist yet for a new user
+        const currentProfile = currentProfileData || { ...defaultProfile, id: session.user.id };
+        if (fetchError && fetchError.code !== 'PGRST116') {
             throw fetchError;
         }
 
-        // 2. Safely calculate the new P&L.
-        const currentPnl = currentProfile?.total_pnl || 0;
-        const newTotalPnl = currentPnl + pnl;
+        // 2. MODIFY: Safely calculate the new P&L on the complete profile object.
+        const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
+        
+        const profileToUpsert = {
+            ...currentProfile,
+            id: session.user.id,
+            total_pnl: newTotalPnl,
+            updated_at: new Date().toISOString(),
+        };
 
-        // 3. Upsert ONLY the relevant field. This is more resilient to schema differences.
+        // 3. WRITE: Upsert the entire, complete profile object.
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert({
-                id: session.user.id,
-                total_pnl: newTotalPnl,
-                updated_at: new Date().toISOString(),
-            })
-            .select('*') // Still select everything to get the full fresh state back
+            .upsert(profileToUpsert)
+            .select('*')
             .single();
             
         if (upsertError) {
