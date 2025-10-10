@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CandlestickChart, CheckCircle, Sparkles, DollarSign, ChevronRight } from '../components/common/Icons';
+import { Telegram, GraduationCap, CheckCircle, Sparkles, DollarSign, ChevronRight, Share } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
@@ -178,17 +178,34 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             default: return '/learning';
         }
     };
+    
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'OptionsBullTrading',
+                    text: 'Check out this amazing app to learn stock market trading!',
+                    url: 'https://optionsbulltrading.vercel.app/#/home',
+                });
+            } catch (error) {
+                console.error('Error sharing:', error);
+                // Silently fail if user cancels share dialog
+            }
+        } else {
+            // Fallback for browsers that don't support the API
+            alert('Web Share is not supported on this device. You can copy the link: https://optionsbulltrading.vercel.app/#/home');
+        }
+    };
 
     return (
         <div ref={homeViewRef} className="p-4 space-y-8">
             {/* Quick Links */}
             <div className="pro-card p-4 quick-links">
-                <div className="grid grid-cols-5 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
-                    <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={DollarSign} />
+                    <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={Telegram} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
-                    <IconLink title="AI Quiz" onClick={() => onNavigate('/quiz')} icon={Sparkles} />
-                    <IconLink title="Paper Trading" onClick={() => onNavigate('/practice')} icon={CandlestickChart} />
+                    <IconLink title="Web Sharing" onClick={handleShare} icon={Share} />
                 </div>
             </div>
             

@@ -80,6 +80,7 @@ export const Sparkles: React.FC<IconProps> = ({ size = 24, className = '' }) => 
         <path d="M4 4L3.25 6L1 6.75L3.25 7.5L4 9.75L4.75 7.5L7 6.75L4.75 6L4 4Z"/>
     </svg>
 );
+export const Share = createIcon(<><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></>);
 
 
 // --- New Icons for Fundamental Analysis ---
