@@ -121,7 +121,8 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                         <div className="absolute inset-0 bg-black/40"></div>
                         <div className="absolute bottom-4 left-4 z-10">
                             <h2 className="font-bold text-2xl text-white">{module.shortTitle}</h2>
-                            <p className="text-white/80 font-semibold">{module.category}</p>
+                            {/* FIX: Property 'category' does not exist on type 'Chapter'. Use 'title' instead. */}
+                            <p className="text-white/80 font-semibold">{module.title}</p>
                         </div>
                     </div>
                     <div className="p-4 bg-card">

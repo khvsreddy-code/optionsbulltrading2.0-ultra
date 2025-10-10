@@ -44,28 +44,22 @@ const ModuleCard: React.FC<{ chapter: Chapter; onNavigate: (path: string) => voi
 
     return (
         <div 
-            className="bg-card rounded-xl shadow-md overflow-hidden cursor-pointer transition-transform hover:-translate-y-1"
+            className="bg-card rounded-xl shadow-md overflow-hidden cursor-pointer transition-transform duration-200 ease-in-out hover:-translate-y-1 pro-card"
             onClick={() => onNavigate(getPathForModule(chapter.id))}
         >
-            {/* Top part */}
-            <div className="relative p-5 h-40" style={{ backgroundColor: '#2d3450' }}>
+            <div className="aspect-video bg-border">
                 <img 
                     src={chapter.image} 
                     alt={chapter.title} 
-                    className="absolute right-0 top-0 h-full w-2/3 object-contain" 
+                    className="w-full h-full object-cover"
                 />
-                <div className="relative h-full flex flex-col justify-start text-white">
-                    <h4 className="text-lg font-normal text-white/80 w-1/2">{chapter.category}</h4>
-                    <h3 className="text-xl font-bold mt-1 w-1/2">{chapter.shortTitle}</h3>
-                </div>
             </div>
-
-            {/* Bottom part */}
             <div className="p-4">
-                <p className="text-sm text-gray-600">{progress.completed} of {progress.total} lessons completed</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                <h3 className="font-bold text-text-main text-base">{chapter.shortTitle}</h3>
+                <p className="text-sm text-text-secondary mt-1">{progress.completed} of {progress.total} lessons completed</p>
+                <div className="w-full bg-border rounded-full h-1.5 mt-2">
                     <div 
-                        className="bg-green-400 h-1.5 rounded-full" 
+                        className="bg-primary h-1.5 rounded-full" 
                         style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}
                     ></div>
                 </div>
@@ -101,7 +95,7 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
             </header>
 
             <main>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {learningCurriculum.map((chapter) => (
                         <div key={chapter.id} className="anim-child">
                             <ModuleCard chapter={chapter} onNavigate={onNavigate} />
