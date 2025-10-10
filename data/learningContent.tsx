@@ -10,7 +10,6 @@ export interface SubChapter {
 export interface Chapter {
   id: string;
   title: string;
-  shortTitle: string;
   image: string;
   isExternalLink?: boolean; 
   subChapters: SubChapter[];
@@ -20,7 +19,6 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch1',
     title: 'Module 1: Basics',
-    shortTitle: 'Basics',
     image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png',
     subChapters: [
       { 
@@ -50,7 +48,6 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch3',
     title: 'Module 3: Bullish Candlesticks',
-    shortTitle: 'Bullish Candlesticks',
     image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bullishengulfing_context.png',
     isExternalLink: true,
     subChapters: []
@@ -58,7 +55,6 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch4',
     title: 'Module 4: Bearish Candlesticks',
-    shortTitle: 'Bearish Candlesticks',
     image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/bearishengulfing_context.png',
     isExternalLink: true,
     subChapters: []
@@ -66,7 +62,6 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch5',
     title: 'Module 5: Technical Analysis',
-    shortTitle: 'Technical Analysis',
     image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png',
     isExternalLink: true,
     subChapters: []
@@ -74,7 +69,6 @@ export const learningCurriculum: Chapter[] = [
   {
     id: 'ch6',
     title: 'Module 6: Fundamental Analysis',
-    shortTitle: 'Fundamental Analysis',
     image: 'https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png',
     isExternalLink: true,
     subChapters: []

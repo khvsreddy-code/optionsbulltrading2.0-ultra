@@ -103,7 +103,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
     }
 
     const progressPercent = progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
-    const moduleTitle = module.shortTitle;
+    const moduleTitle = module.title.split(': ')[1] || module.title;
 
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans p-4">
@@ -120,8 +120,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
                         <img src={module.image} alt={module.title} className="absolute inset-0 w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40"></div>
                         <div className="absolute bottom-4 left-4 z-10">
-                            <h2 className="font-bold text-2xl text-white">{module.shortTitle}</h2>
-                            {/* FIX: Property 'category' does not exist on type 'Chapter'. Use 'title' instead. */}
+                            <h2 className="font-bold text-2xl text-white">{moduleTitle}</h2>
                             <p className="text-white/80 font-semibold">{module.title}</p>
                         </div>
                     </div>
