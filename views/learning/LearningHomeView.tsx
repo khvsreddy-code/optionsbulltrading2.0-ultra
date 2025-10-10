@@ -1,63 +1,88 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { learningCurriculum, Chapter } from '../../data/learningContent';
+import { useProfileData } from '../../services/profileService';
+
+// Import all lesson data to calculate counts
+import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
+import { bearishPatterns } from '../../data/learning/bearishPatternsContent';
+import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
+import { fundamentalAnalysisTopics } from '../../data/learning/fundamentalAnalysisContent';
 
 interface LearningHomeViewProps {
     onNavigate: (path: string) => void;
 }
 
-const hubCards = [
-    {
-        title: "Courses",
-        image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png",
-        bgColor: "bg-[#3A3F7A]",
-        textColor: "text-white",
-        path: "/home",
-    },
-    {
-        title: "Telegram Subscriptions",
-        image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png",
-        bgColor: "bg-[#3A3F7A]",
-        textColor: "text-white",
-        path: "/pricing",
-    },
-    {
-        title: "Paper Trading",
-        image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png",
-        bgColor: "bg-white",
-        textColor: "text-text-main",
-        path: "/practice",
-    },
-    {
-        title: "Daily Chart Analysis",
-        image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png",
-        bgColor: "bg-[#6E7498]",
-        textColor: "text-white",
-        path: null, // No path specified
-    },
-    {
-        title: "Upcoming Stock Events",
-        image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png",
-        bgColor: "bg-[#6E7498]",
-        textColor: "text-white",
-        path: null, // No path specified
+// Helper to get all lesson IDs for a module
+const getLessonIdsForModule = (moduleId: string): string[] => {
+    switch(moduleId) {
+        case 'ch1': return learningCurriculum.find(c => c.id === 'ch1')?.subChapters.map(sc => sc.id) || [];
+        case 'ch3': return bullishPatterns.map(p => p.id);
+        case 'ch4': return bearishPatterns.map(p => p.id);
+        case 'ch5': return technicalIndicators.map(i => i.id);
+        case 'ch6': return fundamentalAnalysisTopics.map(t => t.id);
+        default: return [];
     }
-];
+}
 
-const StaticCard: React.FC<{ card: typeof hubCards[0], onNavigate: (path: string) => void }> = ({ card, onNavigate }) => {
-    const CardContent = () => (
-        <div className={`pro-card rounded-2xl p-6 flex items-center justify-between h-full ${card.bgColor} transition-transform duration-300 hover:-translate-y-1.5`}>
-            <h2 className={`text-2xl font-bold ${card.textColor} w-1/2`}>{card.title}</h2>
-            <div className="w-1/2 flex justify-center items-center pl-4">
-                <img src={card.image} alt={card.title} className="max-h-24 object-contain rounded-lg" />
-            </div>
-        </div>
-    );
-
-    if (card.path) {
-        return <button onClick={() => onNavigate(card.path)} className="w-full h-full text-left"><CardContent /></button>;
+// Helper function to determine navigation path
+const getPathForModule = (chapter: Chapter): string => {
+    if (chapter.isExternalLink) {
+         switch(chapter.id) {
+            case 'ch3': return '/learning/bullish';
+            case 'ch4': return '/learning/bearish';
+            case 'ch5': return '/learning/indicators';
+            case 'ch6': return '/learning/fundamental';
+            default: return '/learning';
+        }
     }
-    
-    return <div className="w-full h-full opacity-70 cursor-not-allowed"><CardContent /></div>;
+    return `/learning/module/${chapter.id}`;
 };
+
+const ModuleCard: React.FC<{ module: Chapter, onNavigate: (path: string) => void }> = ({ module, onNavigate }) => {
+    const profile = useProfileData();
+
+    const { completedCount, totalLessons } = useMemo(() => {
+        const lessonIds = getLessonIdsForModule(module.id);
+        const total = lessonIds.length;
+        if (total === 0) return { completedCount: 0, totalLessons: 0 };
+        
+        const completed = profile?.progress_data 
+            ? lessonIds.filter(id => profile.progress_data[id]).length 
+            : 0;
+
+        return { completedCount: completed, totalLessons: total };
+    }, [profile, module.id]);
+
+    const progressPercent = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
+
+    return (
+        <button
+            onClick={() => onNavigate(getPathForModule(module))}
+            className="pro-card rounded-2xl overflow-hidden cursor-pointer group transition-transform duration-300 hover:-translate-y-1.5 w-full text-left"
+        >
+            {/* Plain Image - NO TEXT OVERLAY */}
+            <div className="aspect-video bg-gray-200">
+                <img src={module.image} alt={module.title} className="w-full h-full object-cover" />
+            </div>
+            
+            {/* Content Below Image */}
+            <div className="p-4">
+                <h3 className="font-bold text-lg text-text-main">{module.shortTitle}</h3>
+                {totalLessons > 0 ? (
+                    <>
+                        <p className="text-sm text-text-secondary mt-1">{completedCount} of {totalLessons} lessons completed</p>
+                        <div className="w-full bg-primary-light rounded-full h-1.5 mt-2">
+                            <div className="bg-primary h-1.5 rounded-full" style={{ width: `${progressPercent}%`, transition: 'width 0.5s ease-in-out' }}></div>
+                        </div>
+                    </>
+                ) : (
+                     <p className="text-sm text-text-secondary mt-1">Explore this topic</p>
+                )}
+            </div>
+        </button>
+    );
+};
+
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     return (
@@ -68,21 +93,9 @@ const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
 
             <main>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-1">
-                        <StaticCard card={hubCards[0]} onNavigate={onNavigate} />
-                    </div>
-                    <div className="md:col-span-1">
-                        <StaticCard card={hubCards[1]} onNavigate={onNavigate} />
-                    </div>
-                    <div className="md:col-span-1">
-                        <StaticCard card={hubCards[2]} onNavigate={onNavigate} />
-                    </div>
-                    <div className="md:col-span-1">
-                        <StaticCard card={hubCards[3]} onNavigate={onNavigate} />
-                    </div>
-                    <div className="md:col-span-2">
-                        <StaticCard card={hubCards[4]} onNavigate={onNavigate} />
-                    </div>
+                   {learningCurriculum.map(module => (
+                       <ModuleCard key={module.id} module={module} onNavigate={onNavigate} />
+                   ))}
                 </div>
             </main>
         </div>
