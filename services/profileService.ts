@@ -31,6 +31,17 @@ const subscribe = (callback: () => void) => {
 };
 
 /**
+ * Directly sets the profile data in the store and notifies all subscribers.
+ * This is used by write operations to bypass read-after-write race conditions.
+ * @param {ProfileData} newProfile - The fresh profile data to set.
+ */
+export const setProfileData = (newProfile: ProfileData) => {
+    profileState = newProfile;
+    notify();
+};
+
+
+/**
  * Fetches the complete profile for the currently authenticated user from Supabase.
  * If a profile doesn't exist, it creates one.
  * This is the internal fetcher for our store.
@@ -141,15 +152,22 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
         const currentProfile = await getProfileData();
         const newTotalPnl = (currentProfile.total_pnl || 0) + pnl;
 
-        const { error } = await supabase
+        const { data: updatedProfile, error } = await supabase
             .from('profiles')
             .update({ total_pnl: newTotalPnl })
-            .eq('id', session.user.id);
+            .eq('id', session.user.id)
+            .select('*')
+            .single();
             
         if (error) {
             console.error("Error updating user PNL:", error);
-        } else {
-            await forceRefetchProfileData(); // Refetch and notify all components
+        } else if (updatedProfile) {
+            setProfileData({
+                total_pnl: updatedProfile.total_pnl || 0,
+                progress_data: updatedProfile.progress_data || {},
+                subscription_status: updatedProfile.subscription_status || 'free',
+                subscription_expires_at: updatedProfile.subscription_expires_at || null,
+            });
         }
     } catch (e) {
         console.error("Unexpected error in updateUserPnl:", e);

@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { forceRefetchProfileData } from './profileService';
+import { forceRefetchProfileData, setProfileData } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -38,9 +38,8 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             .eq('id', session.user.id)
             .single();
 
-        if (fetchError) {
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found'
             console.error("Error fetching fresh progress before toggle:", fetchError);
-            // Don't proceed if we can't get the latest state.
             return; 
         }
 
@@ -52,16 +51,27 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             [lessonId]: !currentProgress[lessonId], // Toggle the state.
         };
 
-        // 3. Update the database with the new state.
-        const { error: updateError } = await supabase
+        // 3. Update the database and immediately select the updated row.
+        // This is the key fix: it avoids any replication delay by getting the
+        // confirmed data directly from the update operation.
+        const { data: updatedProfile, error: updateError } = await supabase
             .from('profiles')
             .update({ progress_data: newProgress })
-            .eq('id', session.user.id);
+            .eq('id', session.user.id)
+            .select('*')
+            .single();
             
         if (updateError) throw updateError;
         
-        // 4. After successful mutation, force the global store to refetch from DB and notify all subscribed components.
-        await forceRefetchProfileData();
+        // 4. Directly update the central store with the guaranteed fresh data.
+        if (updatedProfile) {
+            setProfileData({
+                total_pnl: updatedProfile.total_pnl || 0,
+                progress_data: updatedProfile.progress_data || {},
+                subscription_status: updatedProfile.subscription_status || 'free',
+                subscription_expires_at: updatedProfile.subscription_expires_at || null,
+            });
+        }
         
     } catch (error) {
         console.error("Error saving progress to Supabase", error);

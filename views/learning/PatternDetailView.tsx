@@ -8,6 +8,7 @@ import { ChevronRight, CheckCircle } from '../../components/common/Icons';
 import { toggleSubChapterCompletion } from '../../services/progressService';
 import { useProfileData } from '../../services/profileService';
 import CompletionDialog from '../../components/learning/CompletionDialog';
+import Confetti from '../../components/common/Confetti';
 
 interface PatternDetailViewProps {
     onNavigate: (path: string) => void;
@@ -18,6 +19,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     const mainRef = useRef<HTMLElement>(null);
     const [isComplete, setIsComplete] = useState(false);
     const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+    const [confettiTrigger, setConfettiTrigger] = useState(0);
     
     const profile = useProfileData();
 
@@ -63,6 +65,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
 
             if (wasJustCompleted) {
                 setIsCompletionDialogOpen(true);
+                setConfettiTrigger(c => c + 1); // Trigger confetti animation
             }
         }
     };
@@ -99,6 +102,7 @@ const PatternDetailView: React.FC<PatternDetailViewProps> = ({ onNavigate, patte
     
     return (
         <div className="bg-background text-text-main min-h-screen font-sans">
+            <Confetti trigger={confettiTrigger} />
             <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
                  <button onClick={() => onNavigate(backTargetPath)} className="p-2 -ml-2" aria-label="Back to list">
                     <ChevronRight size={24} className="transform rotate-180 text-text-secondary" />
