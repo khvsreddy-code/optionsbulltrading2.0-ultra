@@ -93,7 +93,24 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             }));
 
             candlestickSeriesRef.current.setData(candlestickData);
-            chartRef.current?.timeScale().fitContent();
+            
+            // Set an initial zoomed-in view instead of fitting all content.
+            if (chartRef.current) {
+                const dataLength = candlestickData.length;
+                if (dataLength > 1) {
+                    const lastBar = candlestickData[dataLength - 1];
+                    const visibleBars = 200; // Show the last 200 bars by default
+                    const firstVisibleBarIndex = Math.max(0, dataLength - visibleBars);
+                    const firstVisibleBar = candlestickData[firstVisibleBarIndex];
+
+                    chartRef.current.timeScale().setVisibleRange({
+                        from: firstVisibleBar.time,
+                        to: lastBar.time,
+                    });
+                } else {
+                    chartRef.current.timeScale().fitContent();
+                }
+            }
         }
     }, [initialData]);
 
