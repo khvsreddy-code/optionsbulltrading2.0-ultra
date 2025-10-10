@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { getProfileData } from './profileService'; // <-- Import the new central function
+import { getProfileData, invalidateUserProfileCache } from './profileService'; // <-- Import the new central function & invalidator
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -60,7 +60,8 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             
         if (error) throw error;
         
-        window.dispatchEvent(new CustomEvent('progressUpdated'));
+        invalidateUserProfileCache(); // Invalidate the cache to force a fresh fetch next time
+        window.dispatchEvent(new CustomEvent('progressUpdated')); // Notify already-mounted components to refetch
     } catch (error) {
         console.error("Error saving progress to Supabase", error);
     }

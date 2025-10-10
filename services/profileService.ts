@@ -15,16 +15,34 @@ const defaultProfile: ProfileData = {
     subscription_expires_at: null,
 };
 
+// --- NEW CACHING LOGIC ---
+let userProfileCache: ProfileData | null = null;
+
+/**
+ * Invalidates the local user profile cache.
+ * Should be called after any mutation to the profile data (e.g., updating progress, P&L, subscription).
+ */
+export const invalidateUserProfileCache = () => {
+    userProfileCache = null;
+};
+// --- END NEW CACHING LOGIC ---
+
+
 /**
  * Fetches the complete profile for the currently authenticated user.
- * If a profile doesn't exist, it creates one.
+ * If a profile doesn't exist, it creates one. This function now uses a cache.
  * @returns {Promise<ProfileData>} A promise that resolves to the user's complete profile data.
  */
 export const getProfileData = async (): Promise<ProfileData> => {
+    if (userProfileCache) {
+        return userProfileCache;
+    }
+    
     try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !session?.user) {
             console.warn("No valid session for getProfileData");
+            invalidateUserProfileCache();
             return defaultProfile;
         }
 
@@ -44,36 +62,41 @@ export const getProfileData = async (): Promise<ProfileData> => {
             
             if (insertError) {
                 console.error("Error creating new profile:", insertError);
-                return defaultProfile; // Return default on creation failure
+                invalidateUserProfileCache();
+                return defaultProfile; 
             }
 
-            // Return the newly created profile's data, ensuring shape matches ProfileData
-            return {
+            const createdProfileData = {
                 total_pnl: newProfile?.total_pnl || 0,
                 progress_data: newProfile?.progress_data || {},
                 subscription_status: newProfile?.subscription_status || 'free',
                 subscription_expires_at: newProfile?.subscription_expires_at || null,
             };
+            userProfileCache = createdProfileData;
+            return createdProfileData;
 
         } else if (error) { // Case: Other database error
             console.error("Error fetching user profile:", error);
+            invalidateUserProfileCache();
             return defaultProfile;
         }
 
         // Case: Profile exists, return its data
-        return {
+        const profileData = {
             total_pnl: data?.total_pnl || 0,
             progress_data: data?.progress_data || {},
             subscription_status: data?.subscription_status || 'free',
             subscription_expires_at: data?.subscription_expires_at || null,
         };
+        userProfileCache = profileData;
+        return profileData;
     } catch (e) {
         console.error("Unexpected error in getProfileData:", e);
+        invalidateUserProfileCache();
         return defaultProfile;
     }
 };
 
-// FIX: Add missing updateUserPnl function to resolve import error in progressService.ts.
 /**
  * Updates the user's total realized P&L in Supabase by adding the new P&L amount.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
@@ -97,8 +120,7 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
         if (error) {
             console.error("Error updating user PNL:", error);
         } else {
-            // Dispatch an event to notify components like HomeView to refresh stats.
-            // Reusing 'subscriptionUpdated' as it triggers a profile refetch.
+            invalidateUserProfileCache();
             window.dispatchEvent(new CustomEvent('subscriptionUpdated'));
         }
 

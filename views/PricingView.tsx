@@ -90,6 +90,8 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                         alert(`Payment verification failed: ${verificationError.message}`);
                     } else {
                         alert(`Payment successful! Your subscription is now active.`);
+                        // Notify the app that subscription has changed so UI can update
+                        window.dispatchEvent(new CustomEvent('subscriptionUpdated'));
                         // Navigate to profile to see updated status
                         onNavigate('/profile'); 
                     }
