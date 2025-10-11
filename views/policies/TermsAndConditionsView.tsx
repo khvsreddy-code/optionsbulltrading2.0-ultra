@@ -9,9 +9,8 @@ const TermsAndConditionsView: React.FC<TermsAndConditionsViewProps> = ({ onNavig
     return (
         <PolicyPageLayout title="Terms & Conditions" onNavigate={onNavigate}>
             <h2>Terms & Conditions</h2>
-            <p>Last updated on: October 6, 2025</p>
             <p>
-                For the purpose of these Terms and Conditions, The term "we", "us", "our" used anywhere on this page shall mean <strong>Optionsbulltrading Inc.</strong>, whose registered/operational office is 123 Trading Avenue, Financial District, Mumbai, 400001, India. "You", "your", "user", "visitor" shall mean any natural or legal person who is visiting our website and/or agreed to purchase from us.
+                For the purpose of these Terms and Conditions, The term "we", "us", "our" used anywhere on this page shall mean <strong>KALAMAKUNTLA HARINATHA REDDY</strong>, whose registered/operational office is kadapa, ngo colony Cuddapah ANDHRA PRADESH 516002 . "you", “your”, "user", “visitor” shall mean any natural or legal person who is visiting our website and/or agreed to purchase from us.
             </p>
 
             <h3>Your use of the website and/or purchase from us are governed by following Terms and Conditions:</h3>
@@ -23,23 +22,12 @@ const TermsAndConditionsView: React.FC<TermsAndConditionsViewProps> = ({ onNavig
                 <li>All trademarks reproduced in our website which are not the property of, or licensed to, the operator are acknowledged on the website.</li>
                 <li>Unauthorized use of information provided by us shall give rise to a claim for damages and/or be a criminal offense.</li>
                 <li>From time to time our website may also include links to other websites. These links are provided for your convenience to provide further information.</li>
-                <li>You may not create a link to our website from another website or document without Optionsbulltrading Inc.'s prior written consent.</li>
+                <li>You may not create a link to our website from another website or document without KALAMAKUNTLA HARINATHA REDDY’s prior written consent.</li>
                 <li>Any dispute arising out of use of our website and/or purchase with us and/or any engagement with us is subject to the laws of India.</li>
             </ul>
-
-            <h3>Educational Content and Risk Disclaimer</h3>
-            <p>
-                Optionsbulltrading provides educational content on financial markets and is in the process of applying for SEBI registration as a Research Analyst. All content is for <strong>educational purposes only</strong> and should not be construed as investment or financial advice. Trading involves significant risk, and you are solely responsible for your own investment decisions.
-            </p>
             
-            <h3>Subscriptions and No-Refund Policy</h3>
             <p>
-                All purchases of digital products and subscriptions are final. We operate a strict <strong>no-refund and no-cancellation policy</strong>. By completing a purchase, you agree to these terms.
-            </p>
-
-            <h3>Limitation of Liability</h3>
-            <p>
-                We shall be under no liability whatsoever in respect of any loss or damage arising directly or indirectly out of the decline of authorization for any Transaction, on Account of the Cardholder having exceeded the preset limit mutually agreed by us with our acquiring bank from time to time.
+                We, shall be under no liability whatsoever in respect of any loss or damage arising directly or indirectly out of the decline of authorization for any Transaction, on Account of the Cardholder having exceeded the preset limit mutually agreed by us with our acquiring bank from time to time.
             </p>
         </PolicyPageLayout>
     );

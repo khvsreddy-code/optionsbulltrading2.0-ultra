@@ -9,30 +9,30 @@ const CancellationRefundPolicyView: React.FC<CancellationRefundPolicyViewProps> 
     return (
         <PolicyPageLayout title="Cancellation & Refund Policy" onNavigate={onNavigate}>
             <h2>Cancellation & Refund Policy</h2>
-            <p>Last updated: October 6, 2025</p>
-            <p>Optionsbulltrading Inc. believes in helping its customers as far as possible, and has therefore a clear cancellation and refund policy.</p>
+            <p>KALAMAKUNTLA HARINATHA REDDY believes in helping its customers as far as possible, and has therefore a liberal cancellation policy.</p>
             
             <h3>Cancellations</h3>
+            <p>Under this policy:</p>
             <ul>
-                <li>
-                    Due to the instant nature of digital product delivery, all orders are processed immediately upon payment confirmation. Consequently, we operate under a strict no-cancellation policy. Cancellation requests are <strong>Not Applicable</strong> as access to the purchased content (such as courses and premium subscriptions) is granted instantly.
-                </li>
+                <li>Cancellations will be considered only if the request is made within 1-2 days of placing the order.</li>
+                <li>However, the cancellation request may not be entertained if the orders have been communicated to the vendors/merchants and they have initiated the process of shipping them.</li>
+                <li>KALAMAKUNTLA HARINATHA REDDY does not accept cancellation requests for perishable items like flowers, eatables etc. However, refund/replacement can be made if the customer establishes that the quality of product delivered is not good.</li>
+            </ul>
+
+            <h3>Damaged or Defective Items</h3>
+            <ul>
+                <li>In case of receipt of damaged or defective items please report the same to our Customer Service team. The request will, however, be entertained once the merchant has checked and determined the same at his own end. This should be reported within 1-2 days of receipt of the products.</li>
+            </ul>
+            
+            <h3>Product Expectations</h3>
+             <ul>
+                <li>In case you feel that the product received is not as shown on the site or as per your expectations, you must bring it to the notice of our customer service within 1-2 days of receiving the product. The Customer Service Team after looking into your complaint will take an appropriate decision.</li>
+                <li>In case of complaints regarding products that come with a warranty from manufacturers, please refer the issue to them.</li>
             </ul>
 
             <h3>Refunds</h3>
             <ul>
-                <li>
-                    Optionsbulltrading Inc. provides digital products and services that are non-tangible and irrevocable. Therefore, we do not issue refunds once the order is accomplished and the product is sent or access is granted. All sales are final.
-                </li>
-                <li>
-                    As a customer, you are responsible for understanding this upon purchasing any item at our site. We strongly encourage you to review course details and previews before making a purchase.
-                </li>
-                 <li>
-                    In case you feel that the product received is not as shown on the site or as per your expectations, you must bring it to the notice of our customer service within 24 hours of receiving the product. The Customer Service Team after looking into your complaint will take an appropriate decision.
-                </li>
-                <li>
-                    Since no refunds are approved by Optionsbulltrading Inc., the processing time for a refund is <strong>Not Applicable</strong>.
-                </li>
+                <li>In case of any Refunds approved by the KALAMAKUNTLA HARINATHA REDDY, it’ll take 16-30 days for the refund to be processed to the end customer.</li>
             </ul>
         </PolicyPageLayout>
     );
