@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle } from '../../components/common/Icons';
 import { toggleSubChapterCompletion } from '../../services/progressService';

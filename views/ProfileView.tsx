@@ -3,7 +3,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { useProfileData } from '../services/profileService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 
 interface ProfileViewProps {
     user: SupabaseUser | null;

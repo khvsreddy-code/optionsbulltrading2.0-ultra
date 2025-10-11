@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
 import PaymentCancelledDialog from '../components/pricing/PaymentCancelledDialog';
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 import { supabase } from '../services/supabaseClient';
 
 declare global {

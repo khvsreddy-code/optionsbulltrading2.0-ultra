@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { Mic, StopCircle, X, MessageSquare } from '../components/common/Icons';
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 
 // The `LiveSession` type is not exported from the library.
 // We infer the promise type directly from the `ai.live.connect` method for type safety.

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-// FIX: Use a standard ES module import for animejs.
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 import { Home, BookOpen, Swap, Briefcase, User } from '../common/Icons';
 import type { View } from '../../types';
 

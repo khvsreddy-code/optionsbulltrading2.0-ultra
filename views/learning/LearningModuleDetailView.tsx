@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import anime from 'animejs/lib/anime.es.js';
+import anime from 'animejs';
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle, GraduationCap } from '../../components/common/Icons';
 import { useProfileData } from '../../services/profileService';
