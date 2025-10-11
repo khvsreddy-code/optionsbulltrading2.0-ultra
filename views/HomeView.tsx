@@ -201,9 +201,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         <div ref={homeViewRef} className="p-4 space-y-8">
             {/* Quick Links */}
             <div className="pro-card p-4 quick-links">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
-                    <IconLink title="Premium" onClick={() => onNavigate('/pricing')} icon={Telegram} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
                     <IconLink title="Web Sharing" onClick={handleShare} icon={Share} />
                 </div>

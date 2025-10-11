@@ -1,14 +1,16 @@
 import React from 'react';
+import { CheckCircle } from '../common/Icons';
 
 interface PricingPlan {
     title: string;
     price: number;
     highlight?: boolean;
+    description: string[];
 }
 
 interface PricingCardProps {
-    plan: PricingPlan;
-    onSubscribe: (plan: PricingPlan) => void;
+    plan: any;
+    onSubscribe: (plan: any) => void;
 }
 
 const PricingCard: React.FC<PricingCardProps> = ({ plan, onSubscribe }) => {
@@ -19,10 +21,18 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, onSubscribe }) => {
                 <div className="mt-4">
                     <span className="text-3xl md:text-5xl font-bold text-text-main">₹{plan.price.toLocaleString('en-IN')}</span>
                 </div>
+                 <ul className="mt-6 space-y-3 text-left">
+                    {plan.description.map((feature: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                            <CheckCircle size={20} className="text-primary flex-shrink-0 mr-3 mt-0.5" />
+                            <span className="text-text-secondary">{feature}</span>
+                        </li>
+                    ))}
+                </ul>
             </div>
             <button 
                 onClick={() => onSubscribe(plan)}
-                className={`w-full py-2 md:py-3 mt-6 text-center font-semibold rounded-lg transition button-press-feedback text-sm md:text-base ${plan.highlight ? 'bg-primary text-white hover:bg-primary/90' : 'bg-primary-light text-primary hover:bg-blue-200'}`}>
+                className={`w-full py-2 md:py-3 mt-8 text-center font-semibold rounded-lg transition button-press-feedback text-sm md:text-base ${plan.highlight ? 'bg-primary text-white hover:bg-primary/90' : 'bg-primary-light text-primary hover:bg-blue-200'}`}>
                 Subscribe
             </button>
         </div>

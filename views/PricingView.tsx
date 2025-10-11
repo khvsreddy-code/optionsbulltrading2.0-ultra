@@ -21,12 +21,23 @@ const plans = [
         title: 'Basic Plan (1 Month)',
         price: 2999,
         duration: 1, // Duration in months
+        description: [
+            'Access to premium learning and courses',
+            'Access to daily chart analysis',
+            'Access to upcoming stock events',
+        ]
     },
     {
         title: 'Value Plan (3 Months)',
         price: 8997,
         duration: 3,
         highlight: true,
+        description: [
+            'Access to every Basic Plan benefit',
+            '24/7 live support',
+            'Access to live post market and pre market news and reports',
+            'Access to live market streaming',
+        ]
     },
 ];
 
