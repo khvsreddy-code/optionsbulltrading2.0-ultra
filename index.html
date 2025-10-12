@@ -129,51 +129,57 @@
         filter: url(#distortion);
       }
       
-      /* --- NEW: Cosmic Subscribe Button Animation --- */
+      /* --- NEW: High-Quality Cosmic Subscribe Button --- */
       .cosmic-subscribe-button {
         position: relative;
         overflow: hidden;
-        background-color: #1F2937;
-        border: 1px solid #4f5b70;
+        background-color: transparent; /* Let pseudo-elements handle background */
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
         z-index: 1;
       }
 
+      /* Cosmic Nebula Background */
       .cosmic-subscribe-button::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 200%;
-        height: 200%;
-        z-index: -1;
-        background: 
-          radial-gradient(circle at 10% 20%, rgba(167, 139, 250, 0.4) 0%, transparent 20%),
-          radial-gradient(circle at 80% 90%, rgba(56, 189, 248, 0.3) 0%, transparent 25%),
-          radial-gradient(circle at 40% 50%, rgba(236, 72, 153, 0.3) 0%, transparent 20%),
-          radial-gradient(circle at 90% 10%, rgba(250, 250, 250, 0.2) 0px, transparent 2px);
-        background-size: 50% 50%, 40% 40%, 30% 30%, 5px 5px;
-        animation: cosmic-flow 20s linear infinite;
-        transform: translate(-25%, -25%);
+        top: 0; left: 0;
+        width: 300%; height: 300%;
+        z-index: -2; /* Behind the dot grid */
+        background-image: 
+          radial-gradient(circle at 15% 30%, rgba(191, 0, 255, 0.5) 0%, transparent 30%), /* Purple */
+          radial-gradient(circle at 80% 70%, rgba(0, 255, 255, 0.4) 0%, transparent 35%), /* Cyan */
+          radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 25%), /* Pink */
+          radial-gradient(circle at 90% 10%, rgba(250, 250, 250, 0.3) 0px, transparent 2px); /* Stars */
+        background-size: 40% 40%, 35% 35%, 30% 30%, 8px 8px;
+        animation: cosmic-flow 25s linear infinite;
+        transform: translate(-33%, -33%);
+      }
+      
+      /* Dotted Grid Overlay */
+      .cosmic-subscribe-button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1; /* On top of nebula, behind text */
+        background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
+        background-size: 12px 12px;
       }
 
       @keyframes cosmic-flow {
-        0% {
-          background-position: 0% 50%, 50% 0%, 100% 100%, 0% 0%;
-        }
-        100% {
-          background-position: -100% 50%, 50% -100%, 200% 100%, -50% -50%;
-        }
+        0% { background-position: 0% 50%, 50% 100%, 100% 0%, 0% 0%; }
+        100% { background-position: -150% 50%, 50% -50%, 250% 0%, -100% -100%; }
       }
 
       .cosmic-subscribe-button:hover::before {
-        animation-duration: 8s;
+        animation-duration: 10s;
       }
 
       .cosmic-subscribe-button span,
       .cosmic-subscribe-button svg {
         position: relative;
         z-index: 2;
-        text-shadow: 0 0 5px rgba(0,0,0,0.7);
+        text-shadow: 0 1px 4px rgba(0,0,0,0.8);
       }
     </style>
   </head>
