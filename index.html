@@ -129,56 +129,81 @@
         filter: url(#distortion);
       }
       
-      /* --- Interstellar-Inspired Black Hole Button --- */
-      .interstellar-button {
+      /* --- NEW: Candle Chart Button Animation --- */
+      .candle-chart-button {
         position: relative;
         overflow: hidden;
-        background-color: #000;
-        border: 1px solid rgba(255, 215, 0, 0.3);
+        background-color: #111827;
+        border: 1px solid #374151;
         z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-
-      /* This pseudo-element holds the animated background image */
-      .interstellar-button::before {
-        content: '';
+      
+      .candle-chart-button .candle-track {
         position: absolute;
-        inset: -50%; /* Increased size to prevent seeing edges on zoom/rotation */
-        z-index: -1;
-        background-image: url('https://i.imgur.com/g1p5A45.jpeg');
-        background-size: cover;
-        background-position: center;
-        animation: blackhole-spin 90s linear infinite;
-        transition: transform 0.5s ease-out, animation-duration 0.5s ease-out;
+        top: 0;
+        left: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        /* Width: (8px candle + 4px margin) * 80 candles = 960px */
+        width: 960px;
+        animation: scroll-candles 25s linear infinite;
       }
 
-      .interstellar-button:hover::before {
-        animation-duration: 25s; /* Speeds up the spin on hover */
-        transform: scale(1.1); /* Zooms in slightly on hover */
+      @keyframes scroll-candles {
+        from { transform: translateX(0); }
+        /* Scroll by half the width to create a seamless loop */
+        to { transform: translateX(-480px); }
       }
 
-      /* This pseudo-element adds a vignette/shadow for depth */
-      .interstellar-button::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        box-shadow: inset 0 0 20px 10px rgba(0, 0, 0, 0.7);
-        background-image: none; /* Overrides previous rule */
-      }
-
-      /* The rotation animation */
-      @keyframes blackhole-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-
-      /* Ensure text and icon are visible on top */
-      .interstellar-button > * {
+      .candle-chart-button .candle {
+        width: 8px;
+        margin: 0 2px;
         position: relative;
-        z-index: 2;
-        /* Making text shadow more pronounced for better readability against the bright image */
-        text-shadow: 0 1px 6px rgba(0,0,0,1);
+        flex-shrink: 0;
+        height: 90%;
       }
+
+      /* Candle Body */
+      .candle::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+      }
+
+      /* Candle Wick */
+      .candle::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1.5px;
+      }
+      
+      /* Candle Variations using nth-child for a pseudo-random look */
+      .candle:nth-child(7n+1)::before { height: 70%; top: 15%; background: #16A34A; }
+      .candle:nth-child(7n+1)::after  { height: 90%; top: 5%; background: #16A34A; }
+      .candle:nth-child(7n+2)::before { height: 25%; top: 40%; background: #EF4444; }
+      .candle:nth-child(7n+2)::after  { height: 60%; top: 20%; background: #EF4444; }
+      .candle:nth-child(7n+3)::before { height: 10%; top: 45%; background: #16A34A; }
+      .candle:nth-child(7n+3)::after  { height: 80%; top: 10%; background: #16A34A; }
+      .candle:nth-child(7n+4)::before { height: 50%; top: 30%; background: #EF4444; }
+      .candle:nth-child(7n+4)::after  { height: 75%; top: 15%; background: #EF4444; }
+      .candle:nth-child(7n+5)::before { height: 40%; top: 20%; background: #16A34A; }
+      .candle:nth-child(7n+5)::after  { height: 80%; top: 10%; background: #16A34A; }
+      .candle:nth-child(7n+6)::before { height: 15%; top: 50%; background: #EF4444; }
+      .candle:nth-child(7n+6)::after  { height: 95%; top: 2.5%; background: #EF4444; }
+      .candle:nth-child(7n+7)::before { height: 65%; top: 25%; background: #EF4444; }
+      .candle:nth-child(7n+7)::after  { height: 85%; top: 10%; background: #EF4444; }
+
+      .candle-chart-button > div[class*="z-10"] {
+        text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+      }
+
     </style>
   </head>
   <body>

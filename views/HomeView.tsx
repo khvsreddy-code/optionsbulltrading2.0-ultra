@@ -210,10 +210,17 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
                 <button
                     onClick={() => onNavigate('/pricing')}
-                    className="interstellar-button w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg transition-colors button-press-feedback"
+                    className="candle-chart-button w-full p-3 text-white font-semibold rounded-lg transition-colors button-press-feedback"
                 >
-                    <DollarSign size={20} />
-                    <span>Subscribe</span>
+                    <div className="candle-track" aria-hidden="true">
+                        {Array.from({ length: 80 }).map((_, i) => (
+                            <div key={i} className="candle"></div>
+                        ))}
+                    </div>
+                    <div className="relative z-10 flex items-center justify-center space-x-2">
+                        <DollarSign size={20} />
+                        <span>Subscribe</span>
+                    </div>
                 </button>
             </div>
             
