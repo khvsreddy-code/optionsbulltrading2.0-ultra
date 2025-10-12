@@ -202,11 +202,13 @@
       @keyframes pulse-galaxy-core {
           0%, 100% {
               transform: translate(-50%, -50%) scale(1);
-              opacity: 0.8;
+              opacity: 0.9;
+              box-shadow: 0 0 40px 15px rgba(255, 255, 240, 0.4);
           }
           50% {
-              transform: translate(-50%, -50%) scale(1.1);
+              transform: translate(-50%, -50%) scale(1.05);
               opacity: 1;
+              box-shadow: 0 0 50px 20px rgba(255, 255, 240, 0.5);
           }
       }
 
@@ -226,55 +228,61 @@
         animation: warp-speed 15s linear infinite;
       }
 
-      /* The Galaxy Arms */
+      /* The Galaxy Arms - A more detailed implementation */
       .pricing-page-container::before {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
-        width: 90vmin;
-        height: 90vmin;
-        min-width: 600px;
-        min-height: 600px;
-        max-width: 900px;
-        max-height: 900px;
+        width: 100vmin; /* Larger to feel more epic */
+        height: 100vmin;
+        min-width: 700px;
+        min-height: 700px;
+        max-width: 1000px;
+        max-height: 1000px;
         z-index: 1;
         
+        /* Layered gradients to create spiral arms effect */
         background-image: 
-          radial-gradient(ellipse at 40% 60%, rgba(173, 216, 230, 0.25) 0%, transparent 50%),
-          radial-gradient(ellipse at 60% 40%, rgba(230, 190, 255, 0.25) 0%, transparent 50%),
-          conic-gradient(from 180deg at 50% 50%, transparent, rgba(200, 220, 255, 0.4) 10%, transparent 35%),
-          conic-gradient(from 0deg at 50% 50%, transparent, rgba(180, 200, 255, 0.4) 15%, transparent 40%);
+          /* Arm 1 */
+          radial-gradient(ellipse at 40% 60%, rgba(173, 216, 230, 0.3) 0%, transparent 40%),
+          /* Arm 2 */
+          radial-gradient(ellipse at 60% 40%, rgba(230, 190, 255, 0.3) 0%, transparent 40%),
+          /* Dust lanes and structure */
+          conic-gradient(from 180deg at 50% 50%, transparent, rgba(150, 180, 255, 0.3) 10%, transparent 35%),
+          conic-gradient(from 0deg at 50% 50%, transparent, rgba(200, 180, 255, 0.3) 15%, transparent 40%);
         
-        -webkit-mask-image: radial-gradient(ellipse at center, black 15%, transparent 60%);
-        mask-image: radial-gradient(ellipse at center, black 15%, transparent 60%);
+        /* Mask to create the spiral shape */
+        -webkit-mask-image: radial-gradient(ellipse at center, transparent 15%, black 16%, black 50%, transparent 51%);
+        mask-image: radial-gradient(ellipse at center, transparent 15%, black 16%, black 50%, transparent 51%);
 
-        animation: rotate-galaxy-arms 80s linear infinite;
+        animation: rotate-galaxy-arms 120s linear infinite; /* Slower, more majestic rotation */
         border-radius: 0;
       }
 
-      /* The Galaxy Core */
+      /* The Galaxy Core - Brighter and more defined */
       .pricing-page-container::after {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 25vmin; 
-        height: 25vmin;
-        min-width: 150px;
-        min-height: 150px;
-        max-width: 250px;
-        max-height: 250px;
+        width: 20vmin; 
+        height: 20vmin;
+        min-width: 120px;
+        min-height: 120px;
+        max-width: 200px;
+        max-height: 200px;
         z-index: 2;
 
-        background: radial-gradient(ellipse at center, rgba(255, 255, 240, 1) 0%, rgba(200, 220, 255, 0.6) 40%, transparent 70%);
+        /* Brighter core with a softer glow */
+        background: radial-gradient(ellipse at center, rgba(255, 255, 240, 1) 0%, rgba(220, 230, 255, 0.7) 35%, transparent 65%);
         border-radius: 50%;
         
-        animation: pulse-galaxy-core 8s ease-in-out infinite;
+        animation: pulse-galaxy-core 6s ease-in-out infinite;
         
         border: none;
-        box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.3);
+        /* The box-shadow is now part of the animation for a pulsing glow */
       }
 
       .pricing-page-container .pro-card,
