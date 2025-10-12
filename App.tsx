@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 import anime from 'animejs';
 // FIX: Updated Supabase type imports to resolve module export errors.
@@ -107,17 +103,6 @@ const PageTransitionEffect: React.FC<{ isTransitioning: boolean }> = ({ isTransi
     return <div ref={overlayRef} className="page-transition-overlay"></div>;
 };
 
-
-const LoadingSpinner: React.FC = () => (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-        <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-    </div>
-);
-
-
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -191,6 +176,19 @@ const App: React.FC = () => {
         return () => subscription.unsubscribe();
     }, []);
 
+    // New useEffect to remove the initial HTML loader once React is ready.
+    useEffect(() => {
+        if (!loading) {
+            const loader = document.getElementById('initial-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.remove();
+                }, 500); // Wait for fade-out transition
+            }
+        }
+    }, [loading]);
+
     const handleNavigate = (path: string) => {
         if (`#${path}` !== window.location.hash) {
             window.location.hash = path;
@@ -246,10 +244,17 @@ const App: React.FC = () => {
         return { view, activeChapterId, activePatternId, activeModuleId };
     };
 
-    const { view, activeChapterId, activePatternId, activeModuleId } = parseLocation();
-
-
     const renderView = () => {
+        const { view, activeChapterId, activePatternId, activeModuleId } = parseLocation();
+        const loadingFallback = (
+            <div className="flex items-center justify-center h-full">
+                <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        );
+
         return (
             <AnimatedView key={location}>
                 {(() => {
@@ -297,9 +302,9 @@ const App: React.FC = () => {
                         case 'guide':
                             return <UserGuideView onNavigate={handleNavigate} />;
                         case 'quiz':
-                            return <Suspense fallback={<LoadingSpinner />}><QuizView onNavigate={handleNavigate} /></Suspense>;
+                            return <Suspense fallback={loadingFallback}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
-                            return <Suspense fallback={<LoadingSpinner />}><QuizResultsView onNavigate={handleNavigate} /></Suspense>;
+                            return <Suspense fallback={loadingFallback}><QuizResultsView onNavigate={handleNavigate} /></Suspense>;
                         default:
                             return <HomeView onNavigate={handleNavigate} user={user} />;
                     }
@@ -308,41 +313,28 @@ const App: React.FC = () => {
         );
     };
 
-    if (loading) {
-        return <LoadingSpinner />;
-    }
-    
-    if (!session) {
-        return (
-            <AuthLayout>
-                <LoginScreen />
-            </AuthLayout>
-        );
-    }
-    
-    const Wrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
-        <>
-            <PageTransitionEffect isTransitioning={isTransitioning} />
-            <ThemeContext.Provider value={{ theme, toggleTheme }}>
-                {children}
-            </ThemeContext.Provider>
-        </>
-    );
-    
-    // Views that have their own full-page layout
-    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance', 'guide'];
-    if (noLayoutViews.includes(view)) {
-         return (
-            <Wrapper>
-                {renderView()}
-            </Wrapper>
-        );
-    }
+    const renderAppContent = () => {
+        if (loading) {
+            return null; // Render nothing while waiting for session, initial HTML loader is visible
+        }
 
-    return (
-        <Wrapper>
+        if (!session) {
+            return (
+                <AuthLayout>
+                    <LoginScreen />
+                </AuthLayout>
+            );
+        }
+        
+        const { view } = parseLocation();
+        const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance', 'guide'];
+
+        if (noLayoutViews.includes(view)) {
+             return renderView();
+        }
+
+        return (
             <div className="relative min-h-screen bg-background font-sans md:flex">
-                {/* Mobile Sidebar Overlay */}
                 <div 
                     className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
                     onClick={() => setIsSidebarOpen(false)}
@@ -367,7 +359,16 @@ const App: React.FC = () => {
                     </main>
                 </div>
             </div>
-        </Wrapper>
+        );
+    };
+
+    return (
+        <>
+            <PageTransitionEffect isTransitioning={isTransitioning} />
+            <ThemeContext.Provider value={{ theme, toggleTheme }}>
+                {renderAppContent()}
+            </ThemeContext.Provider>
+        </>
     );
 };
 

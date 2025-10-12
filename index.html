@@ -129,76 +129,79 @@
         filter: url(#distortion);
       }
       
-      /* --- NEW: Candle Chart Button Animation --- */
-      .candle-chart-button {
+      /* --- NEW: Star Trek Inspired "Warp Speed" Button --- */
+      @keyframes warp-speed {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+      }
+
+      .star-trek-button {
         position: relative;
         overflow: hidden;
-        background-color: #111827;
-        border: 1px solid #374151;
+        background-color: #0c0d2b; /* Deep space blue/purple */
+        border: 1px solid #7c96ff; /* Light blue border */
+        color: white;
         z-index: 1;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 5px #7c96ff, 0 0 10px #7c96ff, inset 0 0 5px rgba(124, 150, 255, 0.5);
+        
+        /* The starfield background is created with layered radial gradients */
+        background-image:
+          radial-gradient(1px 1px at 25px 5px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1px 1px at 50px 25px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1.5px 1.5px at 100px 10px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1px 1px at 120px 40px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1.5px 1.5px at 150px 20px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(2px 2px at 180px 30px, white, rgba(255, 255, 255, 0));
+        background-repeat: repeat-x;
+        background-size: 200px 100%;
+        animation: warp-speed 10s linear infinite;
+      }
+
+      .star-trek-button:hover {
+        box-shadow: 0 0 10px #a0b6ff, 0 0 20px #a0b6ff, inset 0 0 10px rgba(160, 182, 255, 0.6);
+        border-color: #a0b6ff;
+        animation-duration: 3s; /* Speed up animation on hover */
+        transform: translateY(-2px);
+      }
+      
+      .star-trek-button > div { /* The inner content container */
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+      }
+
+      /* --- NEW: Initial Loader to Prevent Flickering --- */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        background-color: var(--background);
+        z-index: 10000;
+        transition: opacity 0.5s ease-out;
       }
-      
-      .candle-chart-button .candle-track {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        display: flex;
-        align-items: center;
+      #initial-loader > svg {
+        animation: spin 1s linear infinite;
+        height: 2.5rem;
+        width: 2.5rem;
+        color: var(--primary);
       }
-
-      .candle-chart-button .candle {
-        width: 8px;
-        margin: 0 2px; /* Total candle width is 12px */
-        position: relative;
-        flex-shrink: 0;
-        height: 90%;
-        
-        /* CSS variables for JS control */
-        --color: #16A34A;
-        --body-height: 50%;
-        --body-top: 25%;
-        --wick-height: 80%;
-        --wick-top: 10%;
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
       }
-
-      /* Candle Body */
-      .candle::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        width: 100%;
-        background-color: var(--color);
-        height: var(--body-height);
-        top: var(--body-top);
-        transition: height 0.2s ease-out, top 0.2s ease-out; /* Smooth transitions for live candle */
-      }
-
-      /* Candle Wick */
-      .candle::after {
-        content: '';
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 1.5px;
-        background-color: var(--color);
-        height: var(--wick-height);
-        top: var(--wick-top);
-        transition: height 0.2s ease-out, top 0.2s ease-out;
-      }
-
-      .candle-chart-button > div[class*="z-10"] {
-        text-shadow: 0 1px 6px rgba(0,0,0,0.8);
-      }
-
     </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root">
+      <div id="initial-loader">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+    </div>
     
     <!-- SVG Filter for Page Transition Distortion Effect -->
     <svg style="display: none;">
