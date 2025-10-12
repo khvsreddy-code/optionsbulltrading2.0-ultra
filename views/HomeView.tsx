@@ -110,14 +110,13 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         const container = homeViewRef.current;
         if (container) {
             const quickLinksItems = container.querySelectorAll('.quick-links .grid > *, .quick-links > button');
-            const paperTradingCard = container.querySelector('.paper-trading-card');
             const sectionHeaders = container.querySelectorAll('.section-header');
             const mainCards = container.querySelectorAll('.main-card-item');
             const libraryCards = container.querySelectorAll('.library-card-item');
             const aiQuizCard = container.querySelector('.ai-quiz-card');
             const progressDashboard = container.querySelector('.progress-dashboard');
     
-            anime.set([quickLinksItems, paperTradingCard, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8, rotate: '5deg' });
+            anime.set([quickLinksItems, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8, rotate: '5deg' });
     
             const tl = anime.timeline({
                 easing: 'easeOutElastic(1, .8)',
@@ -131,12 +130,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 rotate: 0,
                 delay: anime.stagger(100),
             })
-            .add({
-                targets: paperTradingCard,
-                opacity: 1,
-                scale: 1,
-                rotate: 0,
-            }, '-=900')
             .add({
                 targets: sectionHeaders,
                 opacity: 1,
@@ -219,19 +212,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                         </div>
                     </button>
                 </div>
-            </div>
-
-             {/* Paper Trading Card */}
-            <div className="paper-trading-card">
-                 <button
-                    onClick={() => onNavigate('/practice')}
-                    className="star-trek-button w-full h-16 rounded-2xl flex items-center justify-center text-lg font-bold button-press-feedback"
-                >
-                    <div className="flex items-center space-x-2">
-                        <Swap size={24} />
-                        <span>Paper Trading</span>
-                    </div>
-                </button>
             </div>
             
             {/* Featured Section */}

@@ -165,10 +165,12 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
                 <div className="pt-6">
                      <button 
                         onClick={() => handleNavigation('/practice')}
-                        className="w-full flex items-center justify-center p-3 space-x-3 text-white font-semibold rounded-lg bg-primary hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30 button-press-feedback"
+                        className="star-trek-button w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold button-press-feedback"
                     >
-                        <Swap size={20} />
-                        <span>Paper Trading</span>
+                        <div className="flex items-center space-x-2">
+                            <Swap size={20} />
+                            <span>Paper Trading</span>
+                        </div>
                     </button>
                 </div>
             </nav>
