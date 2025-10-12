@@ -76,13 +76,21 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
             const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
                 body: { 
                     amount: plan.price * 100, // Amount must be in paise
-                    receipt: `receipt_user_${user.id}_${Date.now()}`
+                    receipt: `receipt_user_${user.id}_${Date.now()}`,
+                    key_id: RAZORPAY_KEY_ID, // Pass the public key ID to the function
                 },
             });
+            
+            if (orderError) {
+                console.error('Edge function returned an error:', orderError);
+                alert('Could not initiate payment. The server-side function failed. Please check the function logs in your Supabase dashboard for details.');
+                setLoadingPlan(null);
+                return;
+            }
 
-            if (orderError || !orderData.id) {
-                console.error('Error creating Razorpay order:', orderError);
-                alert(`Could not initiate payment. ${orderError?.message || 'Please try again.'}`);
+            if (!orderData || !orderData.id) {
+                console.error('Error creating Razorpay order: Invalid data returned from server', orderData);
+                alert(`Could not initiate payment. The server did not return a valid order ID.`);
                 setLoadingPlan(null);
                 return;
             }

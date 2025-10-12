@@ -1,13 +1,9 @@
 // supabase/functions/create-razorpay-order/index.ts
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { Buffer } from 'https://deno.land/std@0.168.0/io/buffer.ts';
 
 // Add type declarations to satisfy TypeScript linter
 declare const Deno: any;
-
-// Helper to create a Base64 string for Basic Authentication
-const toBase64 = (str: string) => new Buffer(str).toString('base64');
 
 serve(async (req: Request) => {
   // Handle CORS preflight request
@@ -19,24 +15,28 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { amount, currency = 'INR', receipt } = await req.json();
+    const { amount, currency = 'INR', receipt, key_id } = await req.json();
 
     if (!amount) {
       throw new Error('Amount is required.');
     }
+    if (!key_id) {
+        throw new Error('Razorpay Key ID is required in the request body.');
+    }
 
-    const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
+    const RAZORPAY_KEY_ID = key_id;
     const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
 
-    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay credentials are not configured on the server.');
+    if (!RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay Key Secret is not configured on the server. Please set it in your Supabase project secrets.');
     }
 
     const response = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${toBase64(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET)}`
+        // Use the standard btoa function for Base64 encoding
+        'Authorization': `Basic ${btoa(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET)}`
       },
       body: JSON.stringify({
         amount: amount, // Amount in paise
@@ -48,7 +48,7 @@ serve(async (req: Request) => {
     if (!response.ok) {
         const errorBody = await response.text();
         console.error("Razorpay API Error:", errorBody);
-        throw new Error(`Razorpay API responded with status: ${response.status}`);
+        throw new Error(`Razorpay API responded with status ${response.status}: ${errorBody}`);
     }
 
     const order = await response.json();
