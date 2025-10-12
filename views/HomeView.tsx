@@ -17,12 +17,11 @@ interface HomeViewProps {
 }
 
 const ImageCard: React.FC<{
-    title: string; 
     image: string; 
     onClick: () => void; 
     className?: string;
-    textPosition?: 'top' | 'bottom';
-}> = ({ title, image, onClick, className = '', textPosition = 'bottom' }) => {
+    altText?: string;
+}> = ({ image, onClick, className = '', altText = 'Image card' }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -62,16 +61,13 @@ const ImageCard: React.FC<{
         };
     }, []);
     
-    const textClass = textPosition === 'top' ? 'top-0 from-black/60 to-transparent' : 'bottom-0 from-black/60 to-transparent';
-    const titleClass = textPosition === 'top' ? 'p-3' : 'p-3';
-
     return (
         <div
             ref={cardRef}
             onClick={onClick}
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <img src={image} alt={altText} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
         </div>
     );
 };
@@ -184,8 +180,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                 className="star-trek-button w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold button-press-feedback"
             >
                 <div className="flex items-center space-x-2">
-                    <Rupee size={20} />
-                    <span>Subscribe</span>
+                    <Sparkles size={20} />
+                    <span>Subscribe to Pro</span>
                 </div>
             </button>
 
@@ -205,10 +201,10 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             <div>
                 <h2 className="text-xl font-bold mb-4">What are you looking for?</h2>
                 <div className="grid grid-cols-4 gap-4">
-                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" textPosition="top" />
-                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" textPosition="top" />
-                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} className="aspect-[9/16]" textPosition="top" />
-                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} className="aspect-[9/16]" textPosition="top" />
+                    <ImageCard altText="Daily Chart Analysis" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" />
+                    <ImageCard altText="Upcoming Stock Events" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" />
+                    <ImageCard altText="Telegram Subscriptions" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} className="aspect-[9/16]" />
+                    <ImageCard altText="Courses" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} className="aspect-[9/16]" />
                 </div>
             </div>
 
@@ -223,7 +219,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                     {learningCurriculum.slice(0, 3).map(chapter => (
                         <ImageCard 
                             key={chapter.id}
-                            title=""
+                            altText={chapter.shortTitle}
                             image={chapter.image}
                             onClick={() => onNavigate(chapter.isExternalLink ? `/learning/${chapter.id.replace('ch', '') === '3' ? 'bullish' : 'bearish'}` : `/learning/module/${chapter.id}`)}
                             className="aspect-video"
