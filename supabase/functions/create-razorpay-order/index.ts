@@ -35,7 +35,6 @@ serve(async (req: Request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Use the global btoa function for Base64 encoding, which is standard in Deno/web runtimes.
         'Authorization': `Basic ${btoa(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET)}`
       },
       body: JSON.stringify({
@@ -46,9 +45,11 @@ serve(async (req: Request) => {
     });
 
     if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("Razorpay API Error:", errorBody);
-        throw new Error(`Razorpay API responded with status ${response.status}: ${errorBody}`);
+        // Parse the error from Razorpay and send it back to the client.
+        const errorBody = await response.json();
+        const errorMessage = errorBody?.error?.description || `Razorpay API responded with status ${response.status}`;
+        console.error("Razorpay API Error:", errorMessage);
+        throw new Error(errorMessage);
     }
 
     const order = await response.json();
@@ -62,7 +63,9 @@ serve(async (req: Request) => {
     });
   } catch (error) {
     console.error("Error in create-razorpay-order function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    // Ensure the client gets a clear error message in a consistent format.
+    const message = error.message || 'An unknown error occurred on the server.';
+    return new Response(JSON.stringify({ error: message }), {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
