@@ -194,7 +194,11 @@
       }
       
       /* --- NEW: Pricing Page Background --- */
-      @keyframes spin-blackhole {
+      @keyframes spin-blackhole-disk {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes spin-blackhole-system {
         from { transform: translate(-50%, -50%) rotate(0deg); }
         to { transform: translate(-50%, -50%) rotate(360deg); }
       }
@@ -224,16 +228,32 @@
         height: 60vmin;
         min-width: 300px;
         min-height: 300px;
-        max-width: 600px;
-        max-height: 600px;
-        background-image: url('https://i.imgur.com/8013h3A.jpg');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
+        max-width: 500px;
+        max-height: 500px;
         z-index: 1;
-        opacity: 0.6;
-        animation: spin-blackhole 90s linear infinite;
+        border-radius: 50%;
+        background: black;
+        overflow: hidden;
+        box-shadow: 0 0 20px 5px rgba(255, 165, 0, 0.2);
+        animation: spin-blackhole-system 120s linear infinite;
       }
+      
+      .pricing-page-container::before::after {
+        content: '';
+        position: absolute;
+        top: 40%;
+        left: -50%;
+        width: 200%;
+        height: 20%;
+        background: conic-gradient(
+            from 0.25turn at 50% 50%, 
+            #ffcc00, #ffae42, #ff8c00, #e67300, #a14000, 
+            #4d1c00, #000, #4d1c00, #a14000, #e67300, 
+            #ff8c00, #ffae42, #ffcc00
+        );
+        animation: spin-blackhole-disk 30s linear infinite;
+      }
+
 
       .pricing-page-container .pro-card,
       .pricing-page-container .back-button-themed {
