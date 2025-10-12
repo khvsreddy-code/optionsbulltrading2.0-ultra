@@ -134,74 +134,50 @@
         position: relative;
         overflow: hidden;
         background-color: #000;
-        border: 1px solid rgba(255, 180, 70, 0.2);
+        border: 1px solid rgba(255, 215, 0, 0.3);
         z-index: 1;
       }
 
-      /* This pseudo-element is the rotating accretion disk */
+      /* This pseudo-element holds the animated background image */
       .interstellar-button::before {
         content: '';
         position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 250%;
-        padding-bottom: 250%; /* Maintain aspect ratio */
-        height: 0;
-        transform: translate(-50%, -50%);
-        border-radius: 50%;
-        
-        /* Conic gradient for a rotating, unevenly lit disk */
-        background: conic-gradient(
-          from 0deg,
-          #ffac4d 0%, 
-          #ffddaa 20%,
-          #fffde4 50%,
-          #ffddaa 80%,
-          #ffac4d 100%
-        );
-        
-        animation: blackhole-spin 10s linear infinite;
+        inset: -50%; /* Increased size to prevent seeing edges on zoom/rotation */
+        z-index: -1;
+        background-image: url('https://i.imgur.com/g1p5A45.jpeg');
+        background-size: cover;
+        background-position: center;
+        animation: blackhole-spin 90s linear infinite;
+        transition: transform 0.5s ease-out, animation-duration 0.5s ease-out;
       }
 
-      /* This pseudo-element is the black hole sphere and lensing mask */
+      .interstellar-button:hover::before {
+        animation-duration: 25s; /* Speeds up the spin on hover */
+        transform: scale(1.1); /* Zooms in slightly on hover */
+      }
+
+      /* This pseudo-element adds a vignette/shadow for depth */
       .interstellar-button::after {
         content: '';
         position: absolute;
         inset: 0;
-        
-        /* Layered gradients create the illusion */
-        background-image: 
-          /* 1. Lensing shadow to create the flat disk illusion */
-          linear-gradient(to bottom, 
-            rgba(0,0,0,1) 0%, 
-            rgba(0,0,0,0) 35%, 
-            rgba(0,0,0,0) 65%, 
-            rgba(0,0,0,1) 100%
-          ),
-          /* 2. The central black hole sphere with a photon ring glow */
-          radial-gradient(circle at center, 
-            rgba(255, 230, 200, 0.7) 13%,
-            #000 15%, 
-            #000 25%, 
-            transparent 27%
-          );
-
-        border-radius: inherit; /* Match button's border radius */
+        border-radius: inherit;
+        box-shadow: inset 0 0 20px 10px rgba(0, 0, 0, 0.7);
+        background-image: none; /* Overrides previous rule */
       }
 
+      /* The rotation animation */
       @keyframes blackhole-spin {
-        to { transform: translate(-50%, -50%) rotate(360deg); }
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
       }
 
-      .interstellar-button:hover::before {
-        animation-duration: 3s;
-      }
-
-      /* Text and icon must be on top */
+      /* Ensure text and icon are visible on top */
       .interstellar-button > * {
         position: relative;
         z-index: 2;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+        /* Making text shadow more pronounced for better readability against the bright image */
+        text-shadow: 0 1px 6px rgba(0,0,0,1);
       }
     </style>
   </head>
