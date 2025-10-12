@@ -18,7 +18,7 @@ const PoliciesListView: React.FC<PoliciesListViewProps> = ({ onNavigate }) => {
         <div className="font-sans antialiased text-text-main bg-background min-h-screen">
             <header className="sticky top-0 z-20 bg-card shadow-sm p-3 border-b border-border">
                 <div className="flex items-center">
-                    <button onClick={() => onNavigate('/home')} className="p-2 rounded-full hover:bg-background" aria-label="Go back to home">
+                    <button onClick={() => window.history.back()} className="p-2 rounded-full hover:bg-background" aria-label="Go back">
                         <ChevronRight size={22} className="text-text-secondary transform rotate-180" />
                     </button>
                     <h1 className="text-lg font-semibold text-text-main ml-2">Our Policies</h1>

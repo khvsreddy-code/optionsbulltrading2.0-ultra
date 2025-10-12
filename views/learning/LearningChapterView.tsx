@@ -86,13 +86,11 @@ const LearningChapterView: React.FC<LearningChapterViewProps> = ({ onNavigate, c
         );
     }
     
-    const parentModule = learningCurriculum.find(c => c.subChapters.some(sc => sc.id === chapterId));
-
     return (
         <div className="bg-background text-text-main min-h-screen font-sans">
             <Confetti trigger={confettiTrigger} />
             <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
-                 <button onClick={() => parentModule ? onNavigate(`/learning/module/${parentModule.id}`) : onNavigate('/learning')} className="p-2 -ml-2" aria-label="Back to curriculum list">
+                 <button onClick={() => window.history.back()} className="p-2 -ml-2" aria-label="Go back">
                     <ChevronRight size={24} className="transform rotate-180 text-text-secondary" />
                 </button>
                 <h1 className="text-md font-semibold text-text-main ml-2 truncate">{subChapter.title}</h1>

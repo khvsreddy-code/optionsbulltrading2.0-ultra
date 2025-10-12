@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { learningCurriculum, Chapter } from '../../data/learningContent';
 import { useProfileData } from '../../services/profileService';
+import { ChevronRight } from '../../components/common/Icons';
 
 // Import all lesson data to calculate counts
 import { bullishPatterns } from '../../data/learning/bullishPatternsContent';
@@ -86,12 +87,15 @@ const ModuleCard: React.FC<{ module: Chapter, onNavigate: (path: string) => void
 
 const LearningHomeView: React.FC<LearningHomeViewProps> = ({ onNavigate }) => {
     return (
-        <div className="bg-background min-h-screen font-sans p-4">
-            <header className="mb-6">
-                <h1 className="text-2xl font-bold text-text-main">Learning Library</h1>
+        <div className="bg-background min-h-screen font-sans">
+            <header className="p-4 flex items-center border-b border-border">
+                <button onClick={() => window.history.back()} className="p-2 -ml-2 text-text-secondary" aria-label="Go back">
+                    <ChevronRight size={24} className="transform rotate-180" />
+                </button>
+                <h1 className="text-xl font-bold text-text-main ml-4">Learning Library</h1>
             </header>
 
-            <main>
+            <main className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                    {learningCurriculum.map(module => (
                        <ModuleCard key={module.id} module={module} onNavigate={onNavigate} />

@@ -345,7 +345,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     return (
         <div className="bg-background text-text-main h-screen flex flex-col font-sans">
             <WelcomeDialog isOpen={showWelcome} onClose={() => { setShowWelcome(false); localStorage.setItem('hasSeenSimulatorWelcome', 'true'); }} />
-            <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
+            <SimulatorHeader title="Market Simulator" />
             
             <div className="practice-container flex-grow">
                 <DrawingToolbar

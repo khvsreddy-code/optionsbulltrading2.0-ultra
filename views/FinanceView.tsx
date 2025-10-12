@@ -178,7 +178,7 @@ const FinanceView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
             <header className="bg-card border-b border-border p-4 sticky top-0 z-10">
                 <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => onNavigate('/home')} className="p-2 -ml-2 rounded-full hover:bg-background" aria-label="Go back to home">
+                        <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full hover:bg-background" aria-label="Go back">
                             <ChevronRight size={22} className="text-text-secondary transform rotate-180" />
                         </button>
                         <p className="text-sm font-semibold text-text-secondary hidden md:block">AI Finance &gt; Market Overview</p>

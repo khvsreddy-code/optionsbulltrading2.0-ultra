@@ -27,7 +27,7 @@ const BearishPatternsListView: React.FC<BearishPatternsListViewProps> = ({ onNav
     return (
         <div ref={viewRef} className="bg-background text-text-main min-h-screen font-sans p-4">
             <header className="flex items-center justify-between mb-6 anim-child">
-                 <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to curriculum">
+                 <button onClick={() => window.history.back()} className="p-2 -ml-2 text-text-secondary" aria-label="Go back">
                     <ChevronRight size={24} className="transform rotate-180" />
                 </button>
                 <div className="flex-1 text-center">

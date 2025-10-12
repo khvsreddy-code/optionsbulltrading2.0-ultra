@@ -69,11 +69,11 @@ const QuizResultsView: React.FC<QuizResultsViewProps> = ({ onNavigate }) => {
 
     return (
         <div className="min-h-screen bg-background font-sans">
-            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-border">
-                 <h1 className="text-lg font-bold text-text-main">Quiz Results</h1>
-                 <button onClick={() => onNavigate('/home')} className="p-2 rounded-full hover:bg-border">
-                    <X size={20} className="text-text-secondary" />
-                 </button>
+            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
+                <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full hover:bg-border" aria-label="Go back">
+                    <ChevronRight size={22} className="transform rotate-180 text-text-secondary" />
+                </button>
+                 <h1 className="text-lg font-bold text-text-main ml-2">Quiz Results</h1>
             </header>
             
             <main className="p-4 max-w-3xl mx-auto">

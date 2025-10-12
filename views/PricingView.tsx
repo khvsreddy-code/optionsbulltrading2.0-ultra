@@ -171,9 +171,9 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
             <div className="stars-overlay"></div>
             <div className="pricing-content-wrapper">
                 <button
-                    onClick={() => onNavigate('/home')}
+                    onClick={() => window.history.back()}
                     className="back-button-themed absolute top-4 left-4 z-20 w-10 h-10 flex items-center justify-center rounded-full shadow-sm hover:bg-gray-700/50 transition-colors anim-child button-press-feedback"
-                    aria-label="Back to Home"
+                    aria-label="Go back"
                 >
                     <ChevronRight size={22} className="transform rotate-180 text-gray-300" />
                 </button>

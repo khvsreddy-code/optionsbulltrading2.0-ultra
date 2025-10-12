@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
-import { Mic, StopCircle, X, MessageSquare } from '../components/common/Icons';
+import { Mic, StopCircle, ChevronRight, MessageSquare } from '../components/common/Icons';
 // FIX: Correctly import animejs to handle module interoperability issues.
 import * as animejs from 'animejs';
 const anime = (animejs as any).default;
@@ -287,11 +287,11 @@ const ChatView: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate
 
     return (
         <div className="min-h-screen bg-background font-sans flex flex-col">
-            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-border">
-                <h1 className="text-lg font-bold text-text-main">Live Market Assistant</h1>
-                <button onClick={() => onNavigate('/home')} className="p-2 rounded-full hover:bg-border">
-                    <X size={20} className="text-text-secondary" />
+            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
+                <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full hover:bg-border" aria-label="Go back">
+                    <ChevronRight size={22} className="transform rotate-180 text-text-secondary" />
                 </button>
+                <h1 className="text-lg font-bold text-text-main ml-2">Live Market Assistant</h1>
             </header>
 
             <main className="flex-grow flex flex-col p-4 overflow-hidden">

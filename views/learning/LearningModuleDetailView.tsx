@@ -88,7 +88,7 @@ const LearningModuleDetailView: React.FC<LearningModuleDetailViewProps> = ({ onN
     return (
         <div ref={viewRef} className="bg-background min-h-screen font-sans">
             <header className="p-4 flex items-center anim-child">
-                 <button onClick={() => onNavigate('/learning')} className="p-2 -ml-2 text-text-secondary" aria-label="Go back to learning library">
+                 <button onClick={() => window.history.back()} className="p-2 -ml-2 text-text-secondary" aria-label="Go back">
                     <ChevronRight size={24} className="transform rotate-180" />
                 </button>
                 <h1 className="text-xl font-bold text-text-main ml-4">{moduleTitle}</h1>

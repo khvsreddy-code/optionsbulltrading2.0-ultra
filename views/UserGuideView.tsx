@@ -10,7 +10,7 @@ const UserGuideView: React.FC<UserGuideViewProps> = ({ onNavigate }) => {
         <div className="bg-background min-h-screen font-sans text-text-main">
             <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-sm shadow-sm p-3 border-b border-border">
                 <div className="max-w-4xl mx-auto flex items-center">
-                    <button onClick={() => onNavigate('/home')} className="p-2 rounded-full hover:bg-background" aria-label="Go back to home">
+                    <button onClick={() => window.history.back()} className="p-2 rounded-full hover:bg-background" aria-label="Go back">
                         <ChevronRight size={22} className="text-text-secondary transform rotate-180" />
                     </button>
                     <h1 className="text-lg font-semibold text-text-main ml-2">Application User Guide</h1>

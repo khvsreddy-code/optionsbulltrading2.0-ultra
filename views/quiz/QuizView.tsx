@@ -107,7 +107,7 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
                 handleFinish();
             }
         } else {
-            onNavigate('/home');
+            window.history.back();
         }
     };
 
@@ -264,11 +264,11 @@ const QuizView: React.FC<QuizViewProps> = ({ onNavigate }) => {
     
     return (
         <div className="min-h-screen bg-background font-sans flex flex-col">
-            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center justify-between border-b border-border">
-                 <h1 className="text-lg font-bold text-text-main">AI Smart Quiz</h1>
-                 <button onClick={handleExit} className="p-2 rounded-full hover:bg-border">
-                    <X size={20} className="text-text-secondary" />
-                 </button>
+            <header className="sticky top-0 z-10 bg-card/80 backdrop-blur-sm p-4 flex items-center border-b border-border">
+                <button onClick={handleExit} className="p-2 -ml-2 rounded-full hover:bg-border" aria-label="Go back">
+                    <ChevronRight size={22} className="transform rotate-180 text-text-secondary" />
+                </button>
+                <h1 className="text-lg font-bold text-text-main ml-2">AI Smart Quiz</h1>
             </header>
             <main className="flex-grow flex items-center justify-center p-4">
                 <div className="w-full max-w-2xl">
