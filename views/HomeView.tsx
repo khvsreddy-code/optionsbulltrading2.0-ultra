@@ -108,61 +108,56 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     useEffect(() => {
         const container = homeViewRef.current;
         if (container) {
-            const quickLinks = container.querySelector('.quick-links');
-            const paperTrading = container.querySelector('.paper-trading-card');
+            const quickLinksItems = container.querySelectorAll('.quick-links .grid > *, .quick-links > button');
+            const paperTradingCard = container.querySelector('.paper-trading-card');
             const sectionHeaders = container.querySelectorAll('.section-header');
             const mainCards = container.querySelectorAll('.main-card-item');
             const libraryCards = container.querySelectorAll('.library-card-item');
             const aiQuizCard = container.querySelector('.ai-quiz-card');
             const progressDashboard = container.querySelector('.progress-dashboard');
-
-
-            anime.timeline({
+    
+            // Set initial states for animation
+            anime.set([quickLinksItems, paperTradingCard, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8 });
+    
+            const tl = anime.timeline({
                 easing: 'easeOutExpo',
-                duration: 700
+                duration: 900
+            });
+    
+            tl.add({
+                targets: quickLinksItems,
+                opacity: 1,
+                scale: 1,
+                rotate: [-10, 0],
+                delay: anime.stagger(80),
+                easing: 'easeOutElastic(1, .7)'
             })
             .add({
-                targets: quickLinks,
-                opacity: [0, 1],
-                translateY: [-20, 0],
-            })
-            .add({
-                targets: paperTrading,
-                opacity: [0, 1],
-                scale: [0.95, 1],
-            }, '-=500')
-            .add({
-                targets: sectionHeaders[0],
-                opacity: [0, 1],
-                translateX: [-20, 0],
-            }, '-=500')
-            .add({
-                targets: mainCards,
-                opacity: [0, 1],
-                scale: [0.8, 1],
-                delay: anime.stagger(100),
-            }, '-=500')
-            .add({
-                targets: sectionHeaders[1],
-                opacity: [0, 1],
-                translateX: [-20, 0],
-            }, '-=900')
-            .add({
-                targets: libraryCards,
-                opacity: [0, 1],
-                scale: [0.8, 1],
-                delay: anime.stagger(100),
+                targets: paperTradingCard,
+                opacity: 1,
+                scale: 1,
+                easing: 'easeOutBack'
             }, '-=700')
             .add({
-                targets: aiQuizCard,
-                opacity: [0, 1],
-                translateY: [20, 0],
+                targets: sectionHeaders,
+                opacity: 1,
+                translateX: [-25, 0],
+                scale: 1,
+                delay: anime.stagger(150)
             }, '-=600')
             .add({
-                targets: progressDashboard,
-                opacity: [0, 1],
-                translateY: [30, 0],
-            }, '-=1000');
+                targets: [...mainCards, ...libraryCards],
+                opacity: 1,
+                scale: 1,
+                delay: anime.stagger(70, { grid: [2, 4], from: 'first' })
+            }, '-=800')
+            .add({
+                targets: [aiQuizCard, progressDashboard],
+                opacity: 1,
+                scale: 1,
+                translateY: [40, 0],
+                delay: anime.stagger(120)
+            }, '-=700');
         }
     }, []);
 
