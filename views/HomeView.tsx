@@ -17,7 +17,7 @@ interface HomeViewProps {
     user: SupabaseUser | null;
 }
 
-const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string}> = ({ title, image, onClick, className = '' }) => {
+const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string, textPosition?: 'top' | 'bottom'}> = ({ title, image, onClick, className = '', textPosition = 'top' }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -60,6 +60,12 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
     // Shorten titles like "Module 1: Basics" to just "Basics" for cleaner display
     const displayTitle = title.includes(': ') ? title.split(': ')[1] : title;
 
+    const gradientClass = textPosition === 'top' 
+        ? 'bg-gradient-to-b from-black/70 via-black/40 to-transparent' // Dark at top
+        : 'bg-gradient-to-t from-black/70 via-black/40 to-transparent'; // Dark at bottom
+    
+    const textContainerClass = textPosition === 'top' ? 'top-0' : 'bottom-0';
+
     return (
         <div
             ref={cardRef}
@@ -67,8 +73,8 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
             <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-            <div className="absolute top-0 left-0 p-4">
+            <div className={`absolute inset-0 ${gradientClass}`}></div>
+            <div className={`absolute left-0 p-4 ${textContainerClass}`}>
                  <h3 className="font-bold text-white text-lg leading-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{displayTitle}</h3>
             </div>
         </div>
@@ -252,6 +258,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                                 image={chapter.image} 
                                 onClick={() => onNavigate(getPathForModule(chapter.id))}
                                 className="aspect-video"
+                                textPosition="bottom"
                             />
                         </div>
                     ))}
