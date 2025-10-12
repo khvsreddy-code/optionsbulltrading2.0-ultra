@@ -1,6 +1,3 @@
-
-
-
 import React, { useRef, useEffect, useState } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -129,9 +126,9 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                         if (verificationError) {
                             alert(`Payment verification failed: ${verificationError.message}`);
                         } else {
-                            alert('Payment successful! Your subscription is now active.');
-                            // On successful payment, redirect to the Telegram link.
-                            window.location.href = 'https://t.me/+rbWNf4Ig_3o4MDA1';
+                            alert('Payment successful! Redirecting you to our support channel to get started.');
+                            // On successful payment, redirect to the WhatsApp link.
+                            window.location.href = 'https://api.whatsapp.com/send/?phone=919951373380&text=OptionsbullTrading+send+hi+and+you%27ll+recieve+links%21&type=phone_number&app_absent=0';
                         }
                     } catch (verificationError: any) {
                          alert(`An error occurred during payment verification: ${verificationError.message}`);

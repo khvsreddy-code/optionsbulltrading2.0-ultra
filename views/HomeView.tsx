@@ -1,15 +1,10 @@
 
-
-
-
-
-
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import IconLink from '../components/home/IconLink';
 // FIX: Add GraduationCap to imports to resolve reference error.
-import { Telegram, Rupee, CheckCircle, Sparkles, DollarSign, ChevronRight, Share, GraduationCap } from '../components/common/Icons';
+import { Telegram, Rupee, CheckCircle, Sparkles, DollarSign, ChevronRight, Share, GraduationCap, Swap } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
@@ -204,121 +199,103 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
     return (
         <div ref={homeViewRef} className="p-4 space-y-8">
-            {/* Quick Actions */}
-            <div className="pro-card p-4 space-y-4 quick-links">
-                <div className="grid grid-cols-3 gap-4">
-                    <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
-                    <IconLink title="Exclusive Group" onClick={() => onNavigate('/pricing')} icon={Rupee} />
-                    <IconLink title="Web Sharing" onClick={handleShare} icon={Share} />
+            {/* Quick Links & Subscribe */}
+            <div className="quick-links">
+                <div className="grid grid-cols-4 gap-4">
+                    <IconLink title="Free Group" icon={Telegram} href="https://t.me/optionsbulltrading" />
+                    <IconLink title="Library" icon={GraduationCap} onClick={() => onNavigate('/learning')} />
+                    <IconLink title="Share App" icon={Share} onClick={handleShare} />
+                    <IconLink title="Exclusive Group" icon={Sparkles} onClick={() => onNavigate('/pricing')} />
                 </div>
-                <button
-                    onClick={() => onNavigate('/pricing')}
-                    className="star-trek-button w-full p-3 font-semibold rounded-lg button-press-feedback"
-                >
-                    <div className="relative z-10 flex items-center justify-center space-x-2">
-                        <span className="text-xl">₹</span>
-                        <span>Subscribe</span>
-                    </div>
-                </button>
-            </div>
-            
-            <div className="paper-trading-card">
-              <ImageCard 
-                  title="Paper Trading"
-                  image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png"
-                  onClick={() => onNavigate('/practice')}
-                  className="w-full aspect-[16/9]"
-              />
-            </div>
-
-            <div>
-                <h2 className="text-xl font-bold text-text-main mb-4 section-header">What are you looking for?</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    {mainCards.map(card => (
-                        <div className="main-card-item" key={card.title}>
-                          <ImageCard
-                              title={card.title}
-                              image={card.image}
-                              onClick={() => {}}
-                              className="aspect-video"
-                          />
+                 {/* Subscribe Button */}
+                <div className="mt-8">
+                    <button
+                        onClick={() => onNavigate('/pricing')}
+                        className="star-trek-button w-full h-16 rounded-2xl flex items-center justify-center text-lg font-bold button-press-feedback"
+                    >
+                        <div className="flex items-center space-x-2">
+                            <Telegram size={24} />
+                            <span>Subscribe to Pro</span>
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            <div>
-                <h2 className="text-xl font-bold text-text-main mb-4 section-header">Learning Library</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    {learningCurriculum.map(chapter => (
-                        <div className="library-card-item" key={chapter.id}>
-                          <ImageCard
-                              title={chapter.title.split(': ')[1] || chapter.title}
-                              image={chapter.image}
-                              onClick={() => onNavigate(getPathForModule(chapter.id))}
-                              className="aspect-video"
-                          />
-                        </div>
-                    ))}
-                </div>
-            </div>
-            
-            <div className="ai-quiz-card">
-                <div
-                    onClick={() => onNavigate('/quiz')}
-                    className="pro-card p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between bg-card cursor-pointer hover:bg-background transition-colors"
-                >
-                    <div className="flex items-center mb-4 md:mb-0 text-center md:text-left">
-                        <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary-light rounded-xl mr-4">
-                            <Sparkles size={32} className="text-primary"/>
-                        </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-text-main">AI Smart Quiz</h3>
-                            <p className="text-text-secondary">Challenge yourself with an AI-powered test.</p>
-                        </div>
-                    </div>
-                    <button className="px-5 py-2.5 bg-primary text-white font-semibold rounded-lg button-press-feedback flex items-center mt-4 md:mt-0 flex-shrink-0">
-                        Start Quiz <ChevronRight size={20} className="ml-1" />
                     </button>
                 </div>
             </div>
 
-            <div className="progress-dashboard">
-                <h2 className="text-xl font-bold text-text-main mb-4 section-header">Your Progress</h2>
-                <div className="bg-card text-text-main rounded-2xl p-6 space-y-6 border border-border">
-                    <div className="flex flex-col items-center">
-                        <div className="relative w-32 h-32">
-                            <svg width="128" height="128" viewBox="0 0 120 120" className="transform -rotate-90">
-                                <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border-color)" strokeWidth="12" />
-                                <circle
-                                    cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" strokeWidth="12"
-                                    strokeDasharray="339.29"
-                                    strokeDashoffset={339.29 * (1 - (stats.overallProgress / 100))}
-                                    strokeLinecap="round"
-                                    style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
-                                />
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-bold">{Math.floor(stats.overallProgress)}%</span>
-                            </div>
+             {/* Paper Trading Card */}
+            <div className="paper-trading-card">
+                 <button
+                    onClick={() => onNavigate('/practice')}
+                    className="star-trek-button w-full h-16 rounded-2xl flex items-center justify-center text-lg font-bold button-press-feedback"
+                >
+                    <div className="flex items-center space-x-2">
+                        <Swap size={24} />
+                        <span>Paper Trading</span>
+                    </div>
+                </button>
+            </div>
+            
+            {/* Featured Section */}
+            <div>
+                <h2 className="section-header text-xl font-bold mb-4 text-text-main">Featured for you</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {mainCards.map((card, i) => (
+                        <div className="main-card-item" key={i}>
+                             <ImageCard 
+                                title={card.title} 
+                                image={card.image} 
+                                onClick={() => {}} 
+                                className="aspect-[3/4]"
+                            />
                         </div>
-                        <p className="mt-2 text-lg font-semibold tracking-wider text-text-secondary">BEGINNER</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-cyan-500/20" iconColor="text-cyan-400" />
-                        <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-red-500/20" iconColor="text-red-400" />
-                        <StatCard icon={Sparkles} title="Current Streak" value={0} iconBgColor="bg-orange-500/20" iconColor="text-orange-400" />
-                        <StatCard 
-                            icon={DollarSign} 
-                            title="Money Earned" 
-                            value={`${stats.pnlPercent.toFixed(2)}%`} 
-                            iconBgColor="bg-green-500/20" 
-                            iconColor="text-green-400" 
-                        />
-                    </div>
+                    ))}
                 </div>
             </div>
+
+             {/* Learning Library Section */}
+            <div>
+                <div className="section-header flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-text-main">Learning Library</h2>
+                    <button onClick={() => onNavigate('/learning')} className="flex items-center text-sm font-semibold text-primary">
+                        <span>See all</span>
+                        <ChevronRight size={18} />
+                    </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                     {learningCurriculum.slice(0, 3).map((chapter, i) => (
+                         <div className="library-card-item" key={chapter.id}>
+                            <ImageCard 
+                                title={chapter.title} 
+                                image={chapter.image} 
+                                onClick={() => onNavigate(getPathForModule(chapter.id))}
+                                className="aspect-video"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* AI Quiz Card */}
+            <div 
+                onClick={() => onNavigate('/quiz')}
+                className="ai-quiz-card pro-card rounded-2xl p-6 flex items-center justify-between cursor-pointer bg-primary-light"
+            >
+                <div>
+                    <h3 className="font-bold text-lg text-primary">AI Smart Quiz</h3>
+                    <p className="text-sm text-primary/80 mt-1">Test your knowledge with AI-generated questions.</p>
+                </div>
+                <ChevronRight size={24} className="text-primary" />
+            </div>
+
+            {/* Progress Dashboard */}
+            <div className="progress-dashboard">
+                <h2 className="text-xl font-bold mb-4 text-text-main section-header">Your Progress</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-blue-100" iconColor="text-blue-500" />
+                    <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-green-100" iconColor="text-green-500" />
+                    <StatCard icon={DollarSign} title="Paper Trading P&L" value={`₹${stats.pnl.toLocaleString('en-IN')}`} iconBgColor="bg-yellow-100" iconColor="text-yellow-500" />
+                </div>
+            </div>
+            
         </div>
     );
 };
