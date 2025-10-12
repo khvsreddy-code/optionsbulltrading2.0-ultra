@@ -20,10 +20,14 @@ serve(async (req: Request) => {
 
   try {
     const { order_id, razorpay_payment_id, razorpay_signature, plan_duration_months } = await req.json();
-    const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
+    
+    const env = Deno.env.toObject();
+    const RAZORPAY_KEY_SECRET = env.RAZORPAY_KEY_SECRET;
+    const SUPABASE_URL = env.SUPABASE_URL;
+    const SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay secret is not configured.');
+      throw new Error('CRITICAL: "RAZORPAY_KEY_SECRET" is not configured on the server for payment verification.');
     }
 
     // 1. Verify the payment signature using native Deno crypto
@@ -40,10 +44,7 @@ serve(async (req: Request) => {
     }
 
     // 2. Signature is valid, update user profile in Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = createClient(SUPABASE_URL ?? '', SUPABASE_SERVICE_ROLE_KEY ?? '');
       
     // Get the user ID from the request's Authorization header
     const authHeader = req.headers.get('Authorization')!;

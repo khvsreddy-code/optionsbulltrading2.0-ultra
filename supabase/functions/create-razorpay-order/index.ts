@@ -24,17 +24,22 @@ serve(async (req: Request) => {
         throw new Error('Razorpay Key ID is required in the request body.');
     }
 
-    const RAZORPAY_KEY_ID = key_id;
-    const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
+    // This is the correct way to read secrets in Deno runtime for Supabase
+    const env = Deno.env.toObject();
+    const RAZORPAY_KEY_SECRET = env.RAZORPAY_KEY_SECRET;
 
     if (!RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay Key Secret is not configured on the server. Please set it in your Supabase project secrets.');
+      throw new Error('CRITICAL: The "RAZORPAY_KEY_SECRET" was not found in the server environment. Please go to your Supabase dashboard, navigate to Edge Functions > Secrets, and ensure you have saved the secret with this exact name.');
     }
+    
+    // The public key ID is passed from the client
+    const RAZORPAY_KEY_ID = key_id;
 
     const response = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Use native btoa for Base64 encoding
         'Authorization': `Basic ${btoa(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET)}`
       },
       body: JSON.stringify({
