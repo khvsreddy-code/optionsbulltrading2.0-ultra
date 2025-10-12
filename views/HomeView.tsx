@@ -89,6 +89,7 @@ const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | nu
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const homeViewRef = useRef<HTMLDivElement>(null);
+    const candleTrackRef = useRef<HTMLDivElement>(null);
     const profile = useProfileData();
 
     const stats = useMemo(() => {
@@ -105,6 +106,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         return { pnl: profile.total_pnl, lessonsLearned, testsPassed, pnlPercent, overallProgress };
     }, [profile]);
 
+    // Main view entrance animation
     useEffect(() => {
         const container = homeViewRef.current;
         if (container) {
@@ -116,7 +118,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             const aiQuizCard = container.querySelector('.ai-quiz-card');
             const progressDashboard = container.querySelector('.progress-dashboard');
     
-            // Set initial states for animation
             anime.set([quickLinksItems, paperTradingCard, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8, rotate: '5deg' });
     
             const tl = anime.timeline({
@@ -163,6 +164,84 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         }
     }, []);
 
+    // NEW: Live-generating candle animation for subscribe button
+    useEffect(() => {
+        const track = candleTrackRef.current;
+        if (!track) return;
+        
+        anime.set(track, { translateX: 0 });
+        const candles = Array.from(track.children) as HTMLDivElement[];
+        if (candles.length === 0) return;
+
+        // FIX: Correctly type anime instances using the `animejs` namespace from the import.
+        let animation: animejs.AnimeInstance | null = null;
+        // FIX: Correctly type anime instances using the `animejs` namespace from the import.
+        let liveCandleTimeline: animejs.AnimeInstance | null = null;
+
+        const randomizeCandle = (candle: HTMLDivElement) => {
+            const isPositive = Math.random() > 0.5;
+            const color = isPositive ? '#16A34A' : '#EF4444';
+            const bodyHeight = anime.random(10, 70);
+            const bodyTop = anime.random(10, 90 - bodyHeight);
+            const wickHeight = anime.random(bodyHeight, 95);
+            const wickTop = anime.random(0, 100 - wickHeight);
+            
+            candle.style.setProperty('--color', color);
+            candle.style.setProperty('--body-height', `${bodyHeight}%`);
+            candle.style.setProperty('--body-top', `${bodyTop}%`);
+            candle.style.setProperty('--wick-height', `${wickHeight}%`);
+            candle.style.setProperty('--wick-top', `${wickTop}%`);
+        };
+
+        const animateLiveCandle = () => {
+            const liveCandle = track.lastElementChild as HTMLDivElement;
+            if (!liveCandle) return;
+            if (liveCandleTimeline) liveCandleTimeline.pause();
+            
+            liveCandleTimeline = anime.timeline({
+                targets: liveCandle,
+                loop: true,
+                duration: anime.random(400, 800),
+                direction: 'alternate',
+                easing: 'easeInOutSine'
+            }).add({
+                '--body-height': () => `${anime.random(10, 70)}%`,
+                '--body-top': () => `${anime.random(10, 60)}%`,
+            });
+        };
+
+        const startNewCandleCycle = () => {
+            if (!track || (animation && !animation.completed)) return;
+
+            const candleWidth = 12; // 8px width + 4px margin
+            animation = anime({
+                targets: track,
+                translateX: `-=${candleWidth}`,
+                duration: 400,
+                easing: 'easeOutSine',
+                complete: () => {
+                    const firstCandle = track.firstElementChild;
+                    if (firstCandle) {
+                        track.appendChild(firstCandle);
+                        anime.set(track, { translateX: `+=${candleWidth}` });
+                        randomizeCandle(firstCandle as HTMLDivElement);
+                        animateLiveCandle();
+                    }
+                }
+            });
+        };
+
+        candles.forEach(randomizeCandle);
+        animateLiveCandle();
+        const intervalId = setInterval(startNewCandleCycle, 2000);
+
+        return () => {
+            clearInterval(intervalId);
+            if (animation) animation.pause();
+            if (liveCandleTimeline) liveCandleTimeline.pause();
+        };
+    }, []);
+
     const mainCards = [
         { title: "Daily Chart Analysis", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png" },
         { title: "Upcoming Stock Events", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png" },
@@ -191,10 +270,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 });
             } catch (error) {
                 console.error('Error sharing:', error);
-                // Silently fail if user cancels share dialog
             }
         } else {
-            // Fallback for browsers that don't support the API
             alert('Web Share is not supported on this device. You can copy the link: https://optionsbulltrading.vercel.app/#/home');
         }
     };
@@ -212,8 +289,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('/pricing')}
                     className="candle-chart-button w-full p-3 text-white font-semibold rounded-lg transition-colors button-press-feedback"
                 >
-                    <div className="candle-track" aria-hidden="true">
-                        {Array.from({ length: 80 }).map((_, i) => (
+                    <div className="candle-track" ref={candleTrackRef} aria-hidden="true">
+                        {Array.from({ length: 40 }).map((_, i) => (
                             <div key={i} className="candle"></div>
                         ))}
                     </div>
@@ -224,7 +301,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </button>
             </div>
             
-            {/* NEW Paper Trading Hero Card */}
             <div className="paper-trading-card">
               <ImageCard 
                   title="Paper Trading"
@@ -234,7 +310,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               />
             </div>
 
-            {/* Main Content Cards */}
             <div>
                 <h2 className="text-xl font-bold text-text-main mb-4 section-header">What are you looking for?</h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -243,7 +318,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                           <ImageCard
                               title={card.title}
                               image={card.image}
-                              onClick={() => {}} // Placeholder onClick
+                              onClick={() => {}}
                               className="aspect-video"
                           />
                         </div>
@@ -251,7 +326,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
             </div>
 
-            {/* Learning Library Section */}
             <div>
                 <h2 className="text-xl font-bold text-text-main mb-4 section-header">Learning Library</h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -268,7 +342,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
             </div>
             
-            {/* AI Quiz Section */}
             <div className="ai-quiz-card">
                 <div
                     onClick={() => onNavigate('/quiz')}
@@ -289,7 +362,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
             </div>
 
-             {/* Progress Dashboard */}
             <div className="progress-dashboard">
                 <h2 className="text-xl font-bold text-text-main mb-4 section-header">Your Progress</h2>
                 <div className="bg-card text-text-main rounded-2xl p-6 space-y-6 border border-border">

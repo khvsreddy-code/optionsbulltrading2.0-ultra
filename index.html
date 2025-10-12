@@ -148,23 +148,21 @@
         height: 100%;
         display: flex;
         align-items: center;
-        /* Width: (8px candle + 4px margin) * 80 candles = 960px */
-        width: 960px;
-        animation: scroll-candles 25s linear infinite;
-      }
-
-      @keyframes scroll-candles {
-        from { transform: translateX(0); }
-        /* Scroll by half the width to create a seamless loop */
-        to { transform: translateX(-480px); }
       }
 
       .candle-chart-button .candle {
         width: 8px;
-        margin: 0 2px;
+        margin: 0 2px; /* Total candle width is 12px */
         position: relative;
         flex-shrink: 0;
         height: 90%;
+        
+        /* CSS variables for JS control */
+        --color: #16A34A;
+        --body-height: 50%;
+        --body-top: 25%;
+        --wick-height: 80%;
+        --wick-top: 10%;
       }
 
       /* Candle Body */
@@ -173,6 +171,10 @@
         position: absolute;
         left: 0;
         width: 100%;
+        background-color: var(--color);
+        height: var(--body-height);
+        top: var(--body-top);
+        transition: height 0.2s ease-out, top 0.2s ease-out; /* Smooth transitions for live candle */
       }
 
       /* Candle Wick */
@@ -182,23 +184,11 @@
         left: 50%;
         transform: translateX(-50%);
         width: 1.5px;
+        background-color: var(--color);
+        height: var(--wick-height);
+        top: var(--wick-top);
+        transition: height 0.2s ease-out, top 0.2s ease-out;
       }
-      
-      /* Candle Variations using nth-child for a pseudo-random look */
-      .candle:nth-child(7n+1)::before { height: 70%; top: 15%; background: #16A34A; }
-      .candle:nth-child(7n+1)::after  { height: 90%; top: 5%; background: #16A34A; }
-      .candle:nth-child(7n+2)::before { height: 25%; top: 40%; background: #EF4444; }
-      .candle:nth-child(7n+2)::after  { height: 60%; top: 20%; background: #EF4444; }
-      .candle:nth-child(7n+3)::before { height: 10%; top: 45%; background: #16A34A; }
-      .candle:nth-child(7n+3)::after  { height: 80%; top: 10%; background: #16A34A; }
-      .candle:nth-child(7n+4)::before { height: 50%; top: 30%; background: #EF4444; }
-      .candle:nth-child(7n+4)::after  { height: 75%; top: 15%; background: #EF4444; }
-      .candle:nth-child(7n+5)::before { height: 40%; top: 20%; background: #16A34A; }
-      .candle:nth-child(7n+5)::after  { height: 80%; top: 10%; background: #16A34A; }
-      .candle:nth-child(7n+6)::before { height: 15%; top: 50%; background: #EF4444; }
-      .candle:nth-child(7n+6)::after  { height: 95%; top: 2.5%; background: #EF4444; }
-      .candle:nth-child(7n+7)::before { height: 65%; top: 25%; background: #EF4444; }
-      .candle:nth-child(7n+7)::after  { height: 85%; top: 10%; background: #EF4444; }
 
       .candle-chart-button > div[class*="z-10"] {
         text-shadow: 0 1px 6px rgba(0,0,0,0.8);

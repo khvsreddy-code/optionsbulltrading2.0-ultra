@@ -1,11 +1,12 @@
 
 
 
+
 import React, { useContext, useRef } from 'react';
 import anime from 'animejs';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
-import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon, HelpCircle } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 import { ThemeContext } from '../../App';
@@ -88,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
         { label: 'Home', icon: Home, path: '/home', views: ['home'] },
         { label: 'Learn', icon: BookOpen, path: '/learning', views: ['learningHome', 'learningChapter', 'learningModuleDetail', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'technicalIndicatorsList', 'fundamentalAnalysisList'] },
         { label: 'Pricing', icon: DollarSign, path: '/pricing', views: ['pricing'] },
-        { label: 'Portfolio', icon: Briefcase, path: '/home', views: [] }, // Placeholder
+        { label: 'User Guide', icon: HelpCircle, path: '/guide', views: ['guide'] },
     ];
 
     const aiNavItems = [

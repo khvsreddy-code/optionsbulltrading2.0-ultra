@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 import anime from 'animejs';
 // FIX: Updated Supabase type imports to resolve module export errors.
@@ -33,6 +34,7 @@ import FundamentalAnalysisListView from './views/learning/FundamentalAnalysisLis
 import LearningModuleDetailView from './views/learning/LearningModuleDetailView';
 import ChatView from './views/ChatView';
 import FinanceView from './views/FinanceView';
+import UserGuideView from './views/UserGuideView';
 import { Sparkles } from './components/common/Icons';
 
 // Auth components
@@ -208,6 +210,7 @@ const App: React.FC = () => {
         else if (parts[0] === 'profile') view = 'profile';
         else if (parts[0] === 'chat') view = 'chat';
         else if (parts[0] === 'finance') view = 'finance';
+        else if (parts[0] === 'guide') view = 'guide';
         else if (parts[0] === 'quiz') {
             if (parts[1] === 'results') view = 'quizResults';
             else view = 'quiz';
@@ -291,6 +294,8 @@ const App: React.FC = () => {
                             return <ChatView onNavigate={handleNavigate} />;
                         case 'finance':
                             return <FinanceView onNavigate={handleNavigate} />;
+                        case 'guide':
+                            return <UserGuideView onNavigate={handleNavigate} />;
                         case 'quiz':
                             return <Suspense fallback={<LoadingSpinner />}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
@@ -325,7 +330,7 @@ const App: React.FC = () => {
     );
     
     // Views that have their own full-page layout
-    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance'];
+    const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance', 'guide'];
     if (noLayoutViews.includes(view)) {
          return (
             <Wrapper>
