@@ -75,37 +75,6 @@ const AnimatedView: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     return <div ref={viewRef}>{children}</div>;
 };
 
-// --- NEW: Page Transition Distortion Effect ---
-const PageTransitionEffect: React.FC<{ isTransitioning: boolean }> = ({ isTransitioning }) => {
-    const overlayRef = useRef<HTMLDivElement>(null);
-    const filterRef = useRef<SVGFEDisplacementMapElement | null>(null);
-
-    useEffect(() => {
-        // Cache the filter element once
-        filterRef.current = document.querySelector('#distortion feDisplacementMap');
-    }, []);
-
-    useEffect(() => {
-        if (isTransitioning && overlayRef.current && filterRef.current) {
-            anime.remove([overlayRef.current, filterRef.current]);
-            anime({
-                targets: filterRef.current,
-                scale: [0, 100, 0],
-                duration: 800,
-                easing: 'easeInOutSine',
-            });
-            anime({
-                targets: overlayRef.current,
-                opacity: [0, 1, 0],
-                duration: 800,
-                easing: 'easeInOutSine',
-            });
-        }
-    }, [isTransitioning]);
-
-    return <div ref={overlayRef} className="page-transition-overlay"></div>;
-};
-
 const App: React.FC = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -113,7 +82,6 @@ const App: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     const [location, setLocation] = useState(window.location.hash.slice(1) || '/home');
-    const [isTransitioning, setIsTransitioning] = useState(false);
     
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         const savedTheme = localStorage.getItem('theme');
@@ -137,15 +105,8 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const handleHashChange = () => {
-            setIsTransitioning(true);
-            // The timeout allows the new content to render underneath the transition overlay
-            setTimeout(() => {
-                setLocation(window.location.hash.slice(1) || '/home');
-                window.scrollTo(0, 0);
-            }, 100);
-            
-            // The transition state is reset by the animation's completion, but add a failsafe
-            setTimeout(() => setIsTransitioning(false), 900);
+            setLocation(window.location.hash.slice(1) || '/home');
+            window.scrollTo(0, 0);
         };
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
@@ -367,7 +328,6 @@ const App: React.FC = () => {
 
     return (
         <>
-            <PageTransitionEffect isTransitioning={isTransitioning} />
             <ThemeContext.Provider value={{ theme, toggleTheme }}>
                 {renderAppContent()}
             </ThemeContext.Provider>

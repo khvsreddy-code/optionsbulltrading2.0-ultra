@@ -1,11 +1,9 @@
-
-
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import IconLink from '../components/home/IconLink';
 // FIX: Add GraduationCap to imports to resolve reference error.
-import { Telegram, Rupee, CheckCircle, Sparkles, DollarSign, ChevronRight, Share, GraduationCap, Swap } from '../components/common/Icons';
+import { Telegram, Rupee, CheckCircle, Sparkles, DollarSign, ChevronRight, Share, GraduationCap, Swap, Flame } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
@@ -22,10 +20,9 @@ const ImageCard: React.FC<{
     title: string; 
     image: string; 
     onClick: () => void; 
-    className?: string; 
+    className?: string;
     textPosition?: 'top' | 'bottom';
-    fitContent?: boolean;
-}> = ({ title, image, onClick, className = '', textPosition = 'top', fitContent = false }) => {
+}> = ({ title, image, onClick, className = '', textPosition = 'bottom' }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -37,10 +34,10 @@ const ImageCard: React.FC<{
             anime({
                 targets: cardEl,
                 translateY: -8,
-                scale: 1.05,
-                boxShadow: '0 12px 20px rgba(0,0,0,0.1), 0 5px 8px rgba(0,0,0,0.08)',
-                duration: 400,
-                easing: 'easeOutElastic(1, .8)'
+                scale: 1.03,
+                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+                duration: 300,
+                easing: 'easeOutQuad'
             });
         };
 
@@ -51,7 +48,7 @@ const ImageCard: React.FC<{
                 translateY: 0,
                 scale: 1,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                duration: 250,
+                duration: 200,
                 easing: 'easeOutQuad'
             });
         };
@@ -65,236 +62,183 @@ const ImageCard: React.FC<{
         };
     }, []);
     
-    // Shorten titles like "Module 1: Basics" to just "Basics" for cleaner display
-    const displayTitle = title.includes(': ') ? title.split(': ')[1] : title;
-
-    const gradientClass = textPosition === 'top' 
-        ? 'bg-gradient-to-b from-black/70 via-black/40 to-transparent' // Dark at top
-        : 'bg-gradient-to-t from-black/70 via-black/40 to-transparent'; // Dark at bottom
-    
-    const textContainerClass = textPosition === 'top' ? 'top-0' : 'bottom-0';
-
-    const imgClass = fitContent
-        ? "w-full h-auto block transition-transform duration-300 group-hover:scale-105"
-        : "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105";
+    const textClass = textPosition === 'top' ? 'top-0 from-black/60 to-transparent' : 'bottom-0 from-black/60 to-transparent';
+    const titleClass = textPosition === 'top' ? 'p-3' : 'p-3';
 
     return (
         <div
             ref={cardRef}
             onClick={onClick}
-            className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${!fitContent ? className : ''}`}
+            className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={title} className={imgClass} />
-            <div className={`absolute inset-0 ${gradientClass}`}></div>
-            <div className={`absolute left-0 p-4 ${textContainerClass}`}>
-                 <h3 className="font-bold text-white text-lg leading-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{displayTitle}</h3>
+            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        </div>
+    );
+};
+
+
+const ProgressWidget: React.FC<{
+    lessonsLearned: number;
+    testsPassed: number;
+    currentStreak: number;
+    moneyEarnedPercent: number;
+    overallProgress: number;
+}> = ({ lessonsLearned, testsPassed, currentStreak, moneyEarnedPercent, overallProgress }) => {
+    
+    useEffect(() => {
+        anime({
+            targets: '.progress-circle-bar',
+            strokeDashoffset: [anime.setDashoffset, 283 * (1 - (overallProgress / 100))],
+            easing: 'easeInOutSine',
+            duration: 1200,
+            delay: 200,
+        });
+    }, [overallProgress]);
+
+    const StatItem: React.FC<{ icon: React.FC<any>, label: string, value: string | number }> = ({ icon: Icon, label, value }) => (
+        <div className="flex items-start space-x-3">
+            <div className="bg-primary-light p-2 rounded-lg mt-1">
+                 <Icon size={18} className="text-primary" />
+            </div>
+            <div>
+                <p className="text-sm text-text-secondary">{label}</p>
+                <p className="font-bold text-xl text-text-main">{value}</p>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+            <h2 className="text-lg font-bold mb-4 text-text-main">Your Progress</h2>
+            <div className="flex flex-col items-center">
+                <div className="relative w-32 h-32">
+                    <svg width="128" height="128" viewBox="0 0 100 100" className="transform -rotate-90">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-color)" strokeWidth="10" />
+                        <circle
+                            cx="50" cy="50" r="45" fill="none" stroke="var(--primary)" strokeWidth="10"
+                            strokeDasharray="283" strokeDashoffset="283"
+                            strokeLinecap="round" className="progress-circle-bar"
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-2xl font-bold">{Math.round(overallProgress)}%</span>
+                    </div>
+                </div>
+                <p className="font-bold text-sm uppercase tracking-wider text-text-secondary mt-2">BEGINNER</p>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-6 mt-6">
+                <StatItem icon={GraduationCap} label="Lessons Learned" value={lessonsLearned} />
+                <StatItem icon={CheckCircle} label="Tests Passed" value={testsPassed} />
+                <StatItem icon={Flame} label="Current Streak" value={currentStreak} />
+                <StatItem icon={DollarSign} label="Money Earned" value={`${moneyEarnedPercent.toFixed(2)}%`} />
             </div>
         </div>
     );
 };
 
-const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | number, iconBgColor: string, iconColor: string}> = ({ icon: Icon, title, value, iconBgColor, iconColor }) => (
-    <div className="bg-background/50 dark:bg-card rounded-2xl p-4 flex flex-col justify-between">
-        <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-text-secondary">{title}</h4>
-            <Icon size={20} className={iconColor} />
-        </div>
-        <div>
-            {typeof value === 'number' && value % 1 !== 0 ? (
-                 <p className="text-2xl font-bold text-text-main mt-2">{value.toFixed(2)}</p>
-            ) : (
-                <p className="text-2xl font-bold text-text-main mt-2">{value}</p>
-            )}
-        </div>
-    </div>
-);
-
-
-const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
-    const homeViewRef = useRef<HTMLDivElement>(null);
+const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
     const profile = useProfileData();
 
-    const stats = useMemo(() => {
-        if (!profile) {
-            return { pnl: 0, lessonsLearned: 0, testsPassed: 0, pnlPercent: 0, overallProgress: 0 };
-        }
-        const lessonsLearned = Object.values(profile.progress_data || {}).filter(Boolean).length;
-        const testsPassed = getTestsPassedCount();
+    const { lessonsCompleted, pnlPercent, overallProgressPercent } = useMemo(() => {
+        const completedLessons = profile?.progress_data ? Object.values(profile.progress_data).filter(Boolean).length : 0;
+        const pnl = profile?.total_pnl || 0;
+        const pnlPercentage = (pnl / 100000) * 100; // Assuming initial capital of 1,00,000 for percentage calculation
+        
         const totalLessons = getTotalLessonCount();
-        const initialPortfolio = 100000;
-        const pnlPercent = initialPortfolio > 0 ? (profile.total_pnl / initialPortfolio) * 100 : 0;
-        const overallProgress = totalLessons > 0 ? (lessonsLearned / totalLessons) * 100 : 0;
-
-        return { pnl: profile.total_pnl, lessonsLearned, testsPassed, pnlPercent, overallProgress };
+        const overallProgress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+        
+        return { lessonsCompleted: completedLessons, pnlPercent: pnlPercentage, overallProgressPercent: overallProgress };
     }, [profile]);
+    
+    const testsPassed = getTestsPassedCount();
 
-    // Main view entrance animation
-    useEffect(() => {
-        const container = homeViewRef.current;
-        if (container) {
-            const quickLinksItems = container.querySelectorAll('.quick-links .grid > *, .quick-links > button');
-            const sectionHeaders = container.querySelectorAll('.section-header');
-            const mainCards = container.querySelectorAll('.main-card-item');
-            const libraryCards = container.querySelectorAll('.library-card-item');
-            const aiQuizCard = container.querySelector('.ai-quiz-card');
-            const progressDashboard = container.querySelector('.progress-dashboard');
-    
-            anime.set([quickLinksItems, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8, rotate: '5deg' });
-    
-            const tl = anime.timeline({
-                easing: 'easeOutElastic(1, .8)',
-                duration: 1200
-            });
-    
-            tl.add({
-                targets: quickLinksItems,
-                opacity: 1,
-                scale: 1,
-                rotate: 0,
-                delay: anime.stagger(100),
-            })
-            .add({
-                targets: sectionHeaders,
-                opacity: 1,
-                translateX: [-25, 0],
-                scale: 1,
-                rotate: 0,
-                delay: anime.stagger(150)
-            }, '-=1000')
-            .add({
-                targets: [...mainCards, ...libraryCards],
-                opacity: 1,
-                scale: 1,
-                rotate: 0,
-                delay: anime.stagger(80, { grid: [2, 4], from: 'first' })
-            }, '-=1100')
-            .add({
-                targets: [aiQuizCard, progressDashboard],
-                opacity: 1,
-                scale: 1,
-                rotate: 0,
-                translateY: [40, 0],
-                delay: anime.stagger(120)
-            }, '-=1000');
-        }
-    }, []);
-
-    const mainCards = [
-        { title: "Daily Chart Analysis", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png" },
-        { title: "Upcoming Stock Events", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png" },
-        { title: "Telegram Subscriptions", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png" },
-        { title: "Courses", image: "https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png" }
-    ];
-
-    const getPathForModule = (chapterId: string): string => {
-        switch(chapterId) {
-            case 'ch1': return `/learning/module/ch1`;
-            case 'ch3': return '/learning/bullish';
-            case 'ch4': return '/learning/bearish';
-            case 'ch5': return '/learning/indicators';
-            case 'ch6': return '/learning/fundamental';
-            default: return '/learning';
-        }
-    };
-    
     const handleShare = async () => {
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: 'OptionsBullTrading',
-                    text: 'Check out this amazing app to learn stock market trading!',
-                    url: 'https://optionsbulltrading.vercel.app/#/home',
+                    text: 'Check out this awesome trading education app!',
+                    url: window.location.origin,
                 });
             } catch (error) {
                 console.error('Error sharing:', error);
             }
         } else {
-            alert('Web Share is not supported on this device. You can copy the link: https://optionsbulltrading.vercel.app/#/home');
+            // Fallback for browsers that don't support the Web Share API
+            alert('Sharing is not supported on this browser. Please copy the link manually.');
         }
     };
 
     return (
-        <div ref={homeViewRef} className="p-4 space-y-8">
-            {/* Quick Links & Subscribe */}
-            <div className="quick-links">
-                <div className="grid grid-cols-3 gap-4">
-                    <IconLink title="Free Group" icon={Telegram} href="https://t.me/optionsbulltrading" />
-                    <IconLink title="Share App" icon={Share} onClick={handleShare} />
-                    <IconLink title="Exclusive Group" icon={Sparkles} onClick={() => onNavigate('/pricing')} />
+        <div className="p-4 space-y-6">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-4">
+                <IconLink title="Free Group" icon={Telegram} href="https://t.me/+0_l_kNOW_u4zY2E1" />
+                <IconLink title="Exclusive Group" icon={Sparkles} onClick={() => onNavigate('/pricing')} />
+                <IconLink title="Web Sharing" icon={Share} onClick={handleShare} />
+            </div>
+
+            {/* Subscribe Button */}
+            <button
+                onClick={() => onNavigate('/pricing')}
+                className="star-trek-button w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold button-press-feedback"
+            >
+                <div className="flex items-center space-x-2">
+                    <Rupee size={20} />
+                    <span>Subscribe</span>
                 </div>
-                 {/* Subscribe Button */}
-                <div className="mt-8">
-                    <button
-                        onClick={() => onNavigate('/pricing')}
-                        className="star-trek-button w-full h-16 rounded-2xl flex items-center justify-center text-lg font-bold button-press-feedback"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <Telegram size={24} />
-                            <span>Subscribe to Pro</span>
-                        </div>
+            </button>
+
+            {/* Paper Trading Card */}
+            <div>
+                <div
+                    onClick={() => onNavigate('/practice')}
+                    className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group aspect-[4/3] md:aspect-[2/1] bg-cover bg-center"
+                    style={{ backgroundImage: `url('https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/paper%20trading%20card.png')` }}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 flex flex-col justify-center">
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">Paper<br/>Trading</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 className="text-xl font-bold mb-4">What are you looking for?</h2>
+                <div className="grid grid-cols-4 gap-4">
+                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" textPosition="top" />
+                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" textPosition="top" />
+                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} className="aspect-[9/16]" textPosition="top" />
+                    <ImageCard title="" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} className="aspect-[9/16]" textPosition="top" />
+                </div>
+            </div>
+
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Learning Library</h2>
+                    <button onClick={() => onNavigate('/learning')} className="text-sm font-semibold text-primary flex items-center">
+                        See all <ChevronRight size={16} className="ml-1" />
                     </button>
                 </div>
-            </div>
-            
-            {/* What are you looking for? Section */}
-            <div>
-                <h2 className="section-header text-xl font-bold mb-4 text-text-main">What are you looking for?</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    {mainCards.map((card, i) => (
-                        <div className="main-card-item" key={i}>
-                             <ImageCard 
-                                title={card.title} 
-                                image={card.image} 
-                                onClick={() => {}} 
-                                fitContent={true}
-                            />
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-             {/* Learning Library Section */}
-            <div>
-                <div className="section-header mb-4">
-                    <h2 className="text-xl font-bold text-text-main">Learning Library</h2>
-                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                     {learningCurriculum.map((chapter, i) => (
-                         <div className="library-card-item" key={chapter.id}>
-                            <ImageCard 
-                                title={chapter.title} 
-                                image={chapter.image} 
-                                onClick={() => onNavigate(getPathForModule(chapter.id))}
-                                className="aspect-video"
-                                textPosition="bottom"
-                            />
-                        </div>
+                    {learningCurriculum.slice(0, 3).map(chapter => (
+                        <ImageCard 
+                            key={chapter.id}
+                            title=""
+                            image={chapter.image}
+                            onClick={() => onNavigate(chapter.isExternalLink ? `/learning/${chapter.id.replace('ch', '') === '3' ? 'bullish' : 'bearish'}` : `/learning/module/${chapter.id}`)}
+                            className="aspect-video"
+                        />
                     ))}
                 </div>
             </div>
-
-            {/* AI Quiz Card */}
-            <div 
-                onClick={() => onNavigate('/quiz')}
-                className="ai-quiz-card pro-card rounded-2xl p-6 flex items-center justify-between cursor-pointer bg-primary-light"
-            >
-                <div>
-                    <h3 className="font-bold text-lg text-primary">AI Smart Quiz</h3>
-                    <p className="text-sm text-primary/80 mt-1">Test your knowledge with AI-generated questions.</p>
-                </div>
-                <ChevronRight size={24} className="text-primary" />
-            </div>
-
-            {/* Progress Dashboard */}
-            <div className="progress-dashboard">
-                <h2 className="text-xl font-bold mb-4 text-text-main section-header">Your Progress</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <StatCard icon={GraduationCap} title="Lessons Learned" value={stats.lessonsLearned} iconBgColor="bg-blue-100" iconColor="text-blue-500" />
-                    <StatCard icon={CheckCircle} title="Tests Passed" value={stats.testsPassed} iconBgColor="bg-green-100" iconColor="text-green-500" />
-                    <StatCard icon={DollarSign} title="Paper Trading P&L" value={`₹${stats.pnl.toLocaleString('en-IN')}`} iconBgColor="bg-yellow-100" iconColor="text-yellow-500" />
-                </div>
-            </div>
             
+            <ProgressWidget
+                lessonsLearned={lessonsCompleted}
+                testsPassed={testsPassed}
+                currentStreak={0} // Placeholder
+                moneyEarnedPercent={pnlPercent}
+                overallProgress={overallProgressPercent}
+            />
         </div>
     );
 };
