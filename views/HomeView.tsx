@@ -117,47 +117,49 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             const progressDashboard = container.querySelector('.progress-dashboard');
     
             // Set initial states for animation
-            anime.set([quickLinksItems, paperTradingCard, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8 });
+            anime.set([quickLinksItems, paperTradingCard, sectionHeaders, mainCards, libraryCards, aiQuizCard, progressDashboard], { opacity: 0, scale: 0.8, rotate: '5deg' });
     
             const tl = anime.timeline({
-                easing: 'easeOutExpo',
-                duration: 900
+                easing: 'easeOutElastic(1, .8)',
+                duration: 1200
             });
     
             tl.add({
                 targets: quickLinksItems,
                 opacity: 1,
                 scale: 1,
-                rotate: [-10, 0],
-                delay: anime.stagger(80),
-                easing: 'easeOutElastic(1, .7)'
+                rotate: 0,
+                delay: anime.stagger(100),
             })
             .add({
                 targets: paperTradingCard,
                 opacity: 1,
                 scale: 1,
-                easing: 'easeOutBack'
-            }, '-=700')
+                rotate: 0,
+            }, '-=900')
             .add({
                 targets: sectionHeaders,
                 opacity: 1,
                 translateX: [-25, 0],
                 scale: 1,
+                rotate: 0,
                 delay: anime.stagger(150)
-            }, '-=600')
+            }, '-=1000')
             .add({
                 targets: [...mainCards, ...libraryCards],
                 opacity: 1,
                 scale: 1,
-                delay: anime.stagger(70, { grid: [2, 4], from: 'first' })
-            }, '-=800')
+                rotate: 0,
+                delay: anime.stagger(80, { grid: [2, 4], from: 'first' })
+            }, '-=1100')
             .add({
                 targets: [aiQuizCard, progressDashboard],
                 opacity: 1,
                 scale: 1,
+                rotate: 0,
                 translateY: [40, 0],
                 delay: anime.stagger(120)
-            }, '-=700');
+            }, '-=1000');
         }
     }, []);
 
@@ -208,7 +210,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
                 <button
                     onClick={() => onNavigate('/pricing')}
-                    className="w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg bg-primary hover:bg-primary-dark transition-colors shadow-md shadow-primary/30 button-press-feedback"
+                    className="cosmic-subscribe-button w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg transition-colors button-press-feedback"
                 >
                     <DollarSign size={20} />
                     <span>Subscribe</span>
