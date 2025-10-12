@@ -1,11 +1,15 @@
 
 
 
+
+
+
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import IconLink from '../components/home/IconLink';
-import { Telegram, GraduationCap, CheckCircle, Sparkles, DollarSign, ChevronRight, Share } from '../components/common/Icons';
+// FIX: Add GraduationCap to imports to resolve reference error.
+import { Telegram, Rupee, CheckCircle, Sparkles, DollarSign, ChevronRight, Share, GraduationCap } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
@@ -204,7 +208,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <div className="pro-card p-4 space-y-4 quick-links">
                 <div className="grid grid-cols-3 gap-4">
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
-                    <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
+                    <IconLink title="Exclusive Group" onClick={() => onNavigate('/pricing')} icon={Rupee} />
                     <IconLink title="Web Sharing" onClick={handleShare} icon={Share} />
                 </div>
                 <button
@@ -212,7 +216,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     className="star-trek-button w-full p-3 font-semibold rounded-lg button-press-feedback"
                 >
                     <div className="relative z-10 flex items-center justify-center space-x-2">
-                        <DollarSign size={20} />
+                        <span className="text-xl">₹</span>
                         <span>Subscribe</span>
                     </div>
                 </button>
