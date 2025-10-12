@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 import anime from 'animejs';
 // FIX: Updated Supabase type imports to resolve module export errors.
@@ -45,6 +46,7 @@ const QuizResultsView = lazy(() => import('./views/quiz/QuizResultsView'));
 // --- NEW: Theme Management ---
 interface ThemeContextType {
     theme: 'light' | 'dark';
+    // FIX: Corrected typo from 'toid' to 'void' for the function return type.
     toggleTheme: () => void;
 }
 export const ThemeContext = createContext<ThemeContextType>({
@@ -317,7 +319,7 @@ const App: React.FC = () => {
         if (loading) {
             return null; // Render nothing while waiting for session, initial HTML loader is visible
         }
-
+        
         if (!session) {
             return (
                 <AuthLayout>

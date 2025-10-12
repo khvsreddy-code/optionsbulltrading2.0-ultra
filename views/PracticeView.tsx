@@ -15,11 +15,20 @@ import OrderDialog from '../components/practice/OrderDialog';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
 import PortfolioBar from '../components/practice/PortfolioBar';
+import DrawingToolbar from '../components/practice/DrawingToolbar';
 
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
 }
+
+export type DrawingTool = 'cursor' | 'trendline' | 'horizontal';
+export interface Drawing {
+  id: string;
+  type: DrawingTool;
+  [key: string]: any;
+}
+
 
 interface ChartComponentHandle {
     updateCandle: (candle: CandleData) => void;
@@ -70,6 +79,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
     const [isPortfolioOpen, setIsPortfolioOpen] = useState(false);
+    
+    // Drawing state
+    const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool>('cursor');
+    const [drawings, setDrawings] = useState<Drawing[]>([]);
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
@@ -335,6 +348,15 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
             <div className="practice-container flex-grow">
+                <DrawingToolbar
+                    activeTool={activeDrawingTool}
+                    onSelectTool={(tool) => {
+                        if (tool !== activeDrawingTool) {
+                            setActiveDrawingTool(tool);
+                        }
+                    }}
+                    onClearDrawings={() => setDrawings([])}
+                />
                 <main className="practice-canvas-container flex flex-col">
                     <ChartHeader
                         instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
@@ -356,6 +378,15 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                                initialData={initialChartData}
                                timeframe={timeframe}
                                theme={theme}
+                               activeDrawingTool={activeDrawingTool}
+                               drawings={drawings}
+                               onDrawingComplete={(newDrawing) => {
+                                   setDrawings(prev => [...prev, newDrawing]);
+                                   // Revert to cursor tool after drawing for better UX
+                                   if (activeDrawingTool === 'horizontal' || activeDrawingTool === 'trendline') {
+                                       setActiveDrawingTool('cursor');
+                                   }
+                               }}
                            />
                         )}
                     </div>

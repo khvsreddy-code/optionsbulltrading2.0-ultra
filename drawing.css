@@ -27,6 +27,13 @@
     background: var(--sim-background);
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* New toolbar styles */
+.drawing-toolbar {
+    flex-shrink: 0;
 }
 
 /* Responsive design for tablet and mobile */

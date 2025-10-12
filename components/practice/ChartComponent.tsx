@@ -1,18 +1,30 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode } from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode, ILineSeries, IPriceLine, LineStyle } from 'lightweight-charts';
 import type { CandleData, Timeframe } from '../../types';
+import type { Drawing, DrawingTool } from '../../views/PracticeView';
 
 interface ChartComponentProps {
   initialData: CandleData[];
   timeframe: Timeframe;
   theme: 'light' | 'dark';
+  activeDrawingTool: DrawingTool;
+  drawings: Drawing[];
+  onDrawingComplete: (drawing: Drawing) => void;
 }
 
-const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, timeframe, theme }, ref) => {
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, timeframe, theme, activeDrawingTool, drawings, onDrawingComplete }, ref) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
     const [countdown, setCountdown] = useState('');
+
+    const drawingStateRef = useRef<{
+        isDrawing: boolean;
+        startPoint: { time: any; price: number } | null;
+        tempLine: ILineSeries | null;
+    }>({ isDrawing: false, startPoint: null, tempLine: null });
+
+    const drawnObjectsRef = useRef<Map<string, ILineSeries | IPriceLine>>(new Map());
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -112,6 +124,112 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             }
         }
     }, [initialData]);
+
+    // Effect to render drawings
+    useEffect(() => {
+        if (!chartRef.current || !candlestickSeriesRef.current) return;
+        const chart = chartRef.current;
+        
+        drawnObjectsRef.current.forEach(obj => {
+             // lightweight-charts doesn't have a universal remove method
+            if ('remove' in (obj as any)) { // IPriceLine
+                chart.removePriceLine(obj as IPriceLine);
+            } else { // ISeriesApi
+                chart.removeSeries(obj as ILineSeries);
+            }
+        });
+        drawnObjectsRef.current.clear();
+        
+        drawings.forEach(drawing => {
+            if (drawing.type === 'horizontal') {
+                const line = candlestickSeriesRef.current!.createPriceLine({
+                    price: drawing.price, color: '#3B82F6', lineWidth: 2,
+                    lineStyle: LineStyle.Solid, axisLabelVisible: true, title: '',
+                });
+                drawnObjectsRef.current.set(drawing.id, line);
+            }
+            if (drawing.type === 'trendline') {
+                const lineSeries = chart.addLineSeries({ color: '#3B82F6', lineWidth: 2 });
+                lineSeries.setData([
+                    { time: drawing.start.time, value: drawing.start.price },
+                    { time: drawing.end.time, value: drawing.end.price },
+                ]);
+                drawnObjectsRef.current.set(drawing.id, lineSeries);
+            }
+        });
+    }, [drawings]);
+
+    // Effect to handle drawing logic
+    useEffect(() => {
+        if (!chartRef.current) return;
+        const chart = chartRef.current;
+
+        const handleCrosshairMove = (param: any) => {
+            if (!drawingStateRef.current.isDrawing || !drawingStateRef.current.startPoint || !param.point) return;
+            if (activeDrawingTool === 'trendline') {
+                const price = candlestickSeriesRef.current!.coordinateToPrice(param.point.y);
+                const time = chart.timeScale().coordinateToTime(param.point.x);
+                if (price && time) {
+                    drawingStateRef.current.tempLine?.setData([
+                        { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price },
+                        { time: time, value: price },
+                    ]);
+                }
+            }
+        };
+
+        const handleClick = (param: any) => {
+            if (!param.point || !candlestickSeriesRef.current) return;
+            
+            const price = candlestickSeriesRef.current.coordinateToPrice(param.point.y);
+            const time = chart.timeScale().coordinateToTime(param.point.x);
+
+            if (!price || !time) return;
+
+            if (activeDrawingTool === 'horizontal') {
+                onDrawingComplete({ id: `d_${Date.now()}_${Math.random()}`, type: 'horizontal', price });
+            }
+
+            if (activeDrawingTool === 'trendline') {
+                if (!drawingStateRef.current.isDrawing) { // First click
+                    drawingStateRef.current.isDrawing = true;
+                    drawingStateRef.current.startPoint = { time, price };
+                    drawingStateRef.current.tempLine = chart.addLineSeries({
+                        color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false,
+                    });
+                } else { // Second click
+                    onDrawingComplete({
+                        id: `d_${Date.now()}_${Math.random()}`, type: 'trendline',
+                        start: drawingStateRef.current.startPoint, end: { time, price }
+                    });
+                    
+                    if (drawingStateRef.current.tempLine) {
+                        chart.removeSeries(drawingStateRef.current.tempLine);
+                    }
+                    drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
+                }
+            }
+        };
+
+        const crosshairMoveHandler = (e: any) => handleCrosshairMove(e);
+        const clickHandler = (e: any) => handleClick(e);
+
+        if (activeDrawingTool !== 'cursor') {
+            chart.subscribeCrosshairMove(crosshairMoveHandler);
+            chart.subscribeClick(clickHandler);
+        }
+
+        return () => {
+            chart.unsubscribeCrosshairMove(crosshairMoveHandler);
+            chart.unsubscribeClick(clickHandler);
+            
+            if (drawingStateRef.current.tempLine) {
+                chart.removeSeries(drawingStateRef.current.tempLine);
+            }
+            drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
+        };
+    }, [activeDrawingTool, onDrawingComplete]);
+
 
     return (
         <div className="absolute inset-0">
