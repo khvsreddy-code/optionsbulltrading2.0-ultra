@@ -1,9 +1,6 @@
 // supabase/functions/create-razorpay-order/index.ts
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-// Import Buffer from Deno's Node compatibility layer for robust Base64 encoding.
-import { Buffer } from 'https://deno.land/std@0.168.0/node/buffer.ts';
-
 
 // Add type declarations to satisfy TypeScript linter
 declare const Deno: any;
@@ -38,8 +35,8 @@ serve(async (req: Request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Use Buffer for Base64 encoding, standard in Node.js environments and more reliable for auth.
-        'Authorization': `Basic ${Buffer.from(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET).toString('base64')}`
+        // Use the global btoa function for Base64 encoding, which is standard in Deno/web runtimes.
+        'Authorization': `Basic ${btoa(RAZORPAY_KEY_ID + ':' + RAZORPAY_KEY_SECRET)}`
       },
       body: JSON.stringify({
         amount: amount, // Amount in paise

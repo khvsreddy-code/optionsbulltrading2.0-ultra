@@ -2,7 +2,9 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.44.4';
-import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
+// Use native Deno standard library for crypto, which is more reliable in the Deno environment.
+import { HmacSha256 } from "https://deno.land/std@0.168.0/crypto/hmac.ts";
+import { encodeToString } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 // Add type declarations to satisfy TypeScript linter
 declare const Deno: any;
@@ -24,11 +26,14 @@ serve(async (req: Request) => {
       throw new Error('Razorpay secret is not configured.');
     }
 
-    // 1. Verify the payment signature
+    // 1. Verify the payment signature using native Deno crypto
     const body = order_id + "|" + razorpay_payment_id;
-    const expectedSignature = createHmac('sha256', RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest('hex');
+    const key = new TextEncoder().encode(RAZORPAY_KEY_SECRET);
+    const message = new TextEncoder().encode(body);
+    
+    const hmac = new HmacSha256(key);
+    const digest = hmac.update(message).digest();
+    const expectedSignature = encodeToString(new Uint8Array(digest));
 
     if (expectedSignature !== razorpay_signature) {
       throw new Error('Payment verification failed. Signature mismatch.');
