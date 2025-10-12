@@ -193,19 +193,21 @@
         to { transform: rotate(360deg); }
       }
       
-      /* --- NEW: High-Fidelity Blackhole Animation for Pricing Page --- */
-      @keyframes pulse-glow {
-        0%, 100% {
-          box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7), 0 0 20px 5px rgba(255, 255, 255, 0.5), 0 0 40px 10px rgba(100, 180, 255, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.9), 0 0 40px 12px rgba(255, 255, 255, 0.7), 0 0 70px 22px rgba(100, 180, 255, 0.4);
-        }
+      /* --- NEW: Milky Way Galaxy Animation for Pricing Page --- */
+      @keyframes rotate-galaxy-arms {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
       }
 
-      @keyframes spin-blackhole-disk {
-        from { transform: translate(-50%, -50%) perspective(300px) rotateX(80deg) rotate(0deg); }
-        to { transform: translate(-50%, -50%) perspective(300px) rotateX(80deg) rotate(360deg); }
+      @keyframes pulse-galaxy-core {
+          0%, 100% {
+              transform: translate(-50%, -50%) scale(1);
+              opacity: 0.8;
+          }
+          50% {
+              transform: translate(-50%, -50%) scale(1.1);
+              opacity: 1;
+          }
       }
 
       .pricing-page-container {
@@ -224,50 +226,56 @@
         animation: warp-speed 15s linear infinite;
       }
 
-      /* The Accretion Disk (horizontal band of light) */
+      /* The Galaxy Arms */
       .pricing-page-container::before {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
-        width: 70vmin;
-        height: 70vmin;
-        min-width: 400px;
-        min-height: 400px;
-        max-width: 600px;
-        max-height: 600px;
+        width: 90vmin;
+        height: 90vmin;
+        min-width: 600px;
+        min-height: 600px;
+        max-width: 900px;
+        max-height: 900px;
         z-index: 1;
-        border-radius: 50%;
-        background: conic-gradient(from 90deg, #ffcc00, #ffae42, #ff8c00, #e67300, #ff8c00, #ffae42, #ffcc00);
         
-        -webkit-mask-image: radial-gradient(circle at center, transparent 45%, black 46%, black 54%, transparent 55%);
-        mask-image: radial-gradient(circle at center, transparent 45%, black 46%, black 54%, transparent 55%);
+        background-image: 
+          radial-gradient(ellipse at 40% 60%, rgba(173, 216, 230, 0.25) 0%, transparent 50%),
+          radial-gradient(ellipse at 60% 40%, rgba(230, 190, 255, 0.25) 0%, transparent 50%),
+          conic-gradient(from 180deg at 50% 50%, transparent, rgba(200, 220, 255, 0.4) 10%, transparent 35%),
+          conic-gradient(from 0deg at 50% 50%, transparent, rgba(180, 200, 255, 0.4) 15%, transparent 40%);
+        
+        -webkit-mask-image: radial-gradient(ellipse at center, black 15%, transparent 60%);
+        mask-image: radial-gradient(ellipse at center, black 15%, transparent 60%);
 
-        animation: spin-blackhole-disk 20s linear infinite;
+        animation: rotate-galaxy-arms 80s linear infinite;
+        border-radius: 0;
       }
 
-      /* The Black Hole Event Horizon + Photon Ring */
+      /* The Galaxy Core */
       .pricing-page-container::after {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 30vmin; 
-        height: 30vmin;
-        min-width: 180px;
-        min-height: 180px;
-        max-width: 280px;
-        max-height: 280px;
+        width: 25vmin; 
+        height: 25vmin;
+        min-width: 150px;
+        min-height: 150px;
+        max-width: 250px;
+        max-height: 250px;
         z-index: 2;
 
-        background: radial-gradient(circle at center, black 88%, transparent 92%);
-        border: 3px solid rgba(255, 255, 255, 0.9);
+        background: radial-gradient(ellipse at center, rgba(255, 255, 240, 1) 0%, rgba(200, 220, 255, 0.6) 40%, transparent 70%);
         border-radius: 50%;
-
-        animation: pulse-glow 4s ease-in-out infinite;
+        
+        animation: pulse-galaxy-core 8s ease-in-out infinite;
+        
+        border: none;
+        box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.3);
       }
-
 
       .pricing-page-container .pro-card,
       .pricing-page-container .back-button-themed {
