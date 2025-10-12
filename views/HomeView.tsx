@@ -227,7 +227,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             {/* Featured for you Section */}
             <div>
                 <h2 className="section-header text-xl font-bold mb-4 text-text-main">Featured for you</h2>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     {mainCards.map((card, i) => (
                         <div className="main-card-item" key={i}>
                              <ImageCard 
