@@ -118,11 +118,32 @@
         animation: slideInUp ease-out;
       }
 
+      /* Page Transition Overlay */
+      .page-transition-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        background-color: var(--background);
+        opacity: 0;
+        filter: url(#distortion);
+      }
     </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    
+    <!-- SVG Filter for Page Transition Distortion Effect -->
+    <svg style="display: none;">
+      <defs>
+        <filter id="distortion">
+          <feTurbulence type="fractalNoise" baseFrequency="0.01 0.04" numOctaves="1" result="warp" />
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="0" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

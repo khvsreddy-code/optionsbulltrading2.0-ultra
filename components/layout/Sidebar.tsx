@@ -1,12 +1,74 @@
 
 
-import React, { useContext } from 'react';
+
+import React, { useContext, useRef } from 'react';
+import anime from 'animejs';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
 import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 import { ThemeContext } from '../../App';
+
+interface NavItemProps {
+    label: string;
+    icon: React.FC<any>;
+    path: string;
+    isActive: boolean;
+    onClick: () => void;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ label, icon: Icon, path, isActive, onClick }) => {
+    const itemRef = useRef<HTMLButtonElement>(null);
+    const underlineRef = useRef<HTMLSpanElement>(null);
+
+    const handleMouseEnter = () => {
+        anime.remove([itemRef.current, underlineRef.current]);
+        anime({
+            targets: itemRef.current,
+            translateY: -2,
+            duration: 200,
+            easing: 'easeOutQuad'
+        });
+        anime({
+            targets: underlineRef.current,
+            width: '100%',
+            duration: 300,
+            easing: 'easeOutQuad'
+        });
+    };
+    
+    const handleMouseLeave = () => {
+        anime.remove([itemRef.current, underlineRef.current]);
+        anime({
+            targets: itemRef.current,
+            translateY: 0,
+            duration: 200,
+            easing: 'easeOutQuad'
+        });
+        anime({
+            targets: underlineRef.current,
+            width: '0%',
+            duration: 250,
+            easing: 'easeOutQuad'
+        });
+    };
+
+    return (
+        <button 
+            ref={itemRef}
+            onClick={onClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className={`relative w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:text-text-main'}`}
+        >
+            <Icon size={22} />
+            <span>{label}</span>
+            <span ref={underlineRef} className="absolute bottom-0 left-0 h-0.5 bg-primary" style={{width: isActive ? '100%' : '0%'}}></span>
+        </button>
+    );
+};
+
 
 interface SidebarProps {
     user: SupabaseUser | null;
@@ -70,38 +132,32 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
 
             {/* Navigation */}
             <nav className="flex-grow p-4">
-                <div className="space-y-2">
-                    {mainNavItems.map(item => {
-                        const isActive = item.views.includes(activeView);
-                        return (
-                            <button 
-                                key={item.label}
-                                onClick={() => handleNavigation(item.path)}
-                                className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background hover:text-text-main'}`}
-                            >
-                                <item.icon size={22} />
-                                <span>{item.label}</span>
-                            </button>
-                        );
-                    })}
+                <div className="space-y-1">
+                    {mainNavItems.map(item => (
+                        <NavItem
+                            key={item.label}
+                            label={item.label}
+                            icon={item.icon}
+                            path={item.path}
+                            isActive={item.views.includes(activeView)}
+                            onClick={() => handleNavigation(item.path)}
+                        />
+                    ))}
                 </div>
                 
                 <div className="pt-6">
                     <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">AI Tools</h3>
-                    <div className="space-y-2">
-                         {aiNavItems.map(item => {
-                            const isActive = item.views.includes(activeView);
-                            return (
-                                <button 
-                                    key={item.label}
-                                    onClick={() => handleNavigation(item.path)}
-                                    className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold transition-colors ${isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background hover:text-text-main'}`}
-                                >
-                                    <item.icon size={22} />
-                                    <span>{item.label}</span>
-                                </button>
-                            );
-                        })}
+                    <div className="space-y-1">
+                         {aiNavItems.map(item => (
+                            <NavItem
+                                key={item.label}
+                                label={item.label}
+                                icon={item.icon}
+                                path={item.path}
+                                isActive={item.views.includes(activeView)}
+                                onClick={() => handleNavigation(item.path)}
+                            />
+                        ))}
                     </div>
                 </div>
 
