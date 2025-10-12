@@ -210,7 +210,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
                 <button
                     onClick={() => onNavigate('/pricing')}
-                    className="cosmic-subscribe-button w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg transition-colors button-press-feedback"
+                    className="interstellar-button w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg transition-colors button-press-feedback"
                 >
                     <DollarSign size={20} />
                     <span>Subscribe</span>

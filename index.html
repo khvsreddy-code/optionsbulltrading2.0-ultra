@@ -129,62 +129,76 @@
         filter: url(#distortion);
       }
       
-      /* --- NEW: Interstellar Black Hole Subscribe Button --- */
-      .cosmic-subscribe-button {
+      /* --- Interstellar-Inspired Black Hole Button --- */
+      .interstellar-button {
         position: relative;
         overflow: hidden;
-        background-color: #000; /* Deep space background */
-        border: 1px solid rgba(255, 165, 0, 0.3); /* Faint orange border */
-        box-shadow: 0 0 10px rgba(255, 165, 0, 0.2); /* Subtle glow */
+        background-color: #000;
+        border: 1px solid rgba(255, 180, 70, 0.2);
         z-index: 1;
       }
 
-      /* Black Hole Accretion Disk */
-      .cosmic-subscribe-button::before {
+      /* This pseudo-element is the rotating accretion disk */
+      .interstellar-button::before {
         content: '';
         position: absolute;
-        top: -100%; left: -100%; /* Make larger to avoid edges during rotation */
-        width: 300%; height: 300%;
-        z-index: -2;
-        /* A rotating conic gradient for the accretion disk */
-        background-image: conic-gradient(
-          from 0deg at 50% 50%,
-          #FFD700, /* Gold */
-          #FFA500, /* Orange */
-          #FF4500, /* OrangeRed */
-          #DAA520, /* Goldenrod */
-          #FFD700
+        left: 50%;
+        top: 50%;
+        width: 250%;
+        padding-bottom: 250%; /* Maintain aspect ratio */
+        height: 0;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        
+        /* Conic gradient for a rotating, unevenly lit disk */
+        background: conic-gradient(
+          from 0deg,
+          #ffac4d 0%, 
+          #ffddaa 20%,
+          #fffde4 50%,
+          #ffddaa 80%,
+          #ffac4d 100%
         );
-        animation: blackhole-flow 10s linear infinite;
+        
+        animation: blackhole-spin 10s linear infinite;
       }
-      
-      /* Dotted Grid + Event Horizon Overlay */
-      .cosmic-subscribe-button::after {
+
+      /* This pseudo-element is the black hole sphere and lensing mask */
+      .interstellar-button::after {
         content: '';
         position: absolute;
         inset: 0;
-        z-index: -1;
+        
+        /* Layered gradients create the illusion */
         background-image: 
-          /* Event Horizon - black center with a glowing edge */
-          radial-gradient(circle at center, #000 35%, rgba(255, 165, 0, 0.5) 37%, transparent 40%),
-          /* Dotted Grid Overlay */
-          radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
-        background-size: auto, 12px 12px;
-        background-position: center, 0 0;
-        background-repeat: no-repeat, repeat;
+          /* 1. Lensing shadow to create the flat disk illusion */
+          linear-gradient(to bottom, 
+            rgba(0,0,0,1) 0%, 
+            rgba(0,0,0,0) 35%, 
+            rgba(0,0,0,0) 65%, 
+            rgba(0,0,0,1) 100%
+          ),
+          /* 2. The central black hole sphere with a photon ring glow */
+          radial-gradient(circle at center, 
+            rgba(255, 230, 200, 0.7) 13%,
+            #000 15%, 
+            #000 25%, 
+            transparent 27%
+          );
+
+        border-radius: inherit; /* Match button's border radius */
       }
 
-      @keyframes blackhole-flow {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+      @keyframes blackhole-spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
       }
 
-      .cosmic-subscribe-button:hover::before {
-        animation-duration: 4s; /* Speed up rotation on hover */
+      .interstellar-button:hover::before {
+        animation-duration: 3s;
       }
 
-      .cosmic-subscribe-button span,
-      .cosmic-subscribe-button svg {
+      /* Text and icon must be on top */
+      .interstellar-button > * {
         position: relative;
         z-index: 2;
         text-shadow: 0 1px 4px rgba(0,0,0,0.8);
