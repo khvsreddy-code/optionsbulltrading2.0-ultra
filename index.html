@@ -129,50 +129,58 @@
         filter: url(#distortion);
       }
       
-      /* --- NEW: High-Quality Cosmic Subscribe Button --- */
+      /* --- NEW: Interstellar Black Hole Subscribe Button --- */
       .cosmic-subscribe-button {
         position: relative;
         overflow: hidden;
-        background-color: transparent; /* Let pseudo-elements handle background */
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        background-color: #000; /* Deep space background */
+        border: 1px solid rgba(255, 165, 0, 0.3); /* Faint orange border */
+        box-shadow: 0 0 10px rgba(255, 165, 0, 0.2); /* Subtle glow */
         z-index: 1;
       }
 
-      /* Cosmic Nebula Background */
+      /* Black Hole Accretion Disk */
       .cosmic-subscribe-button::before {
         content: '';
         position: absolute;
-        top: 0; left: 0;
+        top: -100%; left: -100%; /* Make larger to avoid edges during rotation */
         width: 300%; height: 300%;
-        z-index: -2; /* Behind the dot grid */
-        background-image: 
-          radial-gradient(circle at 15% 30%, rgba(191, 0, 255, 0.5) 0%, transparent 30%), /* Purple */
-          radial-gradient(circle at 80% 70%, rgba(0, 255, 255, 0.4) 0%, transparent 35%), /* Cyan */
-          radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 25%), /* Pink */
-          radial-gradient(circle at 90% 10%, rgba(250, 250, 250, 0.3) 0px, transparent 2px); /* Stars */
-        background-size: 40% 40%, 35% 35%, 30% 30%, 8px 8px;
-        animation: cosmic-flow 25s linear infinite;
-        transform: translate(-33%, -33%);
+        z-index: -2;
+        /* A rotating conic gradient for the accretion disk */
+        background-image: conic-gradient(
+          from 0deg at 50% 50%,
+          #FFD700, /* Gold */
+          #FFA500, /* Orange */
+          #FF4500, /* OrangeRed */
+          #DAA520, /* Goldenrod */
+          #FFD700
+        );
+        animation: blackhole-flow 10s linear infinite;
       }
       
-      /* Dotted Grid Overlay */
+      /* Dotted Grid + Event Horizon Overlay */
       .cosmic-subscribe-button::after {
         content: '';
         position: absolute;
         inset: 0;
-        z-index: -1; /* On top of nebula, behind text */
-        background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
-        background-size: 12px 12px;
+        z-index: -1;
+        background-image: 
+          /* Event Horizon - black center with a glowing edge */
+          radial-gradient(circle at center, #000 35%, rgba(255, 165, 0, 0.5) 37%, transparent 40%),
+          /* Dotted Grid Overlay */
+          radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0);
+        background-size: auto, 12px 12px;
+        background-position: center, 0 0;
+        background-repeat: no-repeat, repeat;
       }
 
-      @keyframes cosmic-flow {
-        0% { background-position: 0% 50%, 50% 100%, 100% 0%, 0% 0%; }
-        100% { background-position: -150% 50%, 50% -50%, 250% 0%, -100% -100%; }
+      @keyframes blackhole-flow {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
 
       .cosmic-subscribe-button:hover::before {
-        animation-duration: 10s;
+        animation-duration: 4s; /* Speed up rotation on hover */
       }
 
       .cosmic-subscribe-button span,
