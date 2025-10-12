@@ -1,5 +1,7 @@
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+
+import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
+import anime from 'animejs';
 // FIX: Updated Supabase type imports to resolve module export errors.
 import type { Session, User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './services/supabaseClient';
@@ -41,6 +43,37 @@ const QuizView = lazy(() => import('./views/quiz/QuizView'));
 const QuizResultsView = lazy(() => import('./views/quiz/QuizResultsView'));
 
 
+// --- NEW: Theme Management ---
+interface ThemeContextType {
+    theme: 'light' | 'dark';
+    toggleTheme: () => void;
+}
+export const ThemeContext = createContext<ThemeContextType>({
+    theme: 'light',
+    toggleTheme: () => {},
+});
+
+
+// --- NEW: Animated View Component for Page Transitions ---
+const AnimatedView: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const viewRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (viewRef.current) {
+            anime({
+                targets: viewRef.current,
+                opacity: [0, 1],
+                translateY: [10, 0],
+                duration: 400,
+                easing: 'easeOutCubic'
+            });
+        }
+    }, []);
+
+    return <div ref={viewRef}>{children}</div>;
+};
+
+
 const LoadingSpinner: React.FC = () => (
     <div className="flex items-center justify-center min-h-screen bg-background">
         <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -58,6 +91,26 @@ const App: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     
     const [location, setLocation] = useState(window.location.hash.slice(1) || '/home');
+    
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) return savedTheme as 'light' | 'dark';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    });
+
+    useEffect(() => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+    };
+
 
     useEffect(() => {
         const handleHashChange = () => {
@@ -153,7 +206,7 @@ const App: React.FC = () => {
 
     const renderView = () => {
         return (
-            <div key={view}>
+            <AnimatedView key={location}>
                 {(() => {
                     switch (view) {
                         case 'home':
@@ -189,7 +242,7 @@ const App: React.FC = () => {
                         case 'patternDetail':
                             return <PatternDetailView onNavigate={handleNavigate} patternId={activePatternId} />;
                         case 'practice':
-                            return <PracticeView onNavigate={handleNavigate} theme={'dark'} />; // Keep simulator dark
+                            return <PracticeView onNavigate={handleNavigate} />;
                         case 'profile':
                             return <ProfileView user={user} onNavigate={handleNavigate} />;
                         case 'chat':
@@ -204,7 +257,7 @@ const App: React.FC = () => {
                             return <HomeView onNavigate={handleNavigate} user={user} />;
                     }
                 })()}
-            </div>
+            </AnimatedView>
         );
     };
 
@@ -223,36 +276,42 @@ const App: React.FC = () => {
     // Views that have their own full-page layout
     const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance'];
     if (noLayoutViews.includes(view)) {
-        return renderView();
+         return (
+            <ThemeContext.Provider value={{ theme, toggleTheme }}>
+                {renderView()}
+            </ThemeContext.Provider>
+        );
     }
 
     return (
-        <div className="relative min-h-screen bg-background font-sans md:flex">
-            {/* Mobile Sidebar Overlay */}
-            <div 
-                className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-                onClick={() => setIsSidebarOpen(false)}
-            ></div>
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            <div className="relative min-h-screen bg-background font-sans md:flex">
+                {/* Mobile Sidebar Overlay */}
+                <div 
+                    className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
 
-            <Sidebar
-                user={user}
-                onNavigate={handleNavigate}
-                activeView={view}
-                isOpen={isSidebarOpen}
-                setIsOpen={setIsSidebarOpen}
-            />
-
-            <div className="flex-1 md:ml-64 flex flex-col">
-                <Header 
-                    user={user} 
+                <Sidebar
+                    user={user}
                     onNavigate={handleNavigate}
-                    onMenuClick={() => setIsSidebarOpen(true)}
+                    activeView={view}
+                    isOpen={isSidebarOpen}
+                    setIsOpen={setIsSidebarOpen}
                 />
-                <main className="flex-grow">
-                    {renderView()}
-                </main>
+
+                <div className="flex-1 md:ml-64 flex flex-col">
+                    <Header 
+                        user={user} 
+                        onNavigate={handleNavigate}
+                        onMenuClick={() => setIsSidebarOpen(true)}
+                    />
+                    <main className="flex-grow">
+                        {renderView()}
+                    </main>
+                </div>
             </div>
-        </div>
+        </ThemeContext.Provider>
     );
 };
 

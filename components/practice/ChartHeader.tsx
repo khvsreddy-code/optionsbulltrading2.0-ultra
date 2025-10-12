@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import anime from 'animejs';
 import type { Instrument, CandleData, Timeframe, OrderSide } from '../../types';
 import StockSelector from './StockSelector';
 import TimeframeSelector from './TimeframeSelector';
@@ -28,8 +29,30 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   const changePercent = open === 0 ? 0 : (change / open) * 100;
   const priceColor = change >= 0 ? 'text-green-500' : 'text-red-500';
 
+  const priceRef = useRef<HTMLSpanElement>(null);
+  const prevPriceRef = useRef<number>(price);
+
+  useEffect(() => {
+    if (priceRef.current) {
+        const currentPrice = price;
+        const prevPrice = prevPriceRef.current;
+        
+        if (currentPrice !== prevPrice && prevPrice !== 0) {
+            const color = currentPrice > prevPrice ? 'rgba(22, 163, 74, 0.4)' : 'rgba(239, 68, 68, 0.4)'; // green or red with alpha
+            anime.remove(priceRef.current);
+            anime({
+                targets: priceRef.current,
+                backgroundColor: [color, 'rgba(0,0,0,0)'],
+                duration: 700,
+                easing: 'easeOutQuad'
+            });
+        }
+        prevPriceRef.current = currentPrice;
+    }
+  }, [price]);
+
   return (
-    <div className="flex-shrink-0 bg-[#131722] border-b border-[#2A2E39] p-2 flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
+    <div className="flex-shrink-0 bg-background border-b border-border p-2 flex items-center justify-between gap-x-4 gap-y-2 flex-wrap">
       <div className="flex items-center space-x-3">
         <StockSelector
             instruments={instruments}
@@ -52,7 +75,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
         </div>
         {liveOhlc && (
           <div className="hidden sm:flex items-baseline space-x-2">
-              <span className={`text-lg font-mono font-bold ${priceColor}`}>{price.toFixed(2)}</span>
+              <span ref={priceRef} className={`text-lg font-mono font-bold ${priceColor} rounded-md px-1 transition-colors duration-200`}>{price.toFixed(2)}</span>
               <span className={`text-sm font-semibold ${priceColor}`}>
                   {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePercent.toFixed(2)}%)
               </span>
@@ -62,7 +85,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
 
       <div className="flex items-center space-x-3">
         {liveOhlc && (
-            <div className="hidden md:flex items-center space-x-3 text-xs text-slate-400 font-mono">
+            <div className="hidden md:flex items-center space-x-3 text-xs text-text-secondary font-mono">
                 <span>O:{liveOhlc.open.toFixed(2)}</span>
                 <span>H:{liveOhlc.high.toFixed(2)}</span>
                 <span>L:{liveOhlc.low.toFixed(2)}</span>

@@ -5,9 +5,10 @@ import type { CandleData, Timeframe } from '../../types';
 interface ChartComponentProps {
   initialData: CandleData[];
   timeframe: Timeframe;
+  theme: 'light' | 'dark';
 }
 
-const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, timeframe }, ref) => {
+const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void; }), ChartComponentProps>(({ initialData, timeframe, theme }, ref) => {
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<IChartApi | null>(null);
     const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -44,12 +45,17 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
+        
+        const chartColors = theme === 'dark'
+            ? { bg: '#111827', text: '#F9FAFB', grid: '#374151', border: '#374151' }
+            : { bg: '#FAF9F6', text: '#1F2937', grid: '#E5E7EB', border: '#E5E7EB' };
+
         const chart = createChart(chartContainerRef.current, {
             width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight,
-            layout: { background: { type: ColorType.Solid, color: '#131722' }, textColor: '#D9D9D9' },
-            grid: { vertLines: { color: '#2A2E39' }, horzLines: { color: '#2A2E39' } },
-            timeScale: { timeVisible: true, secondsVisible: false, borderColor: '#485158' },
-            rightPriceScale: { borderColor: '#485158' },
+            layout: { background: { type: ColorType.Solid, color: chartColors.bg }, textColor: chartColors.text },
+            grid: { vertLines: { color: chartColors.grid }, horzLines: { color: chartColors.grid } },
+            timeScale: { timeVisible: true, secondsVisible: false, borderColor: chartColors.border },
+            rightPriceScale: { borderColor: chartColors.border },
             crosshair: { mode: CrosshairMode.Normal },
             handleScroll: { mouseWheel: true, pressedMouseMove: true },
             handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
@@ -60,13 +66,12 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         chartRef.current = chart;
 
         candlestickSeriesRef.current = chart.addCandlestickSeries({
-            upColor: '#1AAB7A', downColor: '#FF3D5F', borderDownColor: '#FF3D5F',
-            borderUpColor: '#1AAB7A', wickDownColor: '#FF3D5F', wickUpColor: '#1AAB7A',
+            upColor: '#16A34A', downColor: '#EF4444', borderDownColor: '#EF4444',
+            borderUpColor: '#16A34A', wickDownColor: '#EF4444', wickUpColor: '#16A34A',
         });
         candlestickSeriesRef.current.applyOptions({
             lastValueVisible: true,
             priceLineVisible: true,
-            // FIX: Set the price format once on initialization to prevent re-renders.
             priceFormat: {
                 type: 'price',
                 precision: 2,
@@ -79,7 +84,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         });
         resizeObserver.observe(chartContainerRef.current);
         return () => { resizeObserver.disconnect(); chart.remove(); };
-    }, [timeframe]); // Recreate chart on timeframe change to update secondsVisible
+    }, [timeframe, theme]);
     
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
@@ -89,12 +94,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
 
             candlestickSeriesRef.current.setData(candlestickData);
             
-            // Set an initial zoomed-in view instead of fitting all content.
             if (chartRef.current) {
                 const dataLength = candlestickData.length;
                 if (dataLength > 1) {
                     const lastBar = candlestickData[dataLength - 1];
-                    const visibleBars = 200; // Show the last 200 bars by default
+                    const visibleBars = 200; 
                     const firstVisibleBarIndex = Math.max(0, dataLength - visibleBars);
                     const firstVisibleBar = candlestickData[firstVisibleBarIndex];
 
@@ -114,7 +118,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             <div ref={chartContainerRef} className="w-full h-full" />
             {countdown && (
                 <div 
-                    className="absolute bottom-2 right-[80px] z-10 bg-black/50 text-slate-300 text-sm font-mono px-2 py-1 rounded pointer-events-none"
+                    className="absolute bottom-2 right-[80px] z-10 bg-card/50 text-text-secondary text-sm font-mono px-2 py-1 rounded pointer-events-none"
                 >
                     {countdown}
                 </div>

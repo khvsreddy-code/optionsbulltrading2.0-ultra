@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -70,16 +71,16 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
 };
 
 const StatCard: React.FC<{icon: React.FC<any>, title: string, value: string | number, iconBgColor: string, iconColor: string}> = ({ icon: Icon, title, value, iconBgColor, iconColor }) => (
-    <div className="bg-gray-700/50 rounded-2xl p-4 flex flex-col justify-between">
+    <div className="bg-background/50 dark:bg-card rounded-2xl p-4 flex flex-col justify-between">
         <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-slate-300">{title}</h4>
+            <h4 className="text-sm font-semibold text-text-secondary">{title}</h4>
             <Icon size={20} className={iconColor} />
         </div>
         <div>
             {typeof value === 'number' && value % 1 !== 0 ? (
-                 <p className="text-2xl font-bold text-white mt-2">{value.toFixed(2)}</p>
+                 <p className="text-2xl font-bold text-text-main mt-2">{value.toFixed(2)}</p>
             ) : (
-                <p className="text-2xl font-bold text-white mt-2">{value}</p>
+                <p className="text-2xl font-bold text-text-main mt-2">{value}</p>
             )}
         </div>
     </div>
@@ -267,18 +268,18 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <div className="ai-quiz-card">
                 <div
                     onClick={() => onNavigate('/quiz')}
-                    className="pro-card p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between bg-gray-800 text-white cursor-pointer hover:bg-gray-700 transition-colors"
+                    className="pro-card p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between bg-card cursor-pointer hover:bg-background transition-colors"
                 >
                     <div className="flex items-center mb-4 md:mb-0 text-center md:text-left">
-                        <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary rounded-xl mr-4">
-                            <Sparkles size={32} />
+                        <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary-light rounded-xl mr-4">
+                            <Sparkles size={32} className="text-primary"/>
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold">AI Smart Quiz</h3>
-                            <p className="text-slate-300">Challenge yourself with an AI-powered test.</p>
+                            <h3 className="text-xl font-bold text-text-main">AI Smart Quiz</h3>
+                            <p className="text-text-secondary">Challenge yourself with an AI-powered test.</p>
                         </div>
                     </div>
-                    <button className="px-5 py-2.5 bg-primary font-semibold rounded-lg button-press-feedback flex items-center mt-4 md:mt-0 flex-shrink-0">
+                    <button className="px-5 py-2.5 bg-primary text-white font-semibold rounded-lg button-press-feedback flex items-center mt-4 md:mt-0 flex-shrink-0">
                         Start Quiz <ChevronRight size={20} className="ml-1" />
                     </button>
                 </div>
@@ -287,13 +288,13 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
              {/* Progress Dashboard */}
             <div className="progress-dashboard">
                 <h2 className="text-xl font-bold text-text-main mb-4 section-header">Your Progress</h2>
-                <div className="bg-gray-800 text-white rounded-2xl p-6 space-y-6">
+                <div className="bg-card text-text-main rounded-2xl p-6 space-y-6 border border-border">
                     <div className="flex flex-col items-center">
                         <div className="relative w-32 h-32">
                             <svg width="128" height="128" viewBox="0 0 120 120" className="transform -rotate-90">
-                                <circle cx="60" cy="60" r="54" fill="none" stroke="#4B5563" strokeWidth="12" />
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border-color)" strokeWidth="12" />
                                 <circle
-                                    cx="60" cy="60" r="54" fill="none" stroke="#3B82F6" strokeWidth="12"
+                                    cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" strokeWidth="12"
                                     strokeDasharray="339.29"
                                     strokeDashoffset={339.29 * (1 - (stats.overallProgress / 100))}
                                     strokeLinecap="round"
@@ -304,7 +305,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                                 <span className="text-3xl font-bold">{Math.floor(stats.overallProgress)}%</span>
                             </div>
                         </div>
-                        <p className="mt-2 text-lg font-semibold tracking-wider text-slate-300">BEGINNER</p>
+                        <p className="mt-2 text-lg font-semibold tracking-wider text-text-secondary">BEGINNER</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Optionsbulltrading - Trading Education</title>
     
+    <script>
+      // Prevent FOUC for dark mode by applying the theme before the page loads.
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
+
     <script type="importmap">
 {
   "imports": {
@@ -24,20 +33,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class', // Enable class-based dark mode
         theme: {
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
-              'primary': '#53AC53',
-              'primary-dark': '#367A36',
-              'primary-light': 'rgba(83, 172, 83, 0.1)',
-              'background': '#FAF9F6', // Cream White
-              'card': '#FFFFFF',
-              'border': '#E5E7EB',
-              'text-main': '#1F2937',
-              'text-secondary': '#6B7280'
+              // Use CSS variables for theming
+              'primary': 'var(--primary)',
+              'primary-dark': 'var(--primary-dark)',
+              'primary-light': 'var(--primary-light)',
+              'background': 'var(--background)',
+              'card': 'var(--card-bg)',
+              'border': 'var(--border-color)',
+              'text-main': 'var(--text-main)',
+              'text-secondary': 'var(--text-secondary)'
             }
           }
         }
@@ -65,12 +76,24 @@
         --border-color: #E5E7EB;
         --accent-yellow: #F59E0B;
       }
+      
+      .dark {
+        --background: #111827; /* gray-900 */
+        --card-bg: #1F2937;    /* gray-800 */
+        --primary: #4ADE80;     /* green-400 */
+        --primary-dark: #22C55E; /* green-500 */
+        --primary-light: rgba(74, 222, 128, 0.1);
+        --text-main: #F9FAFB;   /* gray-50 */
+        --text-secondary: #9CA3AF; /* gray-400 */
+        --border-color: #374151; /* gray-700 */
+      }
 
       body {
         -webkit-tap-highlight-color: transparent;
         background-color: var(--background);
         color: var(--text-main);
         font-family: 'Inter', sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
       
       .pro-card {
@@ -78,6 +101,7 @@
         border-radius: 1rem; /* 16px */
         border: 1px solid var(--border-color);
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease-out;
       }
       
       .button-press-feedback {
@@ -85,6 +109,13 @@
       }
       .button-press-feedback:active {
         transform: scale(0.96);
+      }
+      @keyframes slideInUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+      }
+      .animate-slideInUp {
+        animation: slideInUp ease-out;
       }
 
     </style>

@@ -1,10 +1,12 @@
 
-import React from 'react';
+
+import React, { useContext } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
-import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
+import { ThemeContext } from '../../App';
 
 interface SidebarProps {
     user: SupabaseUser | null;
@@ -15,6 +17,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen, setIsOpen }) => {
+    const { theme, toggleTheme } = useContext(ThemeContext);
     const userName = user?.user_metadata?.full_name || 'Trader';
     const userEmail = user?.email;
     const userAvatar = user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=53AC53&color=fff`;
@@ -114,13 +117,20 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
             </nav>
 
             {/* Footer / Logout */}
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border flex items-center justify-between">
                 <button 
                     onClick={signOutUser}
-                    className="w-full flex items-center space-x-3 p-3 rounded-lg text-left font-semibold text-text-secondary hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                    className="flex items-center space-x-3 p-3 -m-3 rounded-lg text-left font-semibold text-text-secondary hover:bg-red-500/10 hover:text-red-500 transition-colors"
                 >
                     <SignOut size={22} />
                     <span>Logout</span>
+                </button>
+                <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-lg text-text-secondary hover:bg-background"
+                    aria-label="Toggle theme"
+                >
+                    {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
                 </button>
             </div>
         </aside>

@@ -11,23 +11,22 @@ const WelcomeDialog: React.FC<WelcomeDialogProps> = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 animate-fadeInUp"
-      style={{ animationDuration: '0.3s' }}
+      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
     >
-      <div className="bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm text-white border border-slate-700 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-xl w-full max-w-sm text-text-main border border-border overflow-hidden">
         <div className="p-6 text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary/20 border-2 border-primary mb-4">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary-light border-2 border-primary mb-4">
                 <Zap size={32} className="text-primary" />
             </div>
           <h2 className="text-2xl font-bold mb-2">Welcome to the Simulator!</h2>
-          <p className="text-slate-300 mb-6">
+          <p className="text-text-secondary mb-6">
             This is your risk-free sandbox to practice trading with real-time simulated data. Test your strategies, learn the tools, and build confidence before entering the real market.
           </p>
         </div>
-        <div className="p-4 bg-slate-900/50 border-t border-slate-700">
+        <div className="p-4 bg-background/50 border-t border-border">
           <button 
             onClick={onClose} 
-            className="w-full p-3 bg-primary-dark rounded-lg font-semibold button-press-feedback hover:bg-primary-dark/90 transition-colors"
+            className="w-full p-3 bg-primary text-white rounded-lg font-semibold button-press-feedback hover:bg-primary-dark transition-colors"
           >
             Let's Go!
           </button>

@@ -1,5 +1,4 @@
 
-
 import React, { useRef, useEffect, useState } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -10,6 +9,7 @@ import * as animejs from 'animejs';
 const anime = (animejs as any).default;
 import { supabase } from '../services/supabaseClient';
 import { RAZORPAY_KEY_ID } from '../env';
+import { ChevronRight } from '../components/common/Icons';
 
 declare global {
   interface Window {
@@ -30,7 +30,6 @@ const plans = [
         duration: 1, // Duration in months
         description: [
             'Access to premium learning and courses',
-            'Access to daily chart analysis',
             'Access to upcoming stock events',
         ]
     },
@@ -42,7 +41,8 @@ const plans = [
         highlight: true,
         description: [
             'Access to every Basic Plan benefit',
-            '24/7 live support',
+            'Access to daily chart analysis',
+            'Upcoming stock events with more details and planning',
             'Access to live post market and pre market news and reports',
             'Access to live market streaming',
         ]
@@ -169,11 +169,12 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
 
     return (
         <div ref={viewRef} className="relative text-text-main min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-            <button 
+            <button
                 onClick={() => onNavigate('/home')}
-                className="absolute top-4 left-4 z-20 text-text-secondary font-semibold text-sm hover:underline anim-child"
+                className="absolute top-4 left-4 z-20 w-10 h-10 flex items-center justify-center bg-card rounded-full border border-border shadow-sm hover:bg-background transition-colors anim-child button-press-feedback"
+                aria-label="Back to Home"
             >
-                &lt; Back to Home
+                <ChevronRight size={22} className="transform rotate-180 text-text-secondary" />
             </button>
 
             <div className="relative z-10 max-w-4xl mx-auto text-center">

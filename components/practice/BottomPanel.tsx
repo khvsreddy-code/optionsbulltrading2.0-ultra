@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PortfolioPanel from './PortfolioPanel';
 import TradeHistoryPanel from './TradeHistoryPanel';
 import PortfolioDisplay from './PortfolioDisplay';
-import { RotateCcw } from '../common/Icons';
+import { RotateCcw, ChevronDown } from '../common/Icons';
 import type { Portfolio, Position } from '../../types';
 
 interface BottomPanelProps {
@@ -11,25 +11,26 @@ interface BottomPanelProps {
   onReversePosition: (position: Position) => void;
   onResetPortfolio: () => void;
   onManageFunds: () => void;
+  onClose: () => void;
 }
 
-const BottomPanel: React.FC<BottomPanelProps> = ({ portfolio, onPositionClick, onReversePosition, onResetPortfolio, onManageFunds }) => {
+const BottomPanel: React.FC<BottomPanelProps> = ({ portfolio, onPositionClick, onReversePosition, onResetPortfolio, onManageFunds, onClose }) => {
     const [activeTab, setActiveTab] = useState<'positions' | 'history'>('positions');
     
     return (
-        <div className="flex-shrink-0 bg-[#131722] flex flex-col border-t border-[#2A2E39]">
+        <div className="flex-shrink-0 bg-background flex flex-col border-t border-border h-[320px] animate-slideInUp" style={{ animationDuration: '0.3s' }}>
             {/* Panel Header */}
-            <div className="flex items-center justify-between p-2 flex-wrap border-b border-[#2A2E39]">
+            <div className="flex items-center justify-between p-2 flex-wrap border-b border-border">
                 <div className="flex items-center space-x-1">
                     <button 
                         onClick={() => setActiveTab('positions')}
-                        className={`px-3 py-1.5 font-semibold text-center text-sm rounded-md transition-colors ${activeTab === 'positions' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        className={`px-3 py-1.5 font-semibold text-center text-sm rounded-md transition-colors ${activeTab === 'positions' ? 'bg-card text-text-main' : 'text-text-secondary hover:bg-card hover:text-text-main'}`}
                     >
                         Positions ({portfolio.positions.length})
                     </button>
                     <button 
                         onClick={() => setActiveTab('history')}
-                        className={`px-3 py-1.5 font-semibold text-center text-sm rounded-md transition-colors ${activeTab === 'history' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                        className={`px-3 py-1.5 font-semibold text-center text-sm rounded-md transition-colors ${activeTab === 'history' ? 'bg-card text-text-main' : 'text-text-secondary hover:bg-card hover:text-text-main'}`}
                     >
                         History ({portfolio.trades.length})
                     </button>
@@ -38,16 +39,23 @@ const BottomPanel: React.FC<BottomPanelProps> = ({ portfolio, onPositionClick, o
                    <PortfolioDisplay portfolio={portfolio} onManageFunds={onManageFunds} />
                    <button
                         onClick={onResetPortfolio}
-                        className="p-2 bg-slate-800 hover:bg-slate-700 rounded-md text-sm transition button-press-feedback border border-slate-700"
+                        className="p-2 bg-card hover:bg-background rounded-md text-sm transition button-press-feedback border border-border"
                         aria-label="Reset Portfolio"
                     >
-                        <RotateCcw size={16} className="text-slate-400" />
+                        <RotateCcw size={16} className="text-text-secondary" />
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="p-2 bg-card hover:bg-background rounded-md text-sm transition button-press-feedback border border-border"
+                        aria-label="Close Portfolio"
+                    >
+                        <ChevronDown size={16} className="text-text-secondary" />
                     </button>
                 </div>
             </div>
 
             {/* Content Area */}
-            <div className="overflow-y-auto" style={{ height: 240 }}>
+            <div className="overflow-y-auto flex-grow">
                 {activeTab === 'positions' && (
                     <PortfolioPanel 
                         portfolio={portfolio} 

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useContext } from 'react';
 import type { CandleData, Instrument, Order, OrderSide, Portfolio, Position, Trade, Timeframe } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
 import { loadPortfolio, savePortfolio } from '../services/portfolioService';
+import { ThemeContext } from '../App';
 
 // Components
 import SimulatorHeader from '../components/practice/SimulatorHeader';
@@ -13,11 +14,11 @@ import PositionManagerDialog from '../components/practice/PositionManagerDialog'
 import OrderDialog from '../components/practice/OrderDialog';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
+import PortfolioBar from '../components/practice/PortfolioBar';
 
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
-  theme: 'light' | 'dark';
 }
 
 interface ChartComponentHandle {
@@ -52,7 +53,8 @@ const aggregateHistory = (minuteBars: CandleData[], timeframe: Timeframe): Candl
 };
 
 
-const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
+const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
+    const { theme } = useContext(ThemeContext);
     const [instruments, setInstruments] = useState<Instrument[]>(curatedStocks);
     const [selectedInstrument, setSelectedInstrument] = useState<Instrument | null>(null);
     const [initialChartData, setInitialChartData] = useState<CandleData[]>([]);
@@ -67,6 +69,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
+    const [isPortfolioOpen, setIsPortfolioOpen] = useState(false);
 
     const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
@@ -314,9 +317,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
 
     if (error) {
         return (
-            <div className="bg-[#131722] text-white h-screen flex flex-col items-center justify-center p-4 text-center">
+            <div className="bg-background text-text-main h-screen flex flex-col items-center justify-center p-4 text-center">
                 <h2 className="text-xl font-bold text-red-500">Failed to Load Simulator</h2>
-                <p className="text-slate-400 mt-2 max-w-md">{error}</p>
+                <p className="text-text-secondary mt-2 max-w-md">{error}</p>
                 <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-primary text-white font-semibold rounded-lg">
                     Refresh Page
                 </button>
@@ -327,11 +330,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
     return (
-        <div className="bg-[#131722] text-white h-screen flex flex-col font-sans">
+        <div className="bg-background text-text-main h-screen flex flex-col font-sans">
             <WelcomeDialog isOpen={showWelcome} onClose={() => { setShowWelcome(false); localStorage.setItem('hasSeenSimulatorWelcome', 'true'); }} />
             <SimulatorHeader onNavigate={onNavigate} title="Market Simulator" />
             
-            <div className="practice-container">
+            <div className="practice-container flex-grow">
                 <main className="practice-canvas-container flex flex-col">
                     <ChartHeader
                         instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
@@ -340,8 +343,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                     />
                     <div className="flex-grow relative">
                         {isLoading ? (
-                             <div className="absolute inset-0 flex items-center justify-center bg-[#131722]/80 z-30">
-                                <svg className="animate-spin h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
+                                <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
@@ -352,15 +355,28 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate, theme }) => {
                                key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
                                initialData={initialChartData}
                                timeframe={timeframe}
+                               theme={theme}
                            />
                         )}
                     </div>
                 </main>
             </div>
-            <BottomPanel
-                portfolio={portfolio} onPositionClick={handleOpenPositionManager} onReversePosition={handleReversePosition}
-                onResetPortfolio={handleResetPortfolio} onManageFunds={handleManageFunds}
-            />
+            
+            {isPortfolioOpen ? (
+                <BottomPanel
+                    portfolio={portfolio}
+                    onPositionClick={handleOpenPositionManager}
+                    onReversePosition={handleReversePosition}
+                    onResetPortfolio={handleResetPortfolio}
+                    onManageFunds={handleManageFunds}
+                    onClose={() => setIsPortfolioOpen(false)}
+                />
+            ) : (
+                <PortfolioBar 
+                    portfolio={portfolio}
+                    onOpen={() => setIsPortfolioOpen(true)}
+                />
+            )}
             
             <PositionManagerDialog
                 position={selectedPosition} isOpen={isPositionManagerOpen} onClose={() => setIsPositionManagerOpen(false)}
