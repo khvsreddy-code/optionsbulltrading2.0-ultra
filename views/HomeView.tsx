@@ -243,15 +243,11 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
              {/* Learning Library Section */}
             <div>
-                <div className="section-header flex justify-between items-center mb-4">
+                <div className="section-header mb-4">
                     <h2 className="text-xl font-bold text-text-main">Learning Library</h2>
-                    <button onClick={() => onNavigate('/learning')} className="flex items-center text-sm font-semibold text-primary">
-                        <span>See all</span>
-                        <ChevronRight size={18} />
-                    </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                     {learningCurriculum.slice(0, 3).map((chapter, i) => (
+                     {learningCurriculum.map((chapter, i) => (
                          <div className="library-card-item" key={chapter.id}>
                             <ImageCard 
                                 title={chapter.title} 

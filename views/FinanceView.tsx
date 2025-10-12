@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
-import { Search, Bell, TrendingUp, TrendingDown, Plus } from '../components/common/Icons';
+import { Search, Bell, TrendingUp, TrendingDown, Plus, ChevronRight } from '../components/common/Icons';
 import Sparkline from '../components/home/Sparkline';
 
 // --- TYPE DEFINITIONS for Gemini Response ---
@@ -176,12 +176,19 @@ const FinanceView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
     return (
         <div className="bg-background min-h-screen font-sans text-text-main">
             <header className="bg-card border-b border-border p-4 sticky top-0 z-10">
-                <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-                    <p className="text-sm font-semibold text-text-secondary hidden md:block">AI Finance &gt; Market Overview</p>
+                <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => onNavigate('/home')} className="p-2 -ml-2 rounded-full hover:bg-background" aria-label="Go back to home">
+                            <ChevronRight size={22} className="text-text-secondary transform rotate-180" />
+                        </button>
+                        <p className="text-sm font-semibold text-text-secondary hidden md:block">AI Finance &gt; Market Overview</p>
+                    </div>
+
                     <div className="relative w-full max-w-md">
                         <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                         <input type="text" placeholder="Search for companies, tickers, or crypto" className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50" />
                     </div>
+
                     <div className="hidden md:flex items-center space-x-2">
                         <button className="flex items-center space-x-1 px-3 py-2 rounded-lg hover:bg-background text-sm font-semibold text-text-main"><Bell size={16}/><span>Price Alert</span></button>
                     </div>
