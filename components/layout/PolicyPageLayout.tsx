@@ -30,7 +30,7 @@ const PolicyPageLayout: React.FC<PolicyPageLayoutProps> = ({ title, onNavigate, 
                         India
                     </address>
                     <div className="mt-2">
-                        <p><strong>Email:</strong> <a href="mailto:Hemanthwork240@gmail.com" className="text-primary hover:underline">Hemanthwork240@gmail.com</a></p>
+                        <p><strong>Email:</strong> <a href="mailto:harinathareddy515@gmail.com" className="text-primary hover:underline">harinathareddy515@gmail.com</a></p>
                         <p><strong>Phone:</strong> <a href="tel:+919951373380" className="text-primary hover:underline">+91 9951373380</a></p>
                     </div>
                     <p className="mt-4 text-xs">

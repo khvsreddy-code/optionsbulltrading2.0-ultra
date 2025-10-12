@@ -23,7 +23,7 @@ const ContactUsView: React.FC<ContactUsViewProps> = ({ onNavigate }) => {
             <h3>Contact Details</h3>
             <ul>
                 <li><strong>Telephone No:</strong> <a href="tel:9951373380">9951373380</a></li>
-                <li><strong>E-Mail ID:</strong> <a href="mailto:hemanthwork240@gmail.com">hemanthwork240@gmail.com</a></li>
+                <li><strong>E-Mail ID:</strong> <a href="mailto:harinathareddy515@gmail.com">harinathareddy515@gmail.com</a></li>
             </ul>
         </PolicyPageLayout>
     );

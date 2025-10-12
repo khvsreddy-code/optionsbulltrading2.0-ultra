@@ -83,10 +83,8 @@ export const Sparkles: React.FC<IconProps> = ({ size = 24, className = '' }) => 
 );
 export const Share = createIcon(<><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></>);
 export const Rupee = createIcon(<>
-  <path d="M18 5h-11a4 4 0 0 0 0 8h1" />
-  <path d="M7 9h11" />
-  <path d="M12 13l5 5" />
-  <path d="M12 13h-5" />
+  <path d="M18 5h-11a4 4 0 0 0 0 8h1l6 -6" />
+  <path d="M6 9h14" />
 </>);
 
 

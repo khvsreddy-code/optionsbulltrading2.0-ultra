@@ -27,7 +27,7 @@ const ShippingPolicyView: React.FC<ShippingPolicyViewProps> = ({ onNavigate }) =
 
             <h3>Customer Support</h3>
             <p>
-                Optionsbulltrading Inc. is committed to providing excellent service. For any issues in utilizing our services, you may contact our helpdesk at <strong><a href="tel:+919951373380">9951373380</a></strong> or <strong><a href="mailto:Hemanthwork240@gmail.com">Hemanthwork240@gmail.com</a></strong>.
+                Optionsbulltrading Inc. is committed to providing excellent service. For any issues in utilizing our services, you may contact our helpdesk at <strong><a href="tel:+919951373380">9951373380</a></strong> or <strong><a href="mailto:harinathareddy515@gmail.com">harinathareddy515@gmail.com</a></strong>.
             </p>
 
         </PolicyPageLayout>

@@ -55,13 +55,13 @@ const PrivacyPolicyView: React.FC<PrivacyPolicyViewProps> = ({ onNavigate }) => 
             <p>You may choose to restrict the collection or use of your personal information in the following ways:</p>
             <ul>
                 <li>whenever you are asked to fill in a form on the website, look for the box that you can click to indicate that you do not want the information to be used by anybody for direct marketing purposes</li>
-                <li>if you have previously agreed to us using your personal information for direct marketing purposes, you may change your mind at any time by writing to or emailing us at hemanthwork240@gmail.com</li>
+                <li>if you have previously agreed to us using your personal information for direct marketing purposes, you may change your mind at any time by writing to or emailing us at harinathareddy515@gmail.com</li>
             </ul>
             <p>
                 We will not sell, distribute or lease your personal information to third parties unless we have your permission or are required by law to do so. We may use your personal information to send you promotional information about third parties which we think you may find interesting if you tell us that you wish this to happen.
             </p>
             <p>
-                If you believe that any information we are holding on you is incorrect or incomplete, please write to kadapa, ngo colony Cuddapah ANDHRA PRADESH 516002 . or contact us at 9951373380 or hemanthwork240@gmail.com as soon as possible. We will promptly correct any information found to be incorrect.
+                If you believe that any information we are holding on you is incorrect or incomplete, please write to kadapa, ngo colony Cuddapah ANDHRA PRADESH 516002 . or contact us at 9951373380 or harinathareddy515@gmail.com as soon as possible. We will promptly correct any information found to be incorrect.
             </p>
         </PolicyPageLayout>
     );
