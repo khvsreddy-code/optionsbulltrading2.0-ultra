@@ -75,6 +75,7 @@
         --text-secondary: #6B7280;
         --border-color: #E5E7EB;
         --accent-yellow: #F59E0B;
+        --card-bg-transparent: rgba(255, 255, 255, 0.1);
       }
       
       .dark {
@@ -86,6 +87,7 @@
         --text-main: #F9FAFB;   /* gray-50 */
         --text-secondary: #9CA3AF; /* gray-400 */
         --border-color: #374151; /* gray-700 */
+        --card-bg-transparent: rgba(31, 41, 55, 0.4);
       }
 
       body {
@@ -189,6 +191,75 @@
       @keyframes spin {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
+      }
+      
+      /* --- NEW: Pricing Page Background --- */
+      @keyframes spin-blackhole {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+
+      .pricing-page-container {
+        position: relative;
+        overflow: hidden;
+        background-color: #0c0d2b;
+        background-image:
+          radial-gradient(1px 1px at 25px 5px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1px 1px at 50px 25px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1.5px 1.5px at 100px 10px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1px 1px at 120px 40px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(1.5px 1.5px at 150px 20px, white, rgba(255, 255, 255, 0)),
+          radial-gradient(2px 2px at 180px 30px, white, rgba(255, 255, 255, 0));
+        background-repeat: repeat-x;
+        background-size: 200px 100%;
+        animation: warp-speed 15s linear infinite;
+      }
+
+      .pricing-page-container::before {
+        content: '';
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 60vmin;
+        height: 60vmin;
+        min-width: 300px;
+        min-height: 300px;
+        max-width: 600px;
+        max-height: 600px;
+        background-image: url('https://i.imgur.com/8013h3A.jpg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        z-index: 1;
+        opacity: 0.6;
+        animation: spin-blackhole 90s linear infinite;
+      }
+
+      .pricing-page-container .pro-card,
+      .pricing-page-container .back-button-themed {
+        background-color: var(--card-bg-transparent) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-color: rgba(255, 255, 255, 0.2) !important;
+      }
+
+      .pricing-page-container .pro-card h3,
+      .pricing-page-container .pro-card span,
+      .pricing-page-container .pro-card li {
+        color: #F9FAFB !important;
+        text-shadow: 0 0 3px rgba(0,0,0,0.5);
+      }
+      .pricing-page-container .pro-card li span {
+         color: #D1D5DB !important;
+      }
+      .pricing-page-container .pro-card .line-through {
+         color: #9CA3AF !important;
+      }
+      
+      .pricing-content-wrapper {
+        position: relative;
+        z-index: 10;
+        width: 100%;
       }
     </style>
   </head>

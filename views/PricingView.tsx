@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useState } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -168,34 +169,36 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     };
 
     return (
-        <div ref={viewRef} className="relative text-text-main min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-            <button
-                onClick={() => onNavigate('/home')}
-                className="absolute top-4 left-4 z-20 w-10 h-10 flex items-center justify-center bg-card rounded-full border border-border shadow-sm hover:bg-background transition-colors anim-child button-press-feedback"
-                aria-label="Back to Home"
-            >
-                <ChevronRight size={22} className="transform rotate-180 text-text-secondary" />
-            </button>
+        <div ref={viewRef} className="pricing-page-container min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="pricing-content-wrapper">
+                <button
+                    onClick={() => onNavigate('/home')}
+                    className="back-button-themed absolute top-4 left-4 z-20 w-10 h-10 flex items-center justify-center rounded-full shadow-sm hover:bg-gray-700/50 transition-colors anim-child button-press-feedback"
+                    aria-label="Back to Home"
+                >
+                    <ChevronRight size={22} className="transform rotate-180 text-gray-300" />
+                </button>
 
-            <div className="relative z-10 max-w-4xl mx-auto text-center">
-                <header className="anim-child">
-                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-text-main">Choose Your Plan</h1>
-                    <p className="text-lg text-text-secondary mt-2">Start your journey to becoming a profitable trader today.</p>
-                </header>
+                <div className="relative z-10 max-w-4xl mx-auto text-center">
+                    <header className="anim-child">
+                        <h1 className="text-4xl md:text-5xl font-bold leading-tight text-white [text-shadow:0_0_8px_rgba(0,0,0,0.7)]">Choose Your Plan</h1>
+                        <p className="text-lg text-gray-300 mt-2 [text-shadow:0_0_5px_rgba(0,0,0,0.7)]">Start your journey to becoming a profitable trader today.</p>
+                    </header>
 
-                <main className="mt-12 w-full">
-                    <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto">
-                        {plans.map(plan => (
-                            <div className="anim-child w-full" key={plan.title}>
-                                <PricingCard 
-                                    plan={plan} 
-                                    onSubscribe={handleSubscribe} 
-                                    isLoading={loadingPlan === plan.title}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </main>
+                    <main className="mt-12 w-full">
+                        <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto">
+                            {plans.map(plan => (
+                                <div className="anim-child w-full" key={plan.title}>
+                                    <PricingCard 
+                                        plan={plan} 
+                                        onSubscribe={handleSubscribe} 
+                                        isLoading={loadingPlan === plan.title}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+                </div>
             </div>
             
             <PaymentCancelledDialog 
