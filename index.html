@@ -193,96 +193,57 @@
         to { transform: rotate(360deg); }
       }
       
-      /* --- NEW: Milky Way Galaxy Animation for Pricing Page --- */
-      @keyframes rotate-galaxy-arms {
-        from { transform: translate(-50%, -50%) rotate(0deg); }
-        to { transform: translate(-50%, -50%) rotate(360deg); }
+      /* --- NEW: Star Trek Inspired Cosmic Animation for Pricing Page --- */
+      @keyframes move-stars {
+        from { background-position: 0 0; }
+        to { background-position: 0 -10000px; }
       }
-
-      @keyframes pulse-galaxy-core {
-          0%, 100% {
-              transform: translate(-50%, -50%) scale(1);
-              opacity: 0.9;
-              box-shadow: 0 0 40px 15px rgba(255, 255, 240, 0.4);
-          }
-          50% {
-              transform: translate(-50%, -50%) scale(1.05);
-              opacity: 1;
-              box-shadow: 0 0 50px 20px rgba(255, 255, 240, 0.5);
-          }
-      }
-
+      
       .pricing-page-container {
         position: relative;
         overflow: hidden;
         background-color: #0c0d2b;
-        background-image:
-          radial-gradient(1px 1px at 25px 5px, white, rgba(255, 255, 255, 0)),
-          radial-gradient(1px 1px at 50px 25px, white, rgba(255, 255, 255, 0)),
-          radial-gradient(1.5px 1.5px at 100px 10px, white, rgba(255, 255, 255, 0)),
-          radial-gradient(1px 1px at 120px 40px, white, rgba(255, 255, 255, 0)),
-          radial-gradient(1.5px 1.5px at 150px 20px, white, rgba(255, 255, 255, 0)),
-          radial-gradient(2px 2px at 180px 30px, white, rgba(255, 255, 255, 0));
-        background-repeat: repeat-x;
-        background-size: 200px 100%;
-        animation: warp-speed 15s linear infinite;
       }
-
-      /* The Galaxy Arms - A more detailed implementation */
-      .pricing-page-container::before {
+      
+      /* Create three layers of stars for a parallax effect */
+      .pricing-page-container::before,
+      .pricing-page-container::after,
+      .stars-overlay {
         content: '';
         position: fixed;
-        top: 50%;
-        left: 50%;
-        width: 100vmin; /* Larger to feel more epic */
-        height: 100vmin;
-        min-width: 700px;
-        min-height: 700px;
-        max-width: 1000px;
-        max-height: 1000px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         z-index: 1;
-        
-        /* Layered gradients to create spiral arms effect */
-        background-image: 
-          /* Arm 1 */
-          radial-gradient(ellipse at 40% 60%, rgba(173, 216, 230, 0.3) 0%, transparent 40%),
-          /* Arm 2 */
-          radial-gradient(ellipse at 60% 40%, rgba(230, 190, 255, 0.3) 0%, transparent 40%),
-          /* Dust lanes and structure */
-          conic-gradient(from 180deg at 50% 50%, transparent, rgba(150, 180, 255, 0.3) 10%, transparent 35%),
-          conic-gradient(from 0deg at 50% 50%, transparent, rgba(200, 180, 255, 0.3) 15%, transparent 40%);
-        
-        /* Mask to create the spiral shape */
-        -webkit-mask-image: radial-gradient(ellipse at center, transparent 15%, black 16%, black 50%, transparent 51%);
-        mask-image: radial-gradient(ellipse at center, transparent 15%, black 16%, black 50%, transparent 51%);
-
-        animation: rotate-galaxy-arms 120s linear infinite; /* Slower, more majestic rotation */
-        border-radius: 0;
       }
 
-      /* The Galaxy Core - Brighter and more defined */
+      /* Layer 1: Small, fast stars in the foreground */
+      .pricing-page-container::before {
+        background-image: 
+          radial-gradient(1px 1px at 20px 30px, #FFFFFF, rgba(255,255,255,0)), 
+          radial-gradient(1px 1px at 80px 120px, #FFFFFF, rgba(255,255,255,0)),
+          radial-gradient(1.5px 1.5px at 150px 70px, #FFFFFF, rgba(255,255,255,0));
+        background-size: 200px 200px;
+        animation: move-stars 50s linear infinite;
+      }
+      
+      /* Layer 2: Medium-sized, medium-speed stars */
+      .stars-overlay {
+        background-image: 
+          radial-gradient(1.5px 1.5px at 50px 100px, #DDDDDD, rgba(255,255,255,0)),
+          radial-gradient(2px 2px at 120px 240px, #DDDDDD, rgba(255,255,255,0));
+        background-size: 400px 400px;
+        animation: move-stars 100s linear infinite;
+      }
+      
+      /* Layer 3: Large, slow stars in the background */
       .pricing-page-container::after {
-        content: '';
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 20vmin; 
-        height: 20vmin;
-        min-width: 120px;
-        min-height: 120px;
-        max-width: 200px;
-        max-height: 200px;
-        z-index: 2;
-
-        /* Brighter core with a softer glow */
-        background: radial-gradient(ellipse at center, rgba(255, 255, 240, 1) 0%, rgba(220, 230, 255, 0.7) 35%, transparent 65%);
-        border-radius: 50%;
-        
-        animation: pulse-galaxy-core 6s ease-in-out infinite;
-        
-        border: none;
-        /* The box-shadow is now part of the animation for a pulsing glow */
+        background-image: 
+          radial-gradient(2px 2px at 100px 50px, #BBBBBB, rgba(255,255,255,0)),
+          radial-gradient(2.5px 2.5px at 250px 180px, #BBBBBB, rgba(255,255,255,0));
+        background-size: 600px 600px;
+        animation: move-stars 150s linear infinite;
       }
 
       .pricing-page-container .pro-card,

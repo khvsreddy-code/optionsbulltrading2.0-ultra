@@ -1,5 +1,6 @@
 
 
+
 import React, { useRef, useEffect, useState } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -170,6 +171,7 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
 
     return (
         <div ref={viewRef} className="pricing-page-container min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="stars-overlay"></div>
             <div className="pricing-content-wrapper">
                 <button
                     onClick={() => onNavigate('/home')}
