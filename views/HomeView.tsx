@@ -30,7 +30,6 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
                 targets: cardEl,
                 translateY: -8,
                 scale: 1.05,
-                rotate: '2deg',
                 boxShadow: '0 12px 20px rgba(0,0,0,0.1), 0 5px 8px rgba(0,0,0,0.08)',
                 duration: 400,
                 easing: 'easeOutElastic(1, .8)'
@@ -43,7 +42,6 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
                 targets: cardEl,
                 translateY: 0,
                 scale: 1,
-                rotate: 0,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                 duration: 250,
                 easing: 'easeOutQuad'
@@ -58,6 +56,9 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
             cardEl.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, []);
+    
+    // Shorten titles like "Module 1: Basics" to just "Basics" for cleaner display
+    const displayTitle = title.includes(': ') ? title.split(': ')[1] : title;
 
     return (
         <div
@@ -65,7 +66,11 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
             onClick={onClick}
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={title} className="w-full h-full object-cover" />
+            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+            <div className="absolute top-0 left-0 p-4">
+                 <h3 className="font-bold text-white text-lg leading-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{displayTitle}</h3>
+            </div>
         </div>
     );
 };
@@ -194,9 +199,8 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         <div ref={homeViewRef} className="p-4 space-y-8">
             {/* Quick Links & Subscribe */}
             <div className="quick-links">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                     <IconLink title="Free Group" icon={Telegram} href="https://t.me/optionsbulltrading" />
-                    <IconLink title="Library" icon={GraduationCap} onClick={() => onNavigate('/learning')} />
                     <IconLink title="Share App" icon={Share} onClick={handleShare} />
                     <IconLink title="Exclusive Group" icon={Sparkles} onClick={() => onNavigate('/pricing')} />
                 </div>
@@ -214,17 +218,17 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
             </div>
             
-            {/* Featured Section */}
+            {/* Featured for you Section */}
             <div>
                 <h2 className="section-header text-xl font-bold mb-4 text-text-main">Featured for you</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                     {mainCards.map((card, i) => (
                         <div className="main-card-item" key={i}>
                              <ImageCard 
                                 title={card.title} 
                                 image={card.image} 
                                 onClick={() => {}} 
-                                className="aspect-[3/4]"
+                                className="aspect-[9/16]"
                             />
                         </div>
                     ))}
