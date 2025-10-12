@@ -131,7 +131,7 @@
         filter: url(#distortion);
       }
       
-      /* --- NEW: Star Trek Inspired "Warp Speed" Button --- */
+      /* --- Star Trek Inspired "Warp Speed" Button --- */
       @keyframes warp-speed {
         0% { background-position: 0% 50%; }
         100% { background-position: 200% 50%; }
@@ -171,7 +171,7 @@
         text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
       }
 
-      /* --- NEW: Initial Loader to Prevent Flickering --- */
+      /* --- Initial Loader to Prevent Flickering --- */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -194,9 +194,18 @@
       }
       
       /* --- NEW: High-Fidelity Blackhole Animation for Pricing Page --- */
+      @keyframes pulse-glow {
+        0%, 100% {
+          box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7), 0 0 20px 5px rgba(255, 255, 255, 0.5), 0 0 40px 10px rgba(100, 180, 255, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.9), 0 0 40px 12px rgba(255, 255, 255, 0.7), 0 0 70px 22px rgba(100, 180, 255, 0.4);
+        }
+      }
+
       @keyframes spin-blackhole-disk {
-        from { transform: translate(-50%, -50%) perspective(400px) rotateX(75deg) rotate(0deg); }
-        to { transform: translate(-50%, -50%) perspective(400px) rotateX(75deg) rotate(360deg); }
+        from { transform: translate(-50%, -50%) perspective(300px) rotateX(80deg) rotate(0deg); }
+        to { transform: translate(-50%, -50%) perspective(300px) rotateX(80deg) rotate(360deg); }
       }
 
       .pricing-page-container {
@@ -215,63 +224,48 @@
         animation: warp-speed 15s linear infinite;
       }
 
-      /* The Accretion Disk */
+      /* The Accretion Disk (horizontal band of light) */
       .pricing-page-container::before {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
-        width: 60vmin;
-        height: 60vmin;
-        min-width: 300px;
-        min-height: 300px;
-        max-width: 500px;
-        max-height: 500px;
-        z-index: 1; /* Behind the black hole */
+        width: 70vmin;
+        height: 70vmin;
+        min-width: 400px;
+        min-height: 400px;
+        max-width: 600px;
+        max-height: 600px;
+        z-index: 1;
         border-radius: 50%;
+        background: conic-gradient(from 90deg, #ffcc00, #ffae42, #ff8c00, #e67300, #ff8c00, #ffae42, #ffcc00);
         
-        background: conic-gradient(
-            from 90deg, 
-            #ffcc00, #ffae42, #ff8c00, #e67300, #a14000, 
-            #4d1c00, #a14000, #e67300, #ff8c00, #ffae42, 
-            #ffcc00
-        );
-        
-        /* Mask to create the ring and dark equatorial lane */
-        -webkit-mask-image: 
-            radial-gradient(circle at center, transparent 40%, black 41%),
-            linear-gradient(to bottom, transparent 49%, black 49%, black 51%, transparent 51%);
-        mask-image: 
-            radial-gradient(circle at center, transparent 40%, black 41%),
-            linear-gradient(to bottom, transparent 49%, black 49%, black 51%, transparent 51%);
+        -webkit-mask-image: radial-gradient(circle at center, transparent 45%, black 46%, black 54%, transparent 55%);
+        mask-image: radial-gradient(circle at center, transparent 45%, black 46%, black 54%, transparent 55%);
 
-        animation: spin-blackhole-disk 25s linear infinite;
+        animation: spin-blackhole-disk 20s linear infinite;
       }
 
-      /* The Black Hole Event Horizon + Lensed Light */
+      /* The Black Hole Event Horizon + Photon Ring */
       .pricing-page-container::after {
         content: '';
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 24vmin; /* Sized to fit inside the disk's hole */
-        height: 60vmin; /* Taller to create the lensed arc */
-        min-width: 120px;
-        min-height: 300px;
-        max-width: 200px;
-        max-height: 500px;
-        z-index: 2; /* On top of the disk */
+        width: 30vmin; 
+        height: 30vmin;
+        min-width: 180px;
+        min-height: 180px;
+        max-width: 280px;
+        max-height: 280px;
+        z-index: 2;
 
-        /* Layered gradients: 1. White Lensed Ring, 2. Black Hole, 3. Glow */
-        background:
-            /* Lensed light (a very thin white ellipse) */
-            radial-gradient(ellipse 100% 41.5% at 50% 50%, transparent 98.5%, white 99%),
-            /* Black hole circle */
-            radial-gradient(circle at center, black 98%, transparent 99%);
-        
+        background: radial-gradient(circle at center, black 88%, transparent 92%);
+        border: 3px solid rgba(255, 255, 255, 0.9);
         border-radius: 50%;
-        box-shadow: 0 0 15px 3px rgba(255, 180, 80, 0.25);
+
+        animation: pulse-glow 4s ease-in-out infinite;
       }
 
 
