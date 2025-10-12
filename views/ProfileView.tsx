@@ -1,5 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+// FIX: Updated Supabase type import to resolve module export errors.
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { useProfileData } from '../services/profileService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';

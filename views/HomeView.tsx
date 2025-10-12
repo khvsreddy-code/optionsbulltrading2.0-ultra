@@ -1,5 +1,7 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+// FIX: Updated Supabase type import to resolve module export errors.
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import IconLink from '../components/home/IconLink';
 import { Telegram, GraduationCap, CheckCircle, Sparkles, DollarSign, ChevronRight, Share } from '../components/common/Icons';
 import { learningCurriculum } from '../data/learningContent';

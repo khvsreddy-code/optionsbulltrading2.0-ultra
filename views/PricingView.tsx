@@ -1,5 +1,7 @@
+
 import React, { useRef, useEffect, useState } from 'react';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+// FIX: Updated Supabase type import to resolve module export errors.
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import PricingCard from '../components/pricing/PricingCard';
 import PaymentCancelledDialog from '../components/pricing/PaymentCancelledDialog';
 // FIX: Correctly import animejs to handle module interoperability issues.
@@ -76,7 +78,7 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
             const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
                 body: { 
                     amount: plan.price * 100, // Amount must be in paise
-                    receipt: `receipt_user_${user.id}_${Date.now()}`,
+                    receipt: `rcpt_${user.id.substring(0, 8)}_${Date.now().toString(36)}`,
                     key_id: RAZORPAY_KEY_ID, // Pass the public key ID to the function
                 },
             });

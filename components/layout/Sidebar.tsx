@@ -1,5 +1,7 @@
+
 import React from 'react';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+// FIX: Updated Supabase type import to resolve module export errors.
+import type { User as SupabaseUser } from '@supabase/auth-js';
 import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';

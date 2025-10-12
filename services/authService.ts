@@ -1,5 +1,7 @@
+
 import { supabase } from './supabaseClient';
-import type { User } from '@supabase/supabase-js';
+// FIX: Updated Supabase type import to resolve module export errors.
+import type { User } from '@supabase/auth-js';
 
 /**
  * Initiates the Google Sign-In process using a popup window.
@@ -43,7 +45,7 @@ export async function signOutUser() {
  * Updates the user's profile metadata in Supabase Auth.
  */
 export async function updateUserProfile(userId: string, data: { [key: string]: any }) {
-    const { data: user, error } = await supabase.auth.updateUser({ data });
+    const { data: { user }, error } = await supabase.auth.updateUser({ data });
     return { user, error };
 }
 

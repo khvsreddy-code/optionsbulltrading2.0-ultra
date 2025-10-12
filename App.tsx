@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+// FIX: Updated Supabase type imports to resolve module export errors.
+import type { Session, User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './services/supabaseClient';
 import type { View } from './types';
 
