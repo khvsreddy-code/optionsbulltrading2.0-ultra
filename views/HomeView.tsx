@@ -17,7 +17,14 @@ interface HomeViewProps {
     user: SupabaseUser | null;
 }
 
-const ImageCard: React.FC<{title: string, image: string, onClick: () => void, className?: string, textPosition?: 'top' | 'bottom'}> = ({ title, image, onClick, className = '', textPosition = 'top' }) => {
+const ImageCard: React.FC<{
+    title: string; 
+    image: string; 
+    onClick: () => void; 
+    className?: string; 
+    textPosition?: 'top' | 'bottom';
+    fitContent?: boolean;
+}> = ({ title, image, onClick, className = '', textPosition = 'top', fitContent = false }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -66,13 +73,17 @@ const ImageCard: React.FC<{title: string, image: string, onClick: () => void, cl
     
     const textContainerClass = textPosition === 'top' ? 'top-0' : 'bottom-0';
 
+    const imgClass = fitContent
+        ? "w-full h-auto block transition-transform duration-300 group-hover:scale-105"
+        : "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105";
+
     return (
         <div
             ref={cardRef}
             onClick={onClick}
-            className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
+            className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${!fitContent ? className : ''}`}
         >
-            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <img src={image} alt={title} className={imgClass} />
             <div className={`absolute inset-0 ${gradientClass}`}></div>
             <div className={`absolute left-0 p-4 ${textContainerClass}`}>
                  <h3 className="font-bold text-white text-lg leading-tight" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{displayTitle}</h3>
@@ -224,9 +235,9 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
             </div>
             
-            {/* Featured for you Section */}
+            {/* What are you looking for? Section */}
             <div>
-                <h2 className="section-header text-xl font-bold mb-4 text-text-main">Featured for you</h2>
+                <h2 className="section-header text-xl font-bold mb-4 text-text-main">What are you looking for?</h2>
                 <div className="grid grid-cols-2 gap-4">
                     {mainCards.map((card, i) => (
                         <div className="main-card-item" key={i}>
@@ -234,7 +245,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                                 title={card.title} 
                                 image={card.image} 
                                 onClick={() => {}} 
-                                className="aspect-[9/16]"
+                                fitContent={true}
                             />
                         </div>
                     ))}
