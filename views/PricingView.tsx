@@ -2,8 +2,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PricingCard from '../components/pricing/PricingCard';
 import PaymentCancelledDialog from '../components/pricing/PaymentCancelledDialog';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 import { supabase } from '../services/supabaseClient';
+import { RAZORPAY_KEY_ID } from '../env';
 
 declare global {
   interface Window {
@@ -19,7 +22,7 @@ interface PricingViewProps {
 const plans = [
     {
         title: 'Basic Plan (1 Month)',
-        price: 2999,
+        price: 10,
         duration: 1, // Duration in months
         description: [
             'Access to premium learning and courses',
@@ -29,7 +32,7 @@ const plans = [
     },
     {
         title: 'Value Plan (3 Months)',
-        price: 8997,
+        price: 20,
         duration: 3,
         highlight: true,
         description: [
@@ -44,6 +47,7 @@ const plans = [
 const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     const viewRef = useRef<HTMLDivElement>(null);
     const [isCancelledDialogOpen, setIsCancelledDialogOpen] = useState(false);
+    const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
     useEffect(() => {
         if (viewRef.current) {
@@ -61,8 +65,11 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
     const handleSubscribe = async (plan: { title: string; price: number, duration: number }) => {
         if (!user) {
             alert('Please sign in to subscribe.');
+            onNavigate('/home');
             return;
         }
+        
+        setLoadingPlan(plan.title);
 
         try {
             // Step 1: Create a secure order on the backend
@@ -76,12 +83,13 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
             if (orderError || !orderData.id) {
                 console.error('Error creating Razorpay order:', orderError);
                 alert(`Could not initiate payment. ${orderError?.message || 'Please try again.'}`);
+                setLoadingPlan(null);
                 return;
             }
 
             // Step 2: Open Razorpay checkout with the secure order_id
             const options = {
-                key: 'rzp_test_RQ5XAtXLTbM4dL', // This is a public key, safe to expose
+                key: RAZORPAY_KEY_ID,
                 amount: plan.price * 100, 
                 currency: 'INR',
                 name: 'Optionsbulltrading Inc.',
@@ -103,11 +111,14 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                         if (verificationError) {
                             alert(`Payment verification failed: ${verificationError.message}`);
                         } else {
+                            alert('Payment successful! Your subscription is now active.');
                             // On successful payment, redirect to the Telegram link.
                             window.location.href = 'https://t.me/+rbWNf4Ig_3o4MDA1';
                         }
-                    } catch (verificationError) {
+                    } catch (verificationError: any) {
                          alert(`An error occurred during payment verification: ${verificationError.message}`);
+                    } finally {
+                        setLoadingPlan(null);
                     }
                 },
                 prefill: {
@@ -121,6 +132,7 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                     ondismiss: function() {
                         // Show cancelled dialog if user closes the modal
                         setIsCancelledDialogOpen(true);
+                        setLoadingPlan(null);
                     }
                 }
             };
@@ -130,10 +142,12 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                 rzp.open();
             } else {
                 alert('Payment gateway could not be loaded. Please check your connection and try again.');
+                setLoadingPlan(null);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Subscription process error:", error);
-            alert("An unexpected error occurred. Please try again.");
+            alert(`An unexpected error occurred: ${error.message}`);
+            setLoadingPlan(null);
         }
     };
 
@@ -156,7 +170,11 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
                     <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto">
                         {plans.map(plan => (
                             <div className="anim-child w-full" key={plan.title}>
-                                <PricingCard plan={plan} onSubscribe={handleSubscribe} />
+                                <PricingCard 
+                                    plan={plan} 
+                                    onSubscribe={handleSubscribe} 
+                                    isLoading={loadingPlan === plan.title}
+                                />
                             </div>
                         ))}
                     </div>

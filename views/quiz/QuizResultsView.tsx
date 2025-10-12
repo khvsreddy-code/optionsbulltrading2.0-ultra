@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 import type { QuizQuestion } from '../../types';
 import { CheckCircle, X, ChevronRight, RotateCcw } from '../../components/common/Icons';
 

@@ -210,8 +210,6 @@ const App: React.FC = () => {
         return <LoadingSpinner />;
     }
     
-    // Temporarily disabled for testing - allows access without login
-    /*
     if (!session) {
         return (
             <AuthLayout>
@@ -219,7 +217,6 @@ const App: React.FC = () => {
             </AuthLayout>
         );
     }
-    */
     
     // Views that have their own full-page layout
     const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance'];

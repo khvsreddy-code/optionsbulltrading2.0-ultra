@@ -3,7 +3,9 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { signOutUser, updateUserProfile, uploadAvatar } from '../services/authService';
 import { useProfileData } from '../services/profileService';
 import { ChevronRight, Pencil, Shield, FileText, Star, SignOut } from '../components/common/Icons';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 
 interface ProfileViewProps {
     user: SupabaseUser | null;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { Mic, StopCircle, X, MessageSquare } from '../components/common/Icons';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 
 // The `LiveSession` type is not exported from the library.
 // We infer the promise type directly from the `ai.live.connect` method for type safety.

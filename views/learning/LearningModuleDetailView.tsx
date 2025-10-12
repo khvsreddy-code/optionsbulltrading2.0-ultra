@@ -1,5 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 import { learningCurriculum } from '../../data/learningContent';
 import { ChevronRight, CheckCircle, GraduationCap } from '../../components/common/Icons';
 import { useProfileData } from '../../services/profileService';

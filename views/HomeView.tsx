@@ -5,7 +5,9 @@ import { Telegram, GraduationCap, CheckCircle, Sparkles, DollarSign, ChevronRigh
 import { learningCurriculum } from '../data/learningContent';
 import { useProfileData } from '../services/profileService';
 import { getTestsPassedCount, getTotalLessonCount } from '../services/progressService';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 
 interface HomeViewProps {
     onNavigate: (path: string) => void;

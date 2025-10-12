@@ -1,5 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import anime from 'animejs';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
 import { technicalIndicators } from '../../data/learning/technicalIndicatorsContent';
 import { ChevronRight } from '../../components/common/Icons';
 
