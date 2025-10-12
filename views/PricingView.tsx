@@ -83,7 +83,12 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
             
             if (orderError) {
                 console.error('Edge function returned an error:', orderError);
-                alert('Could not initiate payment. The server-side function failed. Please check the function logs in your Supabase dashboard for details.');
+                // Try to extract a more specific error message from the function's response.
+                let detailMessage = 'Please check the function logs in your Supabase dashboard for details.';
+                if (orderError.context && typeof orderError.context === 'object' && 'error' in orderError.context) {
+                    detailMessage = (orderError.context as any).error;
+                }
+                alert(`Could not initiate payment. The server-side function failed with the following message: "${detailMessage}"`);
                 setLoadingPlan(null);
                 return;
             }
