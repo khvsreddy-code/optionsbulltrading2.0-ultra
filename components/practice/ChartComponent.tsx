@@ -66,6 +66,12 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         candlestickSeriesRef.current.applyOptions({
             lastValueVisible: true,
             priceLineVisible: true,
+            // FIX: Set the price format once on initialization to prevent re-renders.
+            priceFormat: {
+                type: 'price',
+                precision: 2,
+                minMove: 0.01,
+            },
         });
 
         const resizeObserver = new ResizeObserver(entries => {
@@ -75,17 +81,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         return () => { resizeObserver.disconnect(); chart.remove(); };
     }, [timeframe]); // Recreate chart on timeframe change to update secondsVisible
     
-    useEffect(() => {
-        if (candlestickSeriesRef.current) {
-            candlestickSeriesRef.current.applyOptions({
-                priceFormat: {
-                    type: 'price', precision: 2, minMove: 0.01,
-                    formatter: (price) => countdown ? `${price.toFixed(2)}  ${countdown}` : price.toFixed(2),
-                },
-            });
-        }
-    }, [countdown]);
-
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
             const candlestickData: BarData[] = initialData.map(c => ({
@@ -115,7 +110,16 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }, [initialData]);
 
     return (
-        <div ref={chartContainerRef} className="absolute inset-0" />
+        <div className="absolute inset-0">
+            <div ref={chartContainerRef} className="w-full h-full" />
+            {countdown && (
+                <div 
+                    className="absolute bottom-2 right-[80px] z-10 bg-black/50 text-slate-300 text-sm font-mono px-2 py-1 rounded pointer-events-none"
+                >
+                    {countdown}
+                </div>
+            )}
+        </div>
     );
 });
 

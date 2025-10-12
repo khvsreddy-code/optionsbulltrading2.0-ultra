@@ -73,7 +73,12 @@ export class MarketSimulator {
             this.updateVolatilityRegime();
             const baseVolatility = { LOW: 0.0001, NORMAL: 0.0003, HIGH: 0.0009 };
             const effectiveVolatility = baseVolatility[this.volatilityRegime];
-            const change = (this.prng() - 0.5) * currentPrice * effectiveVolatility * 2;
+            
+            // FIX: Added a small positive drift to simulate a realistic upward-trending market
+            const drift = currentPrice * 0.0000005; // Small positive drift per tick
+            const volatility = (this.prng() - 0.5) * currentPrice * effectiveVolatility * 2;
+            const change = drift + volatility;
+
             currentPrice += change;
             high = Math.max(high, currentPrice);
             low = Math.min(low, currentPrice);
@@ -156,7 +161,11 @@ export class MarketSimulator {
         this.updateVolatilityRegime(); // Update volatility every second
         const baseVolatility = { LOW: 0.00005, NORMAL: 0.0001, HIGH: 0.0003 };
         const rand = this.prng() - 0.5;
-        const change = rand * this.liveBar.close * baseVolatility[this.volatilityRegime];
+
+        // FIX: Added a small positive drift to the live tick as well
+        const drift = this.liveBar.close * 0.0000005;
+        const volatility = rand * this.liveBar.close * baseVolatility[this.volatilityRegime];
+        const change = drift + volatility;
         
         const newPrice = parseFloat((this.liveBar.close + change).toFixed(2));
         
