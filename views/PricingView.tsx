@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect, useState } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -24,7 +25,8 @@ interface PricingViewProps {
 const plans = [
     {
         title: 'Basic Plan (1 Month)',
-        price: 10,
+        price: 2999,
+        originalPrice: 3999,
         duration: 1, // Duration in months
         description: [
             'Access to premium learning and courses',
@@ -34,7 +36,8 @@ const plans = [
     },
     {
         title: 'Value Plan (3 Months)',
-        price: 20,
+        price: 8997,
+        originalPrice: 10997,
         duration: 3,
         highlight: true,
         description: [
@@ -64,7 +67,7 @@ const PricingView: React.FC<PricingViewProps> = ({ onNavigate, user }) => {
         }
     }, []);
     
-    const handleSubscribe = async (plan: { title: string; price: number, duration: number }) => {
+    const handleSubscribe = async (plan: { title: string; price: number, duration: number, originalPrice?: number }) => {
         if (!user) {
             alert('Please sign in to subscribe.');
             onNavigate('/home');

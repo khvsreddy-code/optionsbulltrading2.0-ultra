@@ -203,13 +203,20 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
     return (
         <div ref={homeViewRef} className="p-4 space-y-8">
-            {/* Quick Links */}
-            <div className="pro-card p-4 quick-links">
+            {/* Quick Actions */}
+            <div className="pro-card p-4 space-y-4 quick-links">
                 <div className="grid grid-cols-3 gap-4">
                     <IconLink title="Free Group" href="https://t.me/optionsbulltradingfree" icon={Telegram} />
                     <IconLink title="Library" onClick={() => onNavigate('/learning')} icon={GraduationCap} />
                     <IconLink title="Web Sharing" onClick={handleShare} icon={Share} />
                 </div>
+                <button
+                    onClick={() => onNavigate('/pricing')}
+                    className="w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg bg-primary hover:bg-primary-dark transition-colors shadow-md shadow-primary/30 button-press-feedback"
+                >
+                    <DollarSign size={20} />
+                    <span>View Subscriptions</span>
+                </button>
             </div>
             
             {/* NEW Paper Trading Hero Card */}
