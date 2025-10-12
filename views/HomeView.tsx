@@ -215,7 +215,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     className="w-full flex items-center justify-center p-3 space-x-2 text-white font-semibold rounded-lg bg-primary hover:bg-primary-dark transition-colors shadow-md shadow-primary/30 button-press-feedback"
                 >
                     <DollarSign size={20} />
-                    <span>View Subscriptions</span>
+                    <span>Subscribe</span>
                 </button>
             </div>
             
