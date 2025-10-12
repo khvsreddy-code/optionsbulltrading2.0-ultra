@@ -1,41 +1,37 @@
 import type { CandleData } from '../types';
 
 /**
- * A hyper-realistic, deterministic, seeded pseudo-random market simulator.
- * This engine now generates high-fidelity 1-MINUTE OHLCV bars, providing a vast
- * historical dataset. It also simulates a live, in-progress 1-minute bar that
- * updates every second for a real-time experience.
+ * A hyper-realistic, state-based market simulator.
+ * This engine models market phases, volatility clustering, and rare events to
+ * generate authentic-looking price action. It produces high-fidelity 1-MINUTE OHLCV
+ * bars as its base, which are then aggregated by the view layer.
  */
 export class MarketSimulator {
     private subscribers: Set<(tick: CandleData) => void> = new Set();
     private readonly INTERNAL_TICK_MS = 1000;
     private tickIntervalId: ReturnType<typeof setInterval> | null = null;
-
     private history: CandleData[] = [];
-    private lastFinalizedBar: CandleData;
     private liveBar: CandleData | null = null;
     
-    private seed: number = 0;
+    // --- State Machine & Behavioral Modeling ---
+    private marketPhase: 'BULL' | 'BEAR' | 'CONSOLIDATION' = 'CONSOLIDATION';
+    private phaseCounter: number = 0;
+    private volatility: number = 0.0003;
+    private fearAndGreed: number = 50; // 0 (extreme fear) to 100 (extreme greed)
     private prng: () => number;
 
-    // State for volatility clustering
-    private volatilityRegime: 'LOW' | 'NORMAL' | 'HIGH' = 'NORMAL';
-    private regimeCounter: number = 0;
-
     constructor(seedString: string) {
-        // Create a numeric seed from the string for reproducibility
+        let seed = 0;
         for (let i = 0; i < seedString.length; i++) {
-            this.seed = (this.seed << 5) - this.seed + seedString.charCodeAt(i);
-            this.seed |= 0; // Convert to 32bit integer
+            seed = (seed << 5) - seed + seedString.charCodeAt(i);
+            seed |= 0;
         }
-        this.prng = this.mulberry32(this.seed);
+        this.prng = this.mulberry32(seed);
 
-        // This property now represents the initial price before history generation
-        this.lastFinalizedBar = { time: 0, open: 65000, high: 65000, low: 65000, close: 65000, volume: 0 };
         this.generateInitialHistory();
     }
     
-    private mulberry32(a: number) {
+    private mulberry32(a: number): () => number {
         return () => {
           let t = a += 0x6D2B79F5;
           t = Math.imul(t ^ t >>> 15, t | 1);
@@ -44,82 +40,104 @@ export class MarketSimulator {
         }
     }
 
-    private updateVolatilityRegime() {
-        this.regimeCounter--;
-        if (this.regimeCounter <= 0) {
+    private updateMarketState(lastClose: number): void {
+        this.phaseCounter--;
+
+        // Update Fear & Greed Index
+        if (this.marketPhase === 'BULL') this.fearAndGreed = Math.min(100, this.fearAndGreed + this.prng() * 0.5);
+        else if (this.marketPhase === 'BEAR') this.fearAndGreed = Math.max(0, this.fearAndGreed - this.prng() * 0.5);
+        else this.fearAndGreed += (50 - this.fearAndGreed) * 0.05; // Mean revert
+
+        if (this.phaseCounter <= 0) {
             const rand = this.prng();
-            if (this.volatilityRegime !== 'HIGH' && rand < 0.05) {
-                this.volatilityRegime = 'HIGH';
-                this.regimeCounter = Math.floor(this.prng() * 120) + 60; 
-            } else if (this.volatilityRegime !== 'LOW' && rand < 0.15) {
-                this.volatilityRegime = 'LOW';
-                this.regimeCounter = Math.floor(this.prng() * 300) + 120;
-            } else { 
-                this.volatilityRegime = 'NORMAL';
-                this.regimeCounter = Math.floor(this.prng() * 600) + 300;
+            if (this.marketPhase === 'CONSOLIDATION') {
+                this.marketPhase = rand > 0.5 ? 'BULL' : 'BEAR';
+                this.phaseCounter = 240 + Math.floor(this.prng() * 480); // 4-12 hours trend
+                this.volatility = 0.0004 + this.prng() * 0.0005; // Higher volatility in trends
+            } else { // Was in a trend
+                if ((this.marketPhase === 'BULL' && this.fearAndGreed > 90 && rand < 0.6) || (this.marketPhase === 'BEAR' && this.fearAndGreed < 10 && rand < 0.6)) {
+                     // High chance of reversal after extreme sentiment
+                    this.marketPhase = this.marketPhase === 'BULL' ? 'BEAR' : 'BULL';
+                    this.phaseCounter = 120 + Math.floor(this.prng() * 360);
+                    this.volatility = 0.0006 + this.prng() * 0.0006; // Reversals are volatile
+                } else {
+                    this.marketPhase = 'CONSOLIDATION';
+                    this.phaseCounter = 180 + Math.floor(this.prng() * 600); // 3-10 hours consolidation
+                    this.volatility = 0.0002 + this.prng() * 0.0002; // Lower volatility in consolidation
+                }
             }
         }
     }
 
     private generateNextMinuteBar(lastBar: CandleData): CandleData {
-        const open = lastBar.close;
+        this.updateMarketState(lastBar.close);
+        
+        let drift: number;
+        switch (this.marketPhase) {
+            case 'BULL': drift = this.volatility * 0.1; break;
+            case 'BEAR': drift = -this.volatility * 0.1; break;
+            default: drift = 0;
+        }
+
+        let open = lastBar.close;
         let high = open;
         let low = open;
-        let volume = 0;
         let currentPrice = open;
-
-        // Simulate 60 seconds of ticks to build a realistic 1-minute bar
+        
+        // Simulate ticks within the minute for realistic OHLC
         for (let i = 0; i < 60; i++) {
-            this.updateVolatilityRegime();
-            const baseVolatility = { LOW: 0.0001, NORMAL: 0.0003, HIGH: 0.0009 };
-            const effectiveVolatility = baseVolatility[this.volatilityRegime];
+            let tickVolatility = this.volatility;
+            // Probabilistic events for "fat tails"
+            if (this.prng() < 0.001) tickVolatility *= 5; // Flash crash/spike event
             
-            // FIX: Added a small positive drift to simulate a realistic upward-trending market
-            const drift = currentPrice * 0.0000005; // Small positive drift per tick
-            const volatility = (this.prng() - 0.5) * currentPrice * effectiveVolatility * 2;
-            const change = drift + volatility;
-
+            const change = drift / 60 + (this.prng() - 0.5) * currentPrice * tickVolatility;
             currentPrice += change;
             high = Math.max(high, currentPrice);
             low = Math.min(low, currentPrice);
-            volume += Math.floor(this.prng() * 1e8);
         }
-        
+
+        // Session-based volume simulation
+        const hour = new Date((lastBar.time + 60) * 1000).getUTCHours();
+        let volumeMultiplier = 0.5; // Off-hours
+        if (hour >= 1 && hour < 7) volumeMultiplier = 1.0; // Asian session
+        if (hour >= 7 && hour < 13) volumeMultiplier = 1.5; // European session
+        if (hour >= 13 && hour < 21) volumeMultiplier = 2.0; // US session
+
+        const volume = (5e6 + this.prng() * 1e8) * volumeMultiplier;
+
         return {
             time: lastBar.time + 60,
             open: parseFloat(open.toFixed(2)),
             high: parseFloat(high.toFixed(2)),
             low: parseFloat(low.toFixed(2)),
             close: parseFloat(currentPrice.toFixed(2)),
-            volume
+            volume,
         };
     }
 
     private generateInitialHistory(): void {
-        const history: CandleData[] = [];
-        // Generate 100,000 minutes of data. This provides ~6,666 bars on a 15m chart.
-        const numMinutes = 100000;
+        const numMinutes = 150000; // ~104 days of 1-minute data
         const now = Math.floor(Date.now() / 1000);
-        // Align start time to the beginning of a minute
         const startTime = (now - (now % 60)) - (numMinutes * 60);
 
         let currentBar: CandleData = { 
-            time: startTime - 60,
-            open: this.lastFinalizedBar.open, high: this.lastFinalizedBar.open, 
-            low: this.lastFinalizedBar.open, close: this.lastFinalizedBar.close, 
-            volume: 0 
+            time: startTime - 60, open: 65000, high: 65000, low: 65000, close: 65000, volume: 0 
         };
 
         for (let i = 0; i < numMinutes; i++) {
             currentBar = this.generateNextMinuteBar(currentBar);
-            history.push(currentBar);
+            this.history.push(currentBar);
         }
-        this.history = history;
-        this.lastFinalizedBar = history.length > 0 ? history[history.length - 1] : this.lastFinalizedBar;
     }
 
     public start(): void {
         if (this.tickIntervalId) this.stop();
+        // Start the live tick simulation
+        const lastHistoricalBar = this.history.length > 0 ? this.history[this.history.length - 1] : { time: 0, close: 65000 };
+        this.liveBar = {
+            time: (lastHistoricalBar.time - (lastHistoricalBar.time % 60)) + 60,
+            open: lastHistoricalBar.close, high: lastHistoricalBar.close, low: lastHistoricalBar.close, close: lastHistoricalBar.close, volume: 0,
+        };
         this.tickIntervalId = setInterval(() => this.tick(), this.INTERNAL_TICK_MS);
     }
 
@@ -129,58 +147,45 @@ export class MarketSimulator {
             this.tickIntervalId = null;
         }
     }
-
+    
     public subscribe(callback: (tick: CandleData) => void): () => void {
         this.subscribers.add(callback);
         return () => this.subscribers.delete(callback);
     }
     
     public tick(): void {
+        if (!this.liveBar) return;
+        
         const nowSeconds = Math.floor(Date.now() / 1000);
         const barStartTime = nowSeconds - (nowSeconds % 60);
 
-        if (!this.liveBar || this.liveBar.time !== barStartTime) {
-            // Finalize the old bar if it exists
-            if (this.liveBar) {
-                this.history.push(this.liveBar);
-                if (this.history.length > 110000) this.history.shift(); // Keep buffer
-                this.lastFinalizedBar = this.liveBar;
-            }
-            // Start a new live bar
+        if (this.liveBar.time !== barStartTime) {
+            this.history.push(this.liveBar);
+            if (this.history.length > 160000) this.history.shift();
+            
             this.liveBar = {
-                time: barStartTime,
-                open: this.lastFinalizedBar.close,
-                high: this.lastFinalizedBar.close,
-                low: this.lastFinalizedBar.close,
-                close: this.lastFinalizedBar.close,
-                volume: 0,
+                time: barStartTime, open: this.liveBar.close, high: this.liveBar.close, low: this.liveBar.close, close: this.liveBar.close, volume: 0,
             };
         }
 
         // Simulate an intra-minute price update
-        this.updateVolatilityRegime(); // Update volatility every second
-        const baseVolatility = { LOW: 0.00005, NORMAL: 0.0001, HIGH: 0.0003 };
-        const rand = this.prng() - 0.5;
-
-        // FIX: Added a small positive drift to the live tick as well
-        const drift = this.liveBar.close * 0.0000005;
-        const volatility = rand * this.liveBar.close * baseVolatility[this.volatilityRegime];
-        const change = drift + volatility;
+        this.updateMarketState(this.liveBar.close);
+        let drift: number;
+        switch (this.marketPhase) {
+            case 'BULL': drift = this.volatility * 0.1; break;
+            case 'BEAR': drift = -this.volatility * 0.1; break;
+            default: drift = 0;
+        }
         
+        const change = drift / 60 + (this.prng() - 0.5) * this.liveBar.close * this.volatility;
         const newPrice = parseFloat((this.liveBar.close + change).toFixed(2));
         
         this.liveBar.close = newPrice;
         this.liveBar.high = Math.max(this.liveBar.high, newPrice);
         this.liveBar.low = Math.min(this.liveBar.low, newPrice);
+        this.liveBar.volume = (this.liveBar.volume || 0) + (Math.floor(this.prng() * 1e7));
         
-        const volumeThisSecond = Math.floor(this.prng() * 1e7);
-        this.liveBar.volume = (this.liveBar.volume || 0) + volumeThisSecond;
-        
-        this.notifySubscribers(this.liveBar);
-    }
-
-    private notifySubscribers(tick: CandleData): void {
-        this.subscribers.forEach(callback => callback(tick));
+        this.subscribers.forEach(cb => cb(this.liveBar!));
     }
     
     public getFullHistory(): CandleData[] {
