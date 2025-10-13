@@ -10,10 +10,11 @@ import * as animejs from 'animejs';
 const anime = (animejs as any).default;
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
-import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon, HelpCircle } from '../common/Icons';
+import { Home, BookOpen, Swap, Briefcase, SignOut, X, DollarSign, Sparkles, MessageSquare, Sun, Moon, HelpCircle, Grid } from '../common/Icons';
 import type { View } from '../../types';
 import { signOutUser } from '../../services/authService';
 import { ThemeContext } from '../../App';
+import { useProfileData } from '../../services/profileService';
 
 interface NavItemProps {
     label: string;
@@ -85,6 +86,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen, setIsOpen }) => {
     const { theme, toggleTheme } = useContext(ThemeContext);
+    const profileData = useProfileData();
     const userName = user?.user_metadata?.full_name || 'Trader';
     const userEmail = user?.email;
     const userAvatar = user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userName}&background=53AC53&color=fff`;
@@ -137,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
             </div>
 
             {/* Navigation */}
-            <nav className="flex-grow p-4">
+            <nav className="flex-grow p-4 overflow-y-auto">
                 <div className="space-y-1">
                     {mainNavItems.map(item => (
                         <NavItem
@@ -150,6 +152,21 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
                         />
                     ))}
                 </div>
+                
+                {profileData?.role === 'admin' && (
+                    <div className="pt-6">
+                        <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">Admin Tools</h3>
+                        <div className="space-y-1">
+                            <NavItem
+                                label="Dashboard"
+                                icon={Grid}
+                                path="/admin"
+                                isActive={activeView === 'adminDashboard'}
+                                onClick={() => handleNavigation('/admin')}
+                            />
+                        </div>
+                    </div>
+                )}
                 
                 <div className="pt-6">
                     <h3 className="px-3 mb-2 text-xs font-semibold text-text-secondary uppercase tracking-wider">AI Tools</h3>

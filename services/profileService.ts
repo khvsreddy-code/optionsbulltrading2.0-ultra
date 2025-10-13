@@ -8,6 +8,7 @@ export interface ProfileData {
     subscription_status: 'free' | 'premium';
     subscription_expires_at: string | null;
     updated_at?: string;
+    role?: 'user' | 'admin'; // NEW: Add role property
 }
 
 const defaultProfile: ProfileData = {
@@ -15,6 +16,7 @@ const defaultProfile: ProfileData = {
     progress_data: {},
     subscription_status: 'free',
     subscription_expires_at: null,
+    role: 'user', // NEW: Default role
 };
 
 // --- NEW STATE MANAGEMENT LOGIC ---
@@ -69,7 +71,8 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
                     id: session.user.id,
                     total_pnl: 0,
                     progress_data: {},
-                    subscription_status: 'free'
+                    subscription_status: 'free',
+                    role: 'user', // NEW: Ensure new profiles get a role
                 })
                 .select('*')
                 .single();

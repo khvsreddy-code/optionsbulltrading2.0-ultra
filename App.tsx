@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 // FIX: Corrected animejs import to handle module interoperability issues.
 import * as animejs from 'animejs';
@@ -10,6 +12,7 @@ const anime = (animejs as any).default;
 import type { Session, User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './services/supabaseClient';
 import type { View } from './types';
+import { useProfileData } from './services/profileService'; // Import the profile hook
 
 // Layout components
 import Header from './components/layout/Header';
@@ -38,6 +41,7 @@ import ChatView from './views/ChatView';
 import FinanceView from './views/FinanceView';
 import UserGuideView from './views/UserGuideView';
 import SupportView from './views/SupportView';
+import AdminDashboardView from './views/AdminDashboardView';
 import { Sparkles } from './components/common/Icons';
 
 // Auth components
@@ -93,6 +97,8 @@ const App: React.FC = () => {
         if (savedTheme) return savedTheme as 'light' | 'dark';
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     });
+    
+    const profileData = useProfileData(); // Get profile data reactively
 
     useEffect(() => {
         if (theme === 'dark') {
@@ -179,6 +185,7 @@ const App: React.FC = () => {
         else if (parts[0] === 'finance') view = 'finance';
         else if (parts[0] === 'guide') view = 'guide';
         else if (parts[0] === 'support') view = 'support';
+        else if (parts[0] === 'admin' && profileData?.role === 'admin') view = 'adminDashboard';
         else if (parts[0] === 'quiz') {
             if (parts[1] === 'results') view = 'quizResults';
             else view = 'quiz';
@@ -273,6 +280,8 @@ const App: React.FC = () => {
                             return <UserGuideView onNavigate={handleNavigate} />;
                         case 'support':
                             return <SupportView onNavigate={handleNavigate} />;
+                        case 'adminDashboard':
+                            return <AdminDashboardView onNavigate={handleNavigate} />;
                         case 'quiz':
                             return <Suspense fallback={loadingFallback}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':
@@ -299,7 +308,7 @@ const App: React.FC = () => {
         }
         
         const { view } = parseLocation();
-        const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance', 'guide'];
+        const noLayoutViews: View[] = ['practice', 'policiesList', 'cancellation', 'terms', 'shipping', 'privacy', 'contact', 'pricing', 'quiz', 'quizResults', 'chat', 'finance', 'guide', 'support'];
 
         if (noLayoutViews.includes(view)) {
              return renderView();

@@ -67,6 +67,8 @@ export const Flame = createIcon(<><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-
 export const Trophy = createIcon(<><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.45 1-1 1H5" /><path d="M14 14.66V17c0 .55.45 1 1 1h4" /><path d="M12 2C8.69 2 6 4.69 6 8v6.66L4.12 18h15.76L18 14.66V8c0-3.31-2.69-6-6-6zm0 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z" /></>);
 export const Mic = createIcon(<><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></>);
 export const StopCircle = createIcon(<><circle cx="12" cy="12" r="10"/><rect x="9" y="9" width="6" height="6"/></>);
+// FIX: Add missing 'Activity' icon export
+export const Activity = createIcon(<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />);
 export const Sparkles: React.FC<IconProps> = ({ size = 24, className = '' }) => (
     <svg 
         xmlns="http://www.w3.org/2000/svg"

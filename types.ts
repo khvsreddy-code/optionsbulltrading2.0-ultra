@@ -29,7 +29,8 @@ export type View =
   | 'chat'
   | 'finance'
   | 'guide'
-  | 'support';
+  | 'support'
+  | 'adminDashboard';
 
 // Financial data types
 export interface CandleData {

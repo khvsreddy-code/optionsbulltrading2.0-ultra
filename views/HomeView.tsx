@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -136,7 +135,7 @@ const ProgressWidget: React.FC<{
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
     const profile = useProfileData();
 
-    const { lessonsCompleted, pnlPercent, overallProgressPercent } = useMemo(() => {
+    const { lessonsCompleted, pnlPercent, overallProgressPercent, isSubscriptionActive } = useMemo(() => {
         const completedLessons = profile?.progress_data ? Object.values(profile.progress_data).filter(Boolean).length : 0;
         const pnl = profile?.total_pnl || 0;
         const pnlPercentage = (pnl / 100000) * 100; // Assuming initial capital of 1,00,000 for percentage calculation
@@ -144,7 +143,16 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
         const totalLessons = getTotalLessonCount();
         const overallProgress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
         
-        return { lessonsCompleted: completedLessons, pnlPercent: pnlPercentage, overallProgressPercent: overallProgress };
+        const isPremium = profile?.subscription_status === 'premium';
+        const expiryDate = profile?.subscription_expires_at ? new Date(profile.subscription_expires_at) : null;
+        const subIsActive = isPremium && expiryDate && expiryDate > new Date();
+
+        return { 
+            lessonsCompleted: completedLessons, 
+            pnlPercent: pnlPercentage, 
+            overallProgressPercent: overallProgress,
+            isSubscriptionActive: subIsActive
+        };
     }, [profile]);
     
     const testsPassed = getTestsPassedCount();
@@ -176,15 +184,23 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             </div>
 
             {/* Subscribe Button */}
-            <button
-                onClick={() => onNavigate('/pricing')}
-                className="star-trek-button w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold button-press-feedback"
-            >
-                <div className="flex items-center space-x-2">
-                    <Sparkles size={20} />
-                    <span>Subscribe to Pro</span>
+            {isSubscriptionActive ? (
+                <div className="w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold bg-green-500/10 text-green-500 border-2 border-green-500/30">
+                    <CheckCircle size={20} className="mr-2" />
+                    <span>Subscribed to Pro</span>
                 </div>
-            </button>
+            ) : (
+                <button
+                    onClick={() => onNavigate('/pricing')}
+                    className="star-trek-button w-full h-14 rounded-2xl flex items-center justify-center text-md font-bold button-press-feedback"
+                >
+                    <div className="flex items-center space-x-2">
+                        <Sparkles size={20} />
+                        <span>Subscribe to Pro</span>
+                    </div>
+                </button>
+            )}
+
 
             {/* Paper Trading Card */}
             <ImageCard
