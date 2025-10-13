@@ -46,11 +46,11 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // Step 1: Fetch user details by joining profiles and auth.users.
-            // This replaces the broken `get_all_users_with_roles` RPC.
+            // Step 1: Fetch user details using a robust inner join.
+            // This replaces the previously failing queries.
             const { data: profiles, error: usersError } = await supabase
                 .from('profiles')
-                .select('id, users(email, raw_user_meta_data)');
+                .select('id, users:users!inner(email, raw_user_meta_data)');
 
             if (usersError) {
                 throw new Error(`Failed to fetch user data: ${usersError.message}`);
@@ -58,7 +58,7 @@ const SupportPanel: React.FC = () => {
 
             const userMap = new Map<string, UserDetails>();
             if (profiles) {
-                for (const profile of profiles) {
+                for (const profile of (profiles as any[])) {
                     if (profile.users) {
                         userMap.set(profile.id, {
                             user_id: profile.id,
@@ -218,7 +218,9 @@ const SupportPanel: React.FC = () => {
                                 <div className="flex-grow overflow-hidden">
                                     <p className="font-semibold text-text-main truncate">{convo.display_name || 'No Name'}</p>
                                     <p className="text-xs text-text-secondary truncate">{convo.email}</p>
-                                    <p className="text-sm text-text-secondary truncate mt-1">{convo.last_message_content}</p>
+                                    <p className="text-sm text-text-secondary truncate mt-1">
+                                        {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
+                                    </p>
                                 </div>
                             </button>
                         ))}
@@ -239,16 +241,27 @@ const SupportPanel: React.FC = () => {
                         </div>
                         <div className="flex-grow overflow-y-auto p-4 space-y-4">
                             {loading === 'chat' && <p>Loading messages...</p>}
-                            {messages.map(msg => (
-                                <div key={msg.id} className={`flex ${msg.sent_by === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`p-3 rounded-lg max-w-lg ${msg.sent_by === 'admin' ? 'bg-primary text-white' : 'bg-card border border-border'}`}>
-                                        <p className="whitespace-pre-wrap">{msg.message_content}</p>
-                                        <p className={`text-xs mt-1 ${msg.sent_by === 'admin' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
-                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
+                            {messages.map(msg => {
+                                const isImage = msg.message_content.startsWith('[IMAGE]');
+                                const content = isImage ? msg.message_content.replace('[IMAGE]', '') : msg.message_content;
+
+                                return (
+                                    <div key={msg.id} className={`flex ${msg.sent_by === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`p-2 rounded-lg max-w-lg ${msg.sent_by === 'admin' ? 'bg-primary text-white' : 'bg-card border border-border'}`}>
+                                            {isImage ? (
+                                                <a href={content} target="_blank" rel="noopener noreferrer">
+                                                    <img src={content} alt="User attachment" className="rounded-md max-w-xs cursor-pointer" />
+                                                </a>
+                                            ) : (
+                                                <p className="whitespace-pre-wrap px-1">{content}</p>
+                                            )}
+                                            <p className={`text-xs mt-1 ${msg.sent_by === 'admin' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
+                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             <div ref={messagesEndRef} />
                         </div>
                         <form onSubmit={handleSendMessage} className="flex-shrink-0 p-3 border-t border-border flex items-center space-x-2 bg-card">

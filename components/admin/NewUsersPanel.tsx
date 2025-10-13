@@ -21,12 +21,13 @@ const UserManagementPanel: React.FC = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             setLoading(true);
+            // FIX: Use an explicit `!inner` join hint to make the query more robust and avoid schema cache issues.
             const { data, error } = await supabase
                 .from('profiles')
                 .select(`
                     id,
                     role,
-                    users (
+                    users:users!inner (
                         email,
                         created_at,
                         raw_user_meta_data
@@ -34,12 +35,12 @@ const UserManagementPanel: React.FC = () => {
                 `);
 
             if (error) {
-                setError(error.message);
+                setError(`Failed to fetch user data: ${error.message}`);
                 console.error("Error fetching users:", error);
             } else if (data) {
                 const mappedUsers = data
-                    .filter(profile => profile.users) // Ensure user data exists
-                    .map(profile => ({
+                    .filter(profile => profile.users) // Ensure user data exists after the join
+                    .map((profile: any) => ({ // Use 'any' to handle the nested structure from the join
                         user_id: profile.id,
                         display_name: profile.users.raw_user_meta_data?.full_name || 'No Name',
                         email: profile.users.email,
@@ -123,7 +124,7 @@ const UserManagementPanel: React.FC = () => {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         {isUpdating ? (
-                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>

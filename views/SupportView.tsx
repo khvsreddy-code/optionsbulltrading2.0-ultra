@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabaseClient';
 import type { User as SupabaseUser } from '@supabase/auth-js';
-import { ChevronRight } from '../components/common/Icons';
+import { ChevronRight, Paperclip, X } from '../components/common/Icons';
+import { uploadSupportImage } from '../services/storageService';
 
 // Simple SVG Send Icon
 const SendIcon: React.FC<{className?: string}> = ({className}) => (
@@ -26,6 +27,12 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // New states for image upload
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get user and initial messages
   useEffect(() => {
@@ -68,6 +75,7 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
         (payload) => {
             const newMessageFromServer = payload.new as Message;
             setMessages(prevMessages => {
+                // Avoid duplicating messages that were added optimistically
                 if (prevMessages.some(msg => msg.id === newMessageFromServer.id)) {
                     return prevMessages;
                 }
@@ -87,28 +95,56 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+          setImageFile(file);
+          setPreviewUrl(URL.createObjectURL(file));
+          setNewMessage(''); // Clear text when an image is selected
+      } else if (file) {
+          alert("Please select a valid image file.");
+      }
+  };
+
+  const clearAttachment = () => {
+      setImageFile(null);
+      if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          setPreviewUrl(null);
+      }
+      if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+      }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!newMessage.trim() || !user) return;
+      if ((!newMessage.trim() && !imageFile) || !user) return;
 
-      const messageContent = newMessage.trim();
-      setNewMessage('');
-
-      const { data: newMessages, error: insertError } = await supabase
-        .from('support_chats')
-        .insert({
-            user_id: user.id,
-            message_content: messageContent,
-            sent_by: 'user',
-        })
-        .select();
-
-      if (insertError) {
-          console.error("Error sending message:", insertError);
-          alert("Failed to send message. Please try again.");
-          setNewMessage(messageContent); 
-      } else if (newMessages && newMessages.length > 0) {
-          setMessages(prevMessages => [...prevMessages, newMessages[0] as Message]);
+      if (imageFile) {
+          setIsUploading(true);
+          try {
+              const publicUrl = await uploadSupportImage(user.id, imageFile);
+              await supabase.from('support_chats').insert({
+                  user_id: user.id,
+                  message_content: `[IMAGE]${publicUrl}`,
+                  sent_by: 'user',
+              });
+              clearAttachment();
+          } catch (error) {
+              console.error("Error sending image:", error);
+              alert(error instanceof Error ? error.message : "Failed to send image.");
+          } finally {
+              setIsUploading(false);
+          }
+      } else {
+          const messageContent = newMessage.trim();
+          setNewMessage('');
+          await supabase.from('support_chats').insert({
+              user_id: user.id,
+              message_content: messageContent,
+              sent_by: 'user',
+          });
       }
   };
 
@@ -150,17 +186,28 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
                             <p>Ask us anything about the app, your subscription, or trading concepts. We'll get back to you as soon as possible.</p>
                         </div>
                     ) : (
-                         messages.map(msg => (
-                            <div key={msg.id} className={`flex items-end gap-2 ${msg.sent_by === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                {msg.sent_by === 'admin' && <AdminAvatar />}
-                                <div className={`p-3 rounded-2xl max-w-xs md:max-w-md ${msg.sent_by === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-card border border-border text-text-main rounded-bl-none'}`}>
-                                    <p className="whitespace-pre-wrap text-sm">{msg.message_content}</p>
-                                    <p className={`text-xs mt-1 ${msg.sent_by === 'user' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
-                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
+                         messages.map(msg => {
+                            const isImage = msg.message_content.startsWith('[IMAGE]');
+                            const content = isImage ? msg.message_content.replace('[IMAGE]', '') : msg.message_content;
+                            
+                            return (
+                                <div key={msg.id} className={`flex items-end gap-2 ${msg.sent_by === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    {msg.sent_by === 'admin' && <AdminAvatar />}
+                                    <div className={`p-2 max-w-xs md:max-w-md ${msg.sent_by === 'user' ? 'bg-primary text-white rounded-2xl rounded-br-none' : 'bg-card border border-border text-text-main rounded-2xl rounded-bl-none'}`}>
+                                        {isImage ? (
+                                            <a href={content} target="_blank" rel="noopener noreferrer">
+                                                <img src={content} alt="Attachment" className="rounded-md max-w-full h-auto cursor-pointer" />
+                                            </a>
+                                        ) : (
+                                            <p className="whitespace-pre-wrap text-sm px-1">{content}</p>
+                                        )}
+                                        <p className={`text-xs mt-1 ${msg.sent_by === 'user' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                     <div ref={messagesEndRef} />
                 </div>
@@ -168,18 +215,40 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
         </main>
         
         <footer className="sticky bottom-0 bg-card border-t border-border">
-            <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto p-3 flex items-center space-x-2">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="w-full bg-background border border-border rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
-                />
-                <button type="submit" className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback disabled:opacity-50" aria-label="Send message" disabled={!newMessage.trim()}>
-                    <SendIcon className="w-6 h-6" />
-                </button>
-            </form>
+            <div className="max-w-4xl mx-auto p-3">
+                {previewUrl && (
+                    <div className="relative w-24 h-24 p-2">
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-md" />
+                        <button onClick={clearAttachment} className="absolute -top-1 -right-1 bg-gray-800 text-white rounded-full p-0.5">
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+                <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-12 h-12 flex-shrink-0 bg-background text-text-secondary rounded-full flex items-center justify-center button-press-feedback border border-border" aria-label="Attach image">
+                        <Paperclip size={22} />
+                    </button>
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => { setNewMessage(e.target.value); if (e.target.value) clearAttachment(); }}
+                        placeholder="Type your message..."
+                        className="w-full bg-background border border-border rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
+                        disabled={!!imageFile || isUploading}
+                    />
+                    <button type="submit" className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback disabled:opacity-50" aria-label="Send message" disabled={(!newMessage.trim() && !imageFile) || isUploading}>
+                        {isUploading ? (
+                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        ) : (
+                            <SendIcon className="w-6 h-6" />
+                        )}
+                    </button>
+                </form>
+            </div>
         </footer>
     </div>
   );
