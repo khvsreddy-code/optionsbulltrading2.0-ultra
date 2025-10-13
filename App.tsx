@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 // FIX: Corrected animejs import to handle module interoperability issues.
 import * as animejs from 'animejs';
@@ -36,6 +37,7 @@ import LearningModuleDetailView from './views/learning/LearningModuleDetailView'
 import ChatView from './views/ChatView';
 import FinanceView from './views/FinanceView';
 import UserGuideView from './views/UserGuideView';
+import SupportView from './views/SupportView';
 import { Sparkles } from './components/common/Icons';
 
 // Auth components
@@ -176,6 +178,7 @@ const App: React.FC = () => {
         else if (parts[0] === 'chat') view = 'chat';
         else if (parts[0] === 'finance') view = 'finance';
         else if (parts[0] === 'guide') view = 'guide';
+        else if (parts[0] === 'support') view = 'support';
         else if (parts[0] === 'quiz') {
             if (parts[1] === 'results') view = 'quizResults';
             else view = 'quiz';
@@ -268,6 +271,8 @@ const App: React.FC = () => {
                             return <FinanceView onNavigate={handleNavigate} />;
                         case 'guide':
                             return <UserGuideView onNavigate={handleNavigate} />;
+                        case 'support':
+                            return <SupportView onNavigate={handleNavigate} />;
                         case 'quiz':
                             return <Suspense fallback={loadingFallback}><QuizView onNavigate={handleNavigate} /></Suspense>;
                         case 'quizResults':

@@ -94,6 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onNavigate, activeView, isOpen,
         { label: 'Learn', icon: BookOpen, path: '/learning', views: ['learningHome', 'learningChapter', 'learningModuleDetail', 'bullishPatternsList', 'bearishPatternsList', 'patternDetail', 'technicalIndicatorsList', 'fundamentalAnalysisList'] },
         { label: 'Pricing', icon: DollarSign, path: '/pricing', views: ['pricing'] },
         { label: 'User Guide', icon: HelpCircle, path: '/guide', views: ['guide'] },
+        { label: 'Live Support', icon: MessageSquare, path: '/support', views: ['support'] },
     ];
 
     const aiNavItems = [

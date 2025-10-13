@@ -28,7 +28,8 @@ export type View =
   | 'quizResults'
   | 'chat'
   | 'finance'
-  | 'guide';
+  | 'guide'
+  | 'support';
 
 // Financial data types
 export interface CandleData {
