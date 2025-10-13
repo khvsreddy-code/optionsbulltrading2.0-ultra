@@ -130,7 +130,7 @@ export class MarketSimulator {
                 // Send a copy to the callback to prevent mutation issues
                 callback({ ...currentCandle });
             }
-        }, 5000); // Emit update every 5 seconds as requested
+        }, 500); // Emit update every 0.5 seconds as requested
     }
 
     public stop(): void {
