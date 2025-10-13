@@ -252,7 +252,13 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             if (clickHandler) chart.unsubscribeClick(clickHandler);
             
             if (drawingStateRef.current.tempLine && chartRef.current) {
-                chartRef.current.removeSeries(drawingStateRef.current.tempLine);
+                // CRASH FIX: Wrap in a try-catch to prevent crashes if the chart reference
+                // becomes stale during a re-render or component cleanup.
+                try {
+                    chartRef.current.removeSeries(drawingStateRef.current.tempLine);
+                } catch (e) {
+                    console.warn("Could not remove temp line series, chart might have been removed.", e);
+                }
             }
             drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
         };

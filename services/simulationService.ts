@@ -137,26 +137,39 @@ export const executeOrder = (portfolio: Portfolio, order: Order, executionPrice:
 
 export const updatePortfolioValue = (portfolio: Portfolio, livePrices?: { [instrumentKey: string]: number }): Portfolio => {
     let positionsValue = 0;
-    
-    const newPortfolio = JSON.parse(JSON.stringify(portfolio));
 
-    newPortfolio.positions.forEach((pos: Position) => {
-        const currentPrice = livePrices && livePrices[pos.instrument.instrument_key] !== undefined ? livePrices[pos.instrument.instrument_key] : pos.lastPrice;
-        
-        // BUG FIX: Ensure all values are treated as numbers to prevent calculation errors.
-        pos.lastPrice = Number(currentPrice);
+    const newPositions = portfolio.positions.map(pos => {
+        const currentPrice = (livePrices && livePrices[pos.instrument.instrument_key] !== undefined)
+            ? livePrices[pos.instrument.instrument_key]
+            : pos.lastPrice;
+
         const priceDiff = Number(currentPrice) - Number(pos.averagePrice);
         const quantity = Number(pos.quantity);
-        
-        pos.pnl = priceDiff * quantity;
-        
-        // BUG FIX: Use Math.abs(quantity) for invested value to correctly calculate P&L % for short positions.
+        const pnl = priceDiff * quantity;
         const investedValue = Number(pos.averagePrice) * Math.abs(quantity);
-        pos.pnlPercent = investedValue > 0 ? (pos.pnl / investedValue) * 100 : 0;
+        const pnlPercent = investedValue !== 0 ? (pnl / investedValue) * 100 : 0;
 
-        positionsValue += pos.lastPrice * quantity;
+        positionsValue += Number(currentPrice) * quantity;
+
+        // Optimization: If nothing changed, return the original object reference to help React's diffing.
+        if (pos.lastPrice === Number(currentPrice) && pos.pnl === pnl) {
+            return pos;
+        }
+
+        return {
+            ...pos,
+            lastPrice: Number(currentPrice),
+            pnl,
+            pnlPercent,
+        };
     });
 
-    newPortfolio.totalValue = newPortfolio.cash + positionsValue;
-    return newPortfolio;
+    const totalValue = portfolio.cash + positionsValue;
+
+    // Return a new portfolio object using immutable update pattern
+    return {
+        ...portfolio,
+        positions: newPositions,
+        totalValue,
+    };
 };
