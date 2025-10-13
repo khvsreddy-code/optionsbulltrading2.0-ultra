@@ -25,6 +25,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     }>({ isDrawing: false, startPoint: null, tempLine: null });
 
     const drawnObjectsRef = useRef<Map<string, ILineSeries | IPriceLine>>(new Map());
+    const lastMouseMoveTimeRef = useRef(0);
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -98,7 +99,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         });
         resizeObserver.observe(chartContainerRef.current);
         
-        // CRASH FIX: Implement a robust cleanup function to prevent stale references.
         return () => {
             resizeObserver.disconnect();
             if (chart) {
@@ -137,41 +137,32 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         }
     }, [initialData]);
 
-    // Effect to render drawings
     useEffect(() => {
         const chart = chartRef.current;
         const series = candlestickSeriesRef.current;
         if (!chart || !series) return;
     
-        // Clear all previously drawn objects from the chart UI
         drawnObjectsRef.current.forEach(obj => {
-            if ('price' in obj) { // Heuristic to check if it's IPriceLine
-                series.removePriceLine(obj as IPriceLine);
-            } else if ('setData' in obj) { // Heuristic to check if it's ISeriesApi
-                chart.removeSeries(obj as ILineSeries);
-            }
+            try {
+                if ('price' in obj) { 
+                    series.removePriceLine(obj as IPriceLine);
+                } else if ('setData' in obj) {
+                    chart.removeSeries(obj as ILineSeries);
+                }
+            } catch (e) { console.warn("Could not remove drawn object", e); }
         });
         drawnObjectsRef.current.clear();
     
-        // Redraw all drawings from the state onto the current chart instance
         drawings.forEach(drawing => {
             if (drawing.type === 'horizontal') {
                 const line = series.createPriceLine({
-                    price: drawing.price,
-                    color: '#3B82F6',
-                    lineWidth: 2,
-                    lineStyle: LineStyle.Solid,
-                    axisLabelVisible: true,
-                    title: '',
+                    price: drawing.price, color: '#3B82F6', lineWidth: 2, lineStyle: LineStyle.Solid, axisLabelVisible: true, title: '',
                 });
                 drawnObjectsRef.current.set(drawing.id, line);
             }
             if (drawing.type === 'trendline') {
                 const lineSeries = chart.addLineSeries({
-                    color: '#3B82F6',
-                    lineWidth: 2,
-                    priceLineVisible: false,
-                    lastValueVisible: false,
+                    color: '#3B82F6', lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
                 });
                 lineSeries.setData([
                     { time: drawing.start.time as UTCTimestamp, value: drawing.start.price },
@@ -182,18 +173,26 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         });
     }, [drawings]);
 
-    // Effect to handle drawing logic
     useEffect(() => {
         const chart = chartRef.current;
         if (!chart) return;
 
         const handleCrosshairMove = (param: any) => {
-            if (!drawingStateRef.current.isDrawing || !drawingStateRef.current.startPoint || !param.point) return;
+            // LAG FIX: Throttle event handler to prevent main thread blocking
+            const now = Date.now();
+            if (now - lastMouseMoveTimeRef.current < 16) { // ~60fps
+                return;
+            }
+            lastMouseMoveTimeRef.current = now;
+
+            // CRASH FIX: Add safety checks for refs to prevent crashes on re-render
+            const currentChart = chartRef.current;
+            const currentSeries = candlestickSeriesRef.current;
+            if (!currentChart || !currentSeries || !drawingStateRef.current.isDrawing || !drawingStateRef.current.startPoint || !param.point) return;
+
             if (activeDrawingTool === 'trendline') {
-                const series = candlestickSeriesRef.current;
-                if (!series) return;
-                const price = series.coordinateToPrice(param.point.y);
-                const time = chart.timeScale().coordinateToTime(param.point.x);
+                const price = currentSeries.coordinateToPrice(param.point.y);
+                const time = currentChart.timeScale().coordinateToTime(param.point.x);
                 if (price && time && drawingStateRef.current.tempLine) {
                     drawingStateRef.current.tempLine.setData([
                         { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price },
@@ -204,11 +203,13 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         };
 
         const handleClick = (param: any) => {
-            const series = candlestickSeriesRef.current;
-            if (!param.point || !series) return;
+            // CRASH FIX: Add safety checks for refs
+            const currentChart = chartRef.current;
+            const currentSeries = candlestickSeriesRef.current;
+            if (!currentChart || !currentSeries || !param.point) return;
             
-            const price = series.coordinateToPrice(param.point.y);
-            const time = chart.timeScale().coordinateToTime(param.point.x);
+            const price = currentSeries.coordinateToPrice(param.point.y);
+            const time = currentChart.timeScale().coordinateToTime(param.point.x);
             if (!price || !time) return;
 
             if (activeDrawingTool === 'horizontal') {
@@ -219,7 +220,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                 if (!drawingStateRef.current.isDrawing) { // First click
                     drawingStateRef.current.isDrawing = true;
                     drawingStateRef.current.startPoint = { time: time as UTCTimestamp, price };
-                    drawingStateRef.current.tempLine = chart.addLineSeries({
+                    drawingStateRef.current.tempLine = currentChart.addLineSeries({
                         color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false,
                     });
                 } else { // Second click
@@ -230,7 +231,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                         });
                     }
                     if (drawingStateRef.current.tempLine) {
-                        chart.removeSeries(drawingStateRef.current.tempLine);
+                        try { currentChart.removeSeries(drawingStateRef.current.tempLine); } catch(e) {}
                     }
                     drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
                 }
@@ -248,12 +249,10 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         }
 
         return () => {
-            if (crosshairMoveHandler) chart.unsubscribeCrosshairMove(crosshairMoveHandler);
-            if (clickHandler) chart.unsubscribeClick(clickHandler);
+            if (crosshairMoveHandler && chartRef.current) chartRef.current.unsubscribeCrosshairMove(crosshairMoveHandler);
+            if (clickHandler && chartRef.current) chartRef.current.unsubscribeClick(clickHandler);
             
             if (drawingStateRef.current.tempLine && chartRef.current) {
-                // CRASH FIX: Wrap in a try-catch to prevent crashes if the chart reference
-                // becomes stale during a re-render or component cleanup.
                 try {
                     chartRef.current.removeSeries(drawingStateRef.current.tempLine);
                 } catch (e) {
