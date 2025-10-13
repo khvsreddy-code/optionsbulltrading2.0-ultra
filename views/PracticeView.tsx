@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import type { CandleData, Instrument, Order, OrderSide, Portfolio, Position, Trade, Timeframe } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
-import * as coinApiService from '../services/coinApiService';
+import { MarketSimulator } from '../services/marketSimulator';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
 import { loadPortfolio, savePortfolio } from '../services/portfolioService';
 import { ThemeContext } from '../App';
@@ -32,8 +32,6 @@ interface ChartComponentHandle {
     setData: (data: CandleData[]) => void;
 }
 
-const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
-
 const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const { theme } = useContext(ThemeContext);
     const [instruments, setInstruments] = useState<Instrument[]>(curatedStocks);
@@ -44,9 +42,9 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-    const [timeframe, setTimeframe] = useState<Timeframe>('15m');
     const [showWelcome, setShowWelcome] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('15m');
     
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
@@ -57,7 +55,8 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
 
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
-    const liveAggregatedCandleRef = useRef<CandleData | null>(null);
+    const simulatorRef = useRef<MarketSimulator | null>(null);
+    const lastCandleRef = useRef<CandleData | null>(null);
 
     // Debounced portfolio saving
     useEffect(() => {
@@ -74,7 +73,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             setPortfolio(loadedPortfolio);
         };
         initializePortfolio();
-        setSelectedInstrument(curatedStocks.find(s => s.exchange_token === 'BTCUSDT') || curatedStocks[0]);
+        setSelectedInstrument(curatedStocks[0]); // Default to first instrument
         if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
             const timer = setTimeout(() => setShowWelcome(true), 500);
             return () => clearTimeout(timer);
@@ -85,68 +84,69 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     useEffect(() => {
         if (!selectedInstrument) return;
 
-        let unsubscribe: (() => void) | null = null;
-        liveAggregatedCandleRef.current = null; // Reset live candle on change
+        simulatorRef.current?.stop();
+        const simulator = new MarketSimulator(selectedInstrument);
+        simulatorRef.current = simulator;
 
-        const fetchAndSubscribe = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
+        const timeframeInSeconds = parseInt(activeTimeframe.replace('m', '')) * 60;
+        
+        setIsLoading(true);
+        setError(null);
 
-                const historicalData = await coinApiService.getHistoricalData(selectedInstrument.tradingsymbol, timeframe);
-                setInitialChartData(historicalData);
-                chartComponentRef.current?.setData(historicalData);
-                
-                const lastCandle = historicalData.length > 0 ? historicalData[historicalData.length - 1] : null;
-                setLiveOhlc(lastCandle);
-                
-                const initialPrice = lastCandle?.close ?? 0;
-                setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: initialPrice } : inst));
-                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: initialPrice }));
+        const historicalData = simulator.generateHistoricalData(200, timeframeInSeconds);
+        setInitialChartData(historicalData);
+        
+        if (historicalData.length > 0) {
+            const lastHistCandle = historicalData[historicalData.length - 1];
+            lastCandleRef.current = { ...lastHistCandle };
+            setLiveOhlc(lastHistCandle);
 
-                unsubscribe = coinApiService.subscribeToTrades(selectedInstrument.tradingsymbol, (trade) => {
-                    const tradeTimeSeconds = Math.floor(new Date(trade.time_exchange).getTime() / 1000);
-                    const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
-                    const candleStartTime = tradeTimeSeconds - (tradeTimeSeconds % periodInSeconds);
-                    
-                    let currentCandle = liveAggregatedCandleRef.current;
-                    
-                    if (!currentCandle || currentCandle.time !== candleStartTime) {
-                        currentCandle = {
-                            time: candleStartTime,
-                            open: trade.price, high: trade.price, low: trade.price, close: trade.price,
-                            volume: trade.size,
-                        };
-                    } else {
-                        currentCandle.high = Math.max(currentCandle.high, trade.price);
-                        currentCandle.low = Math.min(currentCandle.low, trade.price);
-                        currentCandle.close = trade.price;
-                        currentCandle.volume = (currentCandle.volume || 0) + trade.size;
-                    }
-                    
-                    liveAggregatedCandleRef.current = currentCandle;
-                    chartComponentRef.current?.updateCandle(currentCandle);
-                    setLiveOhlc(currentCandle);
+            const initialPrice = lastHistCandle.close;
+            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: initialPrice } : inst));
+            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: initialPrice }));
+        }
+        setIsLoading(false);
 
-                    setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: trade.price } : inst));
-                    setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: trade.price }));
-                });
-            } catch (err) {
-                console.error(err);
-                setError(err instanceof Error ? err.message : 'Failed to load data from CoinAPI.');
-            } finally {
-                setIsLoading(false);
+        simulator.start((tick) => {
+            const tickTimeSeconds = Math.floor(tick.time / 1000);
+            
+            let currentCandle = lastCandleRef.current;
+            if (!currentCandle) return;
+
+            const currentCandleStartTime = currentCandle.time - (currentCandle.time % timeframeInSeconds);
+
+            if (tickTimeSeconds >= currentCandleStartTime + timeframeInSeconds) {
+                // New candle
+                const newCandleStartTime = tickTimeSeconds - (tickTimeSeconds % timeframeInSeconds);
+                currentCandle = {
+                    time: newCandleStartTime,
+                    open: tick.price,
+                    high: tick.price,
+                    low: tick.price,
+                    close: tick.price,
+                };
+            } else {
+                // Update existing candle
+                currentCandle = {
+                    ...currentCandle,
+                    high: Math.max(currentCandle.high, tick.price),
+                    low: Math.min(currentCandle.low, tick.price),
+                    close: tick.price,
+                };
             }
-        };
 
-        fetchAndSubscribe();
+            lastCandleRef.current = currentCandle;
+            chartComponentRef.current?.updateCandle(currentCandle);
+            setLiveOhlc(currentCandle);
+
+            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: tick.price } : inst));
+            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: tick.price }));
+        });
 
         return () => {
-            if (unsubscribe) {
-                unsubscribe();
-            }
+            simulatorRef.current?.stop();
         };
-    }, [selectedInstrument, timeframe]);
+    }, [selectedInstrument, activeTimeframe]);
     
     const savePortfolioNow = (portfolioState: Portfolio): Portfolio => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -252,11 +252,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             <main className="flex-grow flex flex-col">
                 <ChartHeader
                     instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
-                    selectedTimeframe={timeframe} onSelectTimeframe={setTimeframe} liveOhlc={liveOhlc}
+                    liveOhlc={liveOhlc}
                     onTradeButtonClick={handleOpenOrderDialog}
                     activeTool={activeDrawingTool}
                     onSelectTool={(tool) => setActiveDrawingTool(tool)}
                     onClearDrawings={() => setDrawings([])}
+                    activeTimeframe={activeTimeframe}
+                    onSelectTimeframe={setActiveTimeframe}
                 />
                 <div className="flex-grow relative">
                     { (isLoading || error) && (
@@ -270,13 +272,13 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                     )}
                     <ChartComponent 
                        ref={chartComponentRef}
-                       key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
+                       key={`${selectedInstrument?.instrument_key}-${activeTimeframe}`}
                        initialData={initialChartData}
-                       timeframe={timeframe}
                        theme={theme}
                        activeDrawingTool={activeDrawingTool}
                        drawings={drawings}
                        onDrawingComplete={handleDrawingComplete}
+                       timeframe={activeTimeframe}
                     />
                 </div>
             </main>

@@ -1,35 +1,37 @@
 import React, { useRef, useEffect } from 'react';
-import anime from 'animejs';
-import type { Instrument, CandleData, Timeframe, OrderSide } from '../../types';
+// FIX: Correctly import animejs to handle module interoperability issues.
+import * as animejs from 'animejs';
+const anime = (animejs as any).default;
+import type { Instrument, CandleData, OrderSide, Timeframe } from '../../types';
 import StockSelector from './StockSelector';
-import TimeframeSelector from './TimeframeSelector';
 import DrawingToolbar from './DrawingToolbar';
 import type { DrawingTool } from '../../views/PracticeView';
+import TimeframeSelector from './TimeframeSelector';
 
 interface ChartHeaderProps {
   instruments: Instrument[];
   selectedInstrument: Instrument | null;
   onSelectInstrument: (instrument: Instrument) => void;
-  selectedTimeframe: Timeframe;
-  onSelectTimeframe: (timeframe: Timeframe) => void;
   liveOhlc: CandleData | null;
   onTradeButtonClick: (side: OrderSide) => void;
   activeTool: DrawingTool;
   onSelectTool: (tool: DrawingTool) => void;
   onClearDrawings: () => void;
+  activeTimeframe: Timeframe;
+  onSelectTimeframe: (timeframe: Timeframe) => void;
 }
 
 const ChartHeader: React.FC<ChartHeaderProps> = ({
   instruments,
   selectedInstrument,
   onSelectInstrument,
-  selectedTimeframe,
-  onSelectTimeframe,
   liveOhlc,
   onTradeButtonClick,
   activeTool,
   onSelectTool,
-  onClearDrawings
+  onClearDrawings,
+  activeTimeframe,
+  onSelectTimeframe
 }) => {
   const price = liveOhlc?.close ?? selectedInstrument?.last_price ?? 0;
   // In a real scenario, this change would be based on previous day's close, but for the simulator, open is a good proxy.
@@ -112,7 +114,7 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
                 </div>
             )}
             <TimeframeSelector
-                selectedTimeframe={selectedTimeframe}
+                activeTimeframe={activeTimeframe}
                 onSelectTimeframe={onSelectTimeframe}
             />
         </div>

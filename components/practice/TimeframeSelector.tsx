@@ -1,28 +1,25 @@
 import React from 'react';
-// FIX: The Timeframe type should be imported from the central types file.
 import type { Timeframe } from '../../types';
 
 interface TimeframeSelectorProps {
-  selectedTimeframe: Timeframe;
+  activeTimeframe: Timeframe;
   onSelectTimeframe: (timeframe: Timeframe) => void;
 }
 
-const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '30m', '45m'];
+const timeframes: Timeframe[] = ['1m', '5m', '15m', '30m', '45m'];
 
-const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({ selectedTimeframe, onSelectTimeframe }) => {
+const TimeframeSelector: React.FC<TimeframeSelectorProps> = ({ activeTimeframe, onSelectTimeframe }) => {
   return (
-    <div className="flex items-center bg-card border border-border rounded-lg p-1">
-      {TIMEFRAMES.map(tf => (
+    <div className="flex items-center space-x-1 bg-card p-1 rounded-lg border border-border">
+      {timeframes.map(tf => (
         <button
           key={tf}
           onClick={() => onSelectTimeframe(tf)}
-          className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${
-            selectedTimeframe === tf
-              ? 'bg-blue-600 text-white'
-              : 'text-text-secondary hover:bg-background hover:text-text-main'
+          className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+            activeTimeframe === tf ? 'bg-primary text-white' : 'text-text-secondary hover:bg-background'
           }`}
         >
-          {tf}
+          {tf.toUpperCase()}
         </button>
       ))}
     </div>
