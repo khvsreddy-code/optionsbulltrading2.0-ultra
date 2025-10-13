@@ -24,7 +24,7 @@ const StockSelector: React.FC<StockSelectorProps> = ({ instruments, onSelect, se
       >
         <div className="flex items-center">
             {selectedInstrument && <selectedInstrument.icon size={22} className="mr-2 text-text-main" />}
-            <span className="text-text-main font-semibold text-lg">{selectedInstrument?.tradingsymbol}</span>
+            <span className="text-text-main font-semibold text-lg">{selectedInstrument?.exchange_token}</span>
         </div>
         <ChevronDown size={20} className={`text-text-secondary transition-transform ml-2 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -32,33 +32,21 @@ const StockSelector: React.FC<StockSelectorProps> = ({ instruments, onSelect, se
       {isOpen && (
         <div className="absolute z-50 w-72 mt-1 bg-card border border-border rounded-lg shadow-xl">
           <ul className="max-h-72 overflow-y-auto p-1">
-            {instruments.map(instrument => {
-              const isCrypto = instrument.instrument_type === 'CRYPTO';
-              return (
+            {instruments.map(instrument => (
                 <li
                   key={instrument.instrument_key}
-                  onClick={() => isCrypto && handleSelect(instrument)}
-                  className={`flex items-center justify-between p-3 rounded-md transition-colors ${
-                    !isCrypto 
-                      ? 'cursor-not-allowed opacity-50' 
-                      : 'cursor-pointer hover:bg-background'
-                  }`}
+                  onClick={() => handleSelect(instrument)}
+                  className="flex items-center justify-between p-3 rounded-md transition-colors cursor-pointer hover:bg-background"
                 >
                     <div className="flex items-center">
-                        <instrument.icon size={22} className={`mr-3 ${!isCrypto ? 'text-text-secondary' : 'text-text-main'}`} />
+                        <instrument.icon size={22} className="mr-3 text-text-main" />
                         <div>
-                            <span className={`font-semibold ${!isCrypto ? 'text-text-secondary' : 'text-text-main'}`}>{instrument.tradingsymbol}</span>
+                            <span className="font-semibold text-text-main">{instrument.exchange_token}</span>
                             <div className="text-xs text-text-secondary">{instrument.name}</div>
                         </div>
                     </div>
-                  {!isCrypto && (
-                    <span className="text-xs font-bold text-yellow-500 bg-yellow-900/50 px-2 py-1 rounded-full">
-                      SOON
-                    </span>
-                  )}
                 </li>
-              );
-            })}
+            ))}
           </ul>
         </div>
       )}

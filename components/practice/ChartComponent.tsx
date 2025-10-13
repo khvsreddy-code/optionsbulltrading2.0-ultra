@@ -139,6 +139,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             if (drawing.type === 'trendline') {
                 const lineSeries = chart.addLineSeries({
                     color: '#3B82F6', lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
+                    // CRITICAL FIX: Prevent the permanent line from affecting auto-scaling.
+                    autoscaleInfoProvider: () => null,
                 });
                 lineSeries.setData([
                     { time: drawing.start.time as UTCTimestamp, value: drawing.start.price },
@@ -164,10 +166,13 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                 const price = series.coordinateToPrice(param.point.y);
                 const time = chart.timeScale().coordinateToTime(param.point.x);
                 if (price && time && drawingStateRef.current.tempLine) {
-                    drawingStateRef.current.tempLine.setData([
-                        { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price },
-                        { time: time as UTCTimestamp, value: price },
-                    ]);
+                    const startPoint = { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price };
+                    const currentPoint = { time: time as UTCTimestamp, value: price };
+                    
+                    // CRITICAL FIX: Ensure the line data is always sorted by time to prevent it from disappearing.
+                    const lineData = [startPoint, currentPoint].sort((a, b) => a.time - b.time);
+
+                    drawingStateRef.current.tempLine.setData(lineData);
                 }
             } catch (e) {
                 console.error("Error drawing temp line:", e);
@@ -199,7 +204,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                         lineStyle: LineStyle.Dashed, 
                         lastValueVisible: false, 
                         priceLineVisible: false,
-                        // CRITICAL FIX: Prevent the temporary line from affecting the chart's auto-scale.
                         autoscaleInfoProvider: () => null,
                     }),
                 };

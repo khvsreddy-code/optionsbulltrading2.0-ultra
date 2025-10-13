@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import type { CandleData, Instrument, Order, OrderSide, Portfolio, Position, Trade, Timeframe } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
-import { MarketSimulator } from '../services/marketSimulator';
+import * as coinApiService from '../services/coinApiService';
 import { createInitialPortfolio, executeOrder, updatePortfolioValue } from '../services/simulationService';
 import { loadPortfolio, savePortfolio } from '../services/portfolioService';
 import { ThemeContext } from '../App';
@@ -27,38 +27,12 @@ export interface Drawing {
   [key: string]: any;
 }
 
-
 interface ChartComponentHandle {
     updateCandle: (candle: CandleData) => void;
+    setData: (data: CandleData[]) => void;
 }
 
 const TIMEFRAME_SECONDS_MAP: Record<Timeframe, number> = { '1m': 60, '5m': 300, '15m': 900, '30m': 1800, '45m': 2700 };
-
-const aggregateHistory = (minuteBars: CandleData[], timeframe: Timeframe): CandleData[] => {
-    if (timeframe === '1m') return [...minuteBars];
-    if (minuteBars.length === 0) return [];
-    
-    const aggregated: CandleData[] = [];
-    const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
-    
-    let currentCandle: CandleData | null = null;
-    for (const bar of minuteBars) {
-        const candleStartTime = bar.time - (bar.time % periodInSeconds);
-        if (!currentCandle || currentCandle.time !== candleStartTime) {
-            if (currentCandle) aggregated.push(currentCandle);
-            currentCandle = { ...bar, time: candleStartTime };
-        } else {
-            currentCandle.high = Math.max(currentCandle.high, bar.high);
-            currentCandle.low = Math.min(currentCandle.low, bar.low);
-            currentCandle.close = bar.close;
-            currentCandle.volume = (currentCandle.volume || 0) + (bar.volume || 0);
-        }
-    }
-    if (currentCandle) aggregated.push(currentCandle);
-
-    return aggregated;
-};
-
 
 const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const { theme } = useContext(ThemeContext);
@@ -70,7 +44,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
-    const [timeframe, setTimeframe] = useState<Timeframe>('15m'); // Default to 15m
+    const [timeframe, setTimeframe] = useState<Timeframe>('15m');
     const [showWelcome, setShowWelcome] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -78,164 +52,101 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
     const [isPortfolioOpen, setIsPortfolioOpen] = useState(false);
     
-    // Drawing state
     const [activeDrawingTool, setActiveDrawingTool] = useState<DrawingTool>('cursor');
     const [drawings, setDrawings] = useState<Drawing[]>([]);
 
-    const simulatorRef = useRef<MarketSimulator | null>(null);
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
-    
     const liveAggregatedCandleRef = useRef<CandleData | null>(null);
-    const prevLiveMinuteBarRef = useRef<CandleData | null>(null);
 
     // Debounced portfolio saving
     useEffect(() => {
         if (isLoading) return; 
-
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        
-        saveTimeoutRef.current = window.setTimeout(() => {
-            savePortfolio(portfolio);
-        }, 1500); 
-
-        return () => {
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        };
+        saveTimeoutRef.current = window.setTimeout(() => savePortfolio(portfolio), 1500); 
+        return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
     }, [portfolio, isLoading]);
 
     // Main initialization effect
     useEffect(() => {
-        const initialize = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const { portfolio: loadedPortfolio } = await loadPortfolio();
-                
-                const dailySeed = new Date().toISOString().slice(0, 10);
-                const sim = new MarketSimulator(dailySeed);
-                simulatorRef.current = sim;
-                
-                const fullHistory = sim.getFullHistory(); // This is now an array of 1-minute bars
-
-                const currentPrice = fullHistory.length > 0 ? fullHistory[fullHistory.length - 1].close : 65000;
-                
-                const initialInstrument = instruments.find(i => i.tradingsymbol === 'BTCUSDT') || instruments[0];
-                setSelectedInstrument(initialInstrument);
-                
-                const livePrices: { [key: string]: number } = { [initialInstrument.instrument_key]: currentPrice };
-                const updatedPortfolio = updatePortfolioValue(loadedPortfolio, livePrices);
-                setPortfolio(updatedPortfolio);
-
-                const initialAggregatedData = aggregateHistory(fullHistory, timeframe);
-                setInitialChartData(initialAggregatedData);
-                const lastCandle = initialAggregatedData.length > 0 ? initialAggregatedData[initialAggregatedData.length - 1] : null;
-                setLiveOhlc(lastCandle);
-                liveAggregatedCandleRef.current = lastCandle;
-
-                setInstruments(prev => prev.map(inst => ({ ...inst, last_price: currentPrice })));
-                
-                sim.start();
-                setIsLoading(false);
-
-            } catch (err) {
-                console.error(err);
-                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-                setIsLoading(false);
-            }
+        const initializePortfolio = async () => {
+            const { portfolio: loadedPortfolio } = await loadPortfolio();
+            setPortfolio(loadedPortfolio);
         };
-
-        initialize();
-
+        initializePortfolio();
+        setSelectedInstrument(curatedStocks.find(s => s.exchange_token === 'BTCUSDT') || curatedStocks[0]);
         if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
             const timer = setTimeout(() => setShowWelcome(true), 500);
             return () => clearTimeout(timer);
         }
+    }, []);
+
+    // Effect for handling instrument and timeframe changes
+    useEffect(() => {
+        if (!selectedInstrument) return;
+
+        let unsubscribe: (() => void) | null = null;
+        liveAggregatedCandleRef.current = null; // Reset live candle on change
+
+        const fetchAndSubscribe = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const historicalData = await coinApiService.getHistoricalData(selectedInstrument.tradingsymbol, timeframe);
+                setInitialChartData(historicalData);
+                chartComponentRef.current?.setData(historicalData);
+                
+                const lastCandle = historicalData.length > 0 ? historicalData[historicalData.length - 1] : null;
+                setLiveOhlc(lastCandle);
+                
+                const initialPrice = lastCandle?.close ?? 0;
+                setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: initialPrice } : inst));
+                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: initialPrice }));
+
+                unsubscribe = coinApiService.subscribeToTrades(selectedInstrument.tradingsymbol, (trade) => {
+                    const tradeTimeSeconds = Math.floor(new Date(trade.time_exchange).getTime() / 1000);
+                    const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
+                    const candleStartTime = tradeTimeSeconds - (tradeTimeSeconds % periodInSeconds);
+                    
+                    let currentCandle = liveAggregatedCandleRef.current;
+                    
+                    if (!currentCandle || currentCandle.time !== candleStartTime) {
+                        currentCandle = {
+                            time: candleStartTime,
+                            open: trade.price, high: trade.price, low: trade.price, close: trade.price,
+                            volume: trade.size,
+                        };
+                    } else {
+                        currentCandle.high = Math.max(currentCandle.high, trade.price);
+                        currentCandle.low = Math.min(currentCandle.low, trade.price);
+                        currentCandle.close = trade.price;
+                        currentCandle.volume = (currentCandle.volume || 0) + trade.size;
+                    }
+                    
+                    liveAggregatedCandleRef.current = currentCandle;
+                    chartComponentRef.current?.updateCandle(currentCandle);
+                    setLiveOhlc(currentCandle);
+
+                    setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: trade.price } : inst));
+                    setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: trade.price }));
+                });
+            } catch (err) {
+                console.error(err);
+                setError(err instanceof Error ? err.message : 'Failed to load data from CoinAPI.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAndSubscribe();
 
         return () => {
-            simulatorRef.current?.stop();
-            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-        };
-    }, []); 
-
-    // Effect for handling live bar updates
-    useEffect(() => {
-        if (isLoading || !simulatorRef.current) return;
-
-        const handleTick = (liveMinuteBar: CandleData) => {
-            // Update portfolio and instrument price first
-            if (selectedInstrument) {
-                 setInstruments(prev => prev.map(inst =>
-                    inst.instrument_key === selectedInstrument.instrument_key
-                        ? { ...inst, last_price: liveMinuteBar.close }
-                        : inst
-                ));
-                setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: liveMinuteBar.close }));
+            if (unsubscribe) {
+                unsubscribe();
             }
-
-            const periodInSeconds = TIMEFRAME_SECONDS_MAP[timeframe];
-            const candleStartTime = liveMinuteBar.time - (liveMinuteBar.time % periodInSeconds);
-            let currentAggregatedCandle = liveAggregatedCandleRef.current;
-            const prevLiveMinuteBar = prevLiveMinuteBarRef.current;
-
-            if (currentAggregatedCandle && currentAggregatedCandle.time === candleStartTime) {
-                // Update existing aggregated candle
-                currentAggregatedCandle.high = Math.max(currentAggregatedCandle.high, liveMinuteBar.high);
-                currentAggregatedCandle.low = Math.min(currentAggregatedCandle.low, liveMinuteBar.low);
-                currentAggregatedCandle.close = liveMinuteBar.close;
-
-                // Update volume by delta
-                if (prevLiveMinuteBar && prevLiveMinuteBar.time === liveMinuteBar.time) {
-                    const volumeDelta = (liveMinuteBar.volume || 0) - (prevLiveMinuteBar.volume || 0);
-                    currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + volumeDelta;
-                } else {
-                    // First tick of a new minute bar within the same aggregated candle
-                    currentAggregatedCandle.volume = (currentAggregatedCandle.volume || 0) + (liveMinuteBar.volume || 0);
-                }
-            } else {
-                // New aggregated candle starts
-                currentAggregatedCandle = {
-                    time: candleStartTime,
-                    open: liveMinuteBar.open,
-                    high: liveMinuteBar.high,
-                    low: liveMinuteBar.low,
-                    close: liveMinuteBar.close,
-                    volume: liveMinuteBar.volume
-                };
-            }
-            
-            liveAggregatedCandleRef.current = currentAggregatedCandle;
-            prevLiveMinuteBarRef.current = { ...liveMinuteBar }; // Store a copy for the next tick's delta calculation
-
-            chartComponentRef.current?.updateCandle(currentAggregatedCandle);
-            setLiveOhlc(currentAggregatedCandle);
         };
-
-        const unsubscribe = simulatorRef.current.subscribe(handleTick);
-        return () => unsubscribe();
-
-    }, [isLoading, timeframe, selectedInstrument]);
-
-    // Effect for changing timeframe
-    useEffect(() => {
-        if (isLoading || !simulatorRef.current) return;
-        
-        // Fetch the most up-to-date history from the simulator
-        const fullHistory = simulatorRef.current.getFullHistory();
-        let newAggregatedData = aggregateHistory(fullHistory, timeframe);
-
-        const MAX_BARS_ON_CHART = 10000;
-        if (newAggregatedData.length > MAX_BARS_ON_CHART) {
-            newAggregatedData = newAggregatedData.slice(-MAX_BARS_ON_CHART);
-        }
-        
-        setInitialChartData(newAggregatedData);
-        const lastCandle = newAggregatedData.length > 0 ? newAggregatedData[newAggregatedData.length - 1] : null;
-        liveAggregatedCandleRef.current = lastCandle;
-        prevLiveMinuteBarRef.current = null; // Reset for new aggregation
-        setLiveOhlc(lastCandle);
-    }, [timeframe, isLoading]);
+    }, [selectedInstrument, timeframe]);
     
     const savePortfolioNow = (portfolioState: Portfolio): Portfolio => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -331,18 +242,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         setActiveDrawingTool('cursor');
     }, []);
 
-    if (error) {
-        return (
-            <div className="bg-background text-text-main h-screen flex flex-col items-center justify-center p-4 text-center">
-                <h2 className="text-xl font-bold text-red-500">Failed to Load Simulator</h2>
-                <p className="text-text-secondary mt-2 max-w-md">{error}</p>
-                <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-primary text-white font-semibold rounded-lg">
-                    Refresh Page
-                </button>
-            </div>
-        );
-    }
-
     const displayedInstrument = instruments.find(i => i.instrument_key === selectedInstrument?.instrument_key) || selectedInstrument;
 
     return (
@@ -360,25 +259,25 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                     onClearDrawings={() => setDrawings([])}
                 />
                 <div className="flex-grow relative">
-                    {isLoading ? (
-                         <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
-                            <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                    { (isLoading || error) && (
+                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-30 p-4 text-center">
+                            {isLoading && <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
+                            {error && <>
+                                <h3 className="text-lg font-bold text-red-500 mt-4">Failed to Load Data</h3>
+                                <p className="text-text-secondary text-sm max-w-sm">{error}</p>
+                            </>}
                          </div>
-                    ) : (
-                       <ChartComponent 
-                           ref={chartComponentRef}
-                           key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
-                           initialData={initialChartData}
-                           timeframe={timeframe}
-                           theme={theme}
-                           activeDrawingTool={activeDrawingTool}
-                           drawings={drawings}
-                           onDrawingComplete={handleDrawingComplete}
-                       />
                     )}
+                    <ChartComponent 
+                       ref={chartComponentRef}
+                       key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
+                       initialData={initialChartData}
+                       timeframe={timeframe}
+                       theme={theme}
+                       activeDrawingTool={activeDrawingTool}
+                       drawings={drawings}
+                       onDrawingComplete={handleDrawingComplete}
+                    />
                 </div>
             </main>
             

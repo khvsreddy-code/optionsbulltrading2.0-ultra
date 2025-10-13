@@ -1,144 +1,88 @@
 import type { Instrument } from '../types';
-import { Bank, Building, Bitcoin } from '../components/common/Icons';
+import { Bitcoin, DollarSign } from '../components/common/Icons';
 
-// This file now provides a stable, offline-first list of mock Instrument objects.
-// This eliminates the need for a network request to fetch instruments, making the app
-// faster and more reliable, and fixing the "No stocks found" bug.
+// This file now provides a stable, offline-first list of popular cryptocurrency instruments
+// for use in the CoinAPI-powered trading simulator.
 
 export const curatedStocks: Instrument[] = [
   {
-    instrument_key: 'NSE_EQ|INE002A01018',
-    exchange_token: '2885',
-    tradingsymbol: 'RELIANCE',
-    name: 'Reliance Industries Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_BTC_USDT', exchange_token: 'BTCUSDT', tradingsymbol: 'BINANCE_SPOT_BTC_USDT', name: 'Bitcoin / Tether',
+    instrument_type: 'CRYPTO', icon: Bitcoin, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE041A01034',
-    exchange_token: '1333',
-    tradingsymbol: 'HDFCBANK',
-    name: 'HDFC Bank Limited',
-    instrument_type: 'EQUITY',
-    icon: Bank,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_ETH_USDT', exchange_token: 'ETHUSDT', tradingsymbol: 'BINANCE_SPOT_ETH_USDT', name: 'Ethereum / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE062A01020',
-    exchange_token: '3045',
-    tradingsymbol: 'SBIN',
-    name: 'State Bank of India',
-    instrument_type: 'EQUITY',
-    icon: Bank,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_SOL_USDT', exchange_token: 'SOLUSDT', tradingsymbol: 'BINANCE_SPOT_SOL_USDT', name: 'Solana / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE467B01029',
-    exchange_token: '29682',
-    tradingsymbol: 'TCS',
-    name: 'Tata Consultancy Services Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_BNB_USDT', exchange_token: 'BNBUSDT', tradingsymbol: 'BINANCE_SPOT_BNB_USDT', name: 'BNB / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE009A01021',
-    exchange_token: '1594',
-    tradingsymbol: 'INFY',
-    name: 'Infosys Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_XRP_USDT', exchange_token: 'XRPUSDT', tradingsymbol: 'BINANCE_SPOT_XRP_USDT', name: 'Ripple / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE075A01022',
-    exchange_token: '3787',
-    tradingsymbol: 'WIPRO',
-    name: 'Wipro Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_DOGE_USDT', exchange_token: 'DOGEUSDT', tradingsymbol: 'BINANCE_SPOT_DOGE_USDT', name: 'Dogecoin / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.0001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE090A01021',
-    exchange_token: '1270',
-    tradingsymbol: 'ICICIBANK',
-    name: 'ICICI Bank Limited',
-    instrument_type: 'EQUITY',
-    icon: Bank,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_ADA_USDT', exchange_token: 'ADAUSDT', tradingsymbol: 'BINANCE_SPOT_ADA_USDT', name: 'Cardano / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.0001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE238A01034',
-    exchange_token: '5900',
-    tradingsymbol: 'AXISBANK',
-    name: 'Axis Bank Limited',
-    instrument_type: 'EQUITY',
-    icon: Bank,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_AVAX_USDT', exchange_token: 'AVAXUSDT', tradingsymbol: 'BINANCE_SPOT_AVAX_USDT', name: 'Avalanche / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE028A01039',
-    exchange_token: '3506',
-    tradingsymbol: 'BANKBARODA',
-    name: 'Bank of Baroda',
-    instrument_type: 'EQUITY',
-    icon: Bank,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_SHIB_USDT', exchange_token: 'SHIBUSDT', tradingsymbol: 'BINANCE_SPOT_SHIB_USDT', name: 'Shiba Inu / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.00000001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE296A01024',
-    exchange_token: '317',
-    tradingsymbol: 'BAJFINANCE',
-    name: 'Bajaj Finance Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_DOT_USDT', exchange_token: 'DOTUSDT', tradingsymbol: 'BINANCE_SPOT_DOT_USDT', name: 'Polkadot / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE397D01024',
-    exchange_token: '10604',
-    tradingsymbol: 'BHARTIARTL',
-    name: 'Bharti Airtel Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_LINK_USDT', exchange_token: 'LINKUSDT', tradingsymbol: 'BINANCE_SPOT_LINK_USDT', name: 'Chainlink / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE030A01027',
-    exchange_token: '1394',
-    tradingsymbol: 'HINDUNILVR',
-    name: 'Hindustan Unilever Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_TRX_USDT', exchange_token: 'TRXUSDT', tradingsymbol: 'BINANCE_SPOT_TRX_USDT', name: 'Tron / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.0001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE018A01030',
-    exchange_token: '1922',
-    tradingsymbol: 'LT',
-    name: 'Larsen & Toubro Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_MATIC_USDT', exchange_token: 'MATICUSDT', tradingsymbol: 'BINANCE_SPOT_MATIC_USDT', name: 'Polygon / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.0001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'NSE_EQ|INE860A01027',
-    exchange_token: '7229',
-    tradingsymbol: 'HCLTECH',
-    name: 'HCL Technologies Limited',
-    instrument_type: 'EQUITY',
-    icon: Building,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
+    instrument_key: 'BINANCE_SPOT_BCH_USDT', exchange_token: 'BCHUSDT', tradingsymbol: 'BINANCE_SPOT_BCH_USDT', name: 'Bitcoin Cash / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
   {
-    instrument_key: 'CRYPTO|BTCUSDT',
-    exchange_token: 'BTCUSDT',
-    tradingsymbol: 'BTCUSDT',
-    name: 'Bitcoin / Tether',
-    instrument_type: 'CRYPTO',
-    icon: Bitcoin,
-    last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'CRYPTO'
+    instrument_key: 'BINANCE_SPOT_ICP_USDT', exchange_token: 'ICPUSDT', tradingsymbol: 'BINANCE_SPOT_ICP_USDT', name: 'Internet Computer / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
+  },
+  {
+    instrument_key: 'BINANCE_SPOT_NEAR_USDT', exchange_token: 'NEARUSDT', tradingsymbol: 'BINANCE_SPOT_NEAR_USDT', name: 'NEAR Protocol / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
+  },
+  {
+    instrument_key: 'BINANCE_SPOT_LTC_USDT', exchange_token: 'LTCUSDT', tradingsymbol: 'BINANCE_SPOT_LTC_USDT', name: 'Litecoin / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.01', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
+  },
+  {
+    instrument_key: 'BINANCE_SPOT_UNI_USDT', exchange_token: 'UNIUSDT', tradingsymbol: 'BINANCE_SPOT_UNI_USDT', name: 'Uniswap / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
+  },
+  {
+    instrument_key: 'BINANCE_SPOT_LEO_USDT', exchange_token: 'LEOUSDT', tradingsymbol: 'BINANCE_SPOT_LEO_USDT', name: 'UNUS SED LEO / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
+  },
+  {
+    instrument_key: 'BINANCE_SPOT_ATOM_USDT', exchange_token: 'ATOMUSDT', tradingsymbol: 'BINANCE_SPOT_ATOM_USDT', name: 'Cosmos / Tether',
+    instrument_type: 'CRYPTO', icon: DollarSign, last_price: 0, expiry: '', strike: '0', tick_size: '0.001', lot_size: '1', segment: 'CRYPTO', exchange: 'BINANCE'
   },
 ];
