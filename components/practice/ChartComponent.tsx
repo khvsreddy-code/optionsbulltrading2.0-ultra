@@ -193,7 +193,15 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                 drawingStateRef.current = {
                     isDrawing: true,
                     startPoint: { time: time as UTCTimestamp, price },
-                    tempLine: chart.addLineSeries({ color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false }),
+                    tempLine: chart.addLineSeries({ 
+                        color: '#9CA3AF', 
+                        lineWidth: 2, 
+                        lineStyle: LineStyle.Dashed, 
+                        lastValueVisible: false, 
+                        priceLineVisible: false,
+                        // CRITICAL FIX: Prevent the temporary line from affecting the chart's auto-scale.
+                        autoscaleInfoProvider: () => null,
+                    }),
                 };
             } else {
                 if (drawingStateRef.current.startPoint) {
