@@ -13,8 +13,9 @@ export async function signInWithGoogle() {
     options: {
       // We tell Supabase to give us the URL instead of redirecting automatically.
       skipBrowserRedirect: true,
-      // This is where Google will redirect the user back to after authentication.
-      redirectTo: window.location.origin,
+      // The redirectTo option has been removed. Supabase will now use the default
+      // Site URL from the project's Auth settings, which is the correct and robust way
+      // to handle OAuth redirects and fixes the "invalid_request" error.
     }
   });
 
