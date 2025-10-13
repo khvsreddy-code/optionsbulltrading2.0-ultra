@@ -207,21 +207,11 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             </button>
 
             {/* Paper Trading Card */}
-            <div>
-                <div
-                    onClick={() => onNavigate('/practice')}
-                    className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group"
-                >
-                    <img 
-                        src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png" 
-                        alt="Paper Trading"
-                        className="w-full h-auto block transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 flex flex-col justify-center">
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">Paper<br/>Trading</h2>
-                    </div>
-                </div>
-            </div>
+            <ImageCard
+                image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png"
+                onClick={() => onNavigate('/practice')}
+                altText="Paper Trading"
+            />
 
             {/* --- UPDATED "What are you looking for?" SECTION --- */}
             <div>
@@ -246,6 +236,38 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                         title="Bearish Candlestick Patterns" 
                         image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" 
                         onClick={() => onNavigate('/learning/bearish')} 
+                    />
+                </div>
+            </div>
+
+            {/* --- NEW Pro Features Section --- */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">Pro Features</h2>
+                    <button onClick={() => onNavigate('/pricing')} className="text-sm font-semibold text-primary flex items-center">
+                        See plans <ChevronRight size={16} className="ml-1" />
+                    </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <ImageCard
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png"
+                        onClick={() => onNavigate('/pricing')}
+                        altText="Premium Courses"
+                    />
+                    <ImageCard
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png"
+                        onClick={() => onNavigate('/pricing')}
+                        altText="Daily Chart Analysis"
+                    />
+                    <ImageCard
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png"
+                        onClick={() => onNavigate('/pricing')}
+                        altText="Upcoming Stock Events"
+                    />
+                    <ImageCard
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png"
+                        onClick={() => onNavigate('/pricing')}
+                        altText="Telegram Subscription"
                     />
                 </div>
             </div>
