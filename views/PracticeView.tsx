@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect, useContext } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useContext, useCallback } from 'react';
 import type { CandleData, Instrument, Order, OrderSide, Portfolio, Position, Trade, Timeframe } from '../types';
 import { curatedStocks } from '../data/curatedStocks';
 import { MarketSimulator } from '../services/marketSimulator';
@@ -326,6 +326,11 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         setPortfolio(prevPortfolio => savePortfolioNow({ ...prevPortfolio, cash: prevPortfolio.cash + (newTotalValue - prevPortfolio.totalValue) }));
     };
 
+    const handleDrawingComplete = useCallback((newDrawing: Drawing) => {
+        setDrawings(prev => [...prev, newDrawing]);
+        setActiveDrawingTool('cursor');
+    }, []);
+
     if (error) {
         return (
             <div className="bg-background text-text-main h-screen flex flex-col items-center justify-center p-4 text-center">
@@ -371,13 +376,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                            theme={theme}
                            activeDrawingTool={activeDrawingTool}
                            drawings={drawings}
-                           onDrawingComplete={(newDrawing) => {
-                               setDrawings(prev => [...prev, newDrawing]);
-                               // Revert to cursor tool after drawing for better UX
-                               if (activeDrawingTool === 'horizontal' || activeDrawingTool === 'trendline') {
-                                   setActiveDrawingTool('cursor');
-                               }
-                           }}
+                           onDrawingComplete={handleDrawingComplete}
                        />
                     )}
                 </div>

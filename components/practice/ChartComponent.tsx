@@ -20,7 +20,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
 
     const drawingStateRef = useRef<{
         isDrawing: boolean;
-        startPoint: { time: any; price: number } | null;
+        startPoint: { time: UTCTimestamp; price: number } | null;
         tempLine: ILineSeries | null;
     }>({ isDrawing: false, startPoint: null, tempLine: null });
 
@@ -129,30 +129,43 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     useEffect(() => {
         if (!chartRef.current || !candlestickSeriesRef.current) return;
         const chart = chartRef.current;
-        
+        const series = candlestickSeriesRef.current;
+    
+        // CRASH FIX: Clear all previously drawn objects using correct methods and type guards
         drawnObjectsRef.current.forEach(obj => {
-             // lightweight-charts doesn't have a universal remove method
-            if ('remove' in (obj as any)) { // IPriceLine
-                chart.removePriceLine(obj as IPriceLine);
-            } else { // ISeriesApi
+            if ('setData' in obj) {
+                // This is an ISeriesApi (like our trendline)
                 chart.removeSeries(obj as ILineSeries);
+            } else {
+                // This is an IPriceLine (our horizontal line). It must be removed from the series it was created on.
+                series.removePriceLine(obj as IPriceLine);
             }
         });
         drawnObjectsRef.current.clear();
-        
+    
+        // Redraw all drawings from the state
         drawings.forEach(drawing => {
             if (drawing.type === 'horizontal') {
-                const line = candlestickSeriesRef.current!.createPriceLine({
-                    price: drawing.price, color: '#3B82F6', lineWidth: 2,
-                    lineStyle: LineStyle.Solid, axisLabelVisible: true, title: '',
+                const line = series.createPriceLine({
+                    price: drawing.price,
+                    color: '#3B82F6',
+                    lineWidth: 2,
+                    lineStyle: LineStyle.Solid,
+                    axisLabelVisible: true,
+                    title: '',
                 });
                 drawnObjectsRef.current.set(drawing.id, line);
             }
             if (drawing.type === 'trendline') {
-                const lineSeries = chart.addLineSeries({ color: '#3B82F6', lineWidth: 2 });
+                const lineSeries = chart.addLineSeries({
+                    color: '#3B82F6',
+                    lineWidth: 2,
+                    priceLineVisible: false, // UX Improvement: Hide distracting labels
+                    lastValueVisible: false,
+                });
                 lineSeries.setData([
-                    { time: drawing.start.time, value: drawing.start.price },
-                    { time: drawing.end.time, value: drawing.end.price },
+                    { time: drawing.start.time as UTCTimestamp, value: drawing.start.price },
+                    { time: drawing.end.time as UTCTimestamp, value: drawing.end.price },
                 ]);
                 drawnObjectsRef.current.set(drawing.id, lineSeries);
             }
@@ -172,7 +185,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                 if (price && time) {
                     drawingStateRef.current.tempLine?.setData([
                         { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price },
-                        { time: time, value: price },
+                        { time: time as UTCTimestamp, value: price },
                     ]);
                 }
             }
@@ -193,15 +206,18 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             if (activeDrawingTool === 'trendline') {
                 if (!drawingStateRef.current.isDrawing) { // First click
                     drawingStateRef.current.isDrawing = true;
-                    drawingStateRef.current.startPoint = { time, price };
+                    drawingStateRef.current.startPoint = { time: time as UTCTimestamp, price };
                     drawingStateRef.current.tempLine = chart.addLineSeries({
                         color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false,
                     });
                 } else { // Second click
-                    onDrawingComplete({
-                        id: `d_${Date.now()}_${Math.random()}`, type: 'trendline',
-                        start: drawingStateRef.current.startPoint, end: { time, price }
-                    });
+                    // TRENDLINE FIX: Add safety check for startPoint before completing the drawing
+                    if (drawingStateRef.current.startPoint) {
+                        onDrawingComplete({
+                            id: `d_${Date.now()}_${Math.random()}`, type: 'trendline',
+                            start: drawingStateRef.current.startPoint, end: { time: time as UTCTimestamp, price }
+                        });
+                    }
                     
                     if (drawingStateRef.current.tempLine) {
                         chart.removeSeries(drawingStateRef.current.tempLine);
