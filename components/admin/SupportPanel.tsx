@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '../../services/supabaseClient';
 import { Search } from '../../components/common/Icons';
 
 // --- TYPE DEFINITIONS ---
+// FIX: Add a type definition for the user data from the RPC call.
+// This resolves the 'unknown' type error by providing a clear structure.
+interface UserDetails {
+  user_id: string;
+  display_name: string;
+  email: string;
+  avatar_url: string | null;
+}
+
 interface Message {
   id: string;
   created_at: string;
@@ -38,14 +47,62 @@ const SupportPanel: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const fetchConversations = async () => {
-        const { data, error } = await supabase.rpc('get_support_conversations');
-        if (error) {
-            setError(error.message);
-            console.error("Error fetching conversations:", error);
-        } else {
-            setConversations(data || []);
+        // The original RPC 'get_support_conversations' is failing due to a database schema mismatch.
+        // Error: "column p.full_name does not exist".
+        // This workaround reconstructs the required data on the client-side.
+        try {
+            // Step 1: Fetch all user details. This RPC is known to work.
+            const { data: usersData, error: usersError } = await supabase.rpc('get_all_users_with_roles');
+            if (usersError) {
+                throw new Error(`Failed to fetch user data: ${usersError.message}`);
+            }
+            // FIX: Explicitly type the user map to ensure type safety.
+            const userMap = new Map((usersData as UserDetails[]).map((u) => [u.user_id, u]));
+
+            // Step 2: Fetch all support messages.
+            const { data: messagesData, error: messagesError } = await supabase
+                .from('support_chats')
+                .select('*')
+                .order('created_at', { ascending: false }); // Order descending to easily find the latest.
+
+            if (messagesError) {
+                throw new Error(`Failed to fetch support chats: ${messagesError.message}`);
+            }
+
+            // Step 3: Process messages to find the last message for each user conversation.
+            const latestMessages = new Map<string, any>();
+            for (const message of messagesData) {
+                if (!latestMessages.has(message.user_id)) {
+                    latestMessages.set(message.user_id, message);
+                }
+            }
+
+            // Step 4: Combine user data with the latest message to build the Conversation list.
+            const combinedConversations: Conversation[] = [];
+            for (const [userId, lastMessage] of latestMessages.entries()) {
+                const userDetails = userMap.get(userId);
+                if (userDetails) {
+                    combinedConversations.push({
+                        user_id: userId,
+                        display_name: userDetails.display_name,
+                        email: userDetails.email,
+                        avatar_url: userDetails.avatar_url,
+                        last_message_content: lastMessage.message_content,
+                        last_message_at: lastMessage.created_at,
+                    });
+                }
+            }
+            
+            // Sort by most recent message
+            combinedConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+
+            setConversations(combinedConversations);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+            console.error("Error fetching conversations:", err);
+        } finally {
+            setLoading('none');
         }
-        setLoading('none');
     };
 
     // Fetch conversation list on mount and subscribe to updates
@@ -54,6 +111,7 @@ const SupportPanel: React.FC = () => {
         const channel = supabase.channel('support-list-updates-admin')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_chats' }, 
             payload => {
+                // Re-fetch the entire list to update the "last message" correctly
                 fetchConversations();
             }).subscribe();
         return () => { supabase.removeChannel(channel); };
@@ -115,10 +173,11 @@ const SupportPanel: React.FC = () => {
 
     const selectedConvo = conversations.find(c => c.user_id === selectedConvoId);
 
-    const filteredConversations = conversations.filter(convo =>
-        convo.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        convo.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredConversations = useMemo(() => 
+        conversations.filter(convo =>
+            convo.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            convo.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        ), [conversations, searchTerm]);
 
     return (
         <div className="h-full flex overflow-hidden">
@@ -139,6 +198,8 @@ const SupportPanel: React.FC = () => {
                 </div>
                 {loading === 'list' ? (
                     <div className="flex-grow flex items-center justify-center"><p>Loading...</p></div>
+                ) : error ? (
+                    <div className="p-4 text-red-500">{error}</div>
                 ) : (
                     <div className="flex-grow overflow-y-auto">
                         {filteredConversations.map(convo => (
@@ -146,7 +207,7 @@ const SupportPanel: React.FC = () => {
                                 className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
                                 <img src={convo.avatar_url || `https://ui-avatars.com/api/?name=${convo.display_name}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
                                 <div className="flex-grow overflow-hidden">
-                                    <p className="font-semibold text-text-main truncate">{convo.display_name}</p>
+                                    <p className="font-semibold text-text-main truncate">{convo.display_name || 'No Name'}</p>
                                     <p className="text-xs text-text-secondary truncate">{convo.email}</p>
                                     <p className="text-sm text-text-secondary truncate mt-1">{convo.last_message_content}</p>
                                 </div>

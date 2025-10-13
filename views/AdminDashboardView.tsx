@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import NewUsersPanel from '../components/admin/NewUsersPanel';
-import UserActivityPanel from '../components/admin/UserActivityPanel';
+import UserManagementPanel from '../components/admin/NewUsersPanel'; // The file is reused for the new panel
 import SupportPanel from '../components/admin/SupportPanel';
 import { Users, MessageSquare, Activity } from '../components/common/Icons';
 
-type AdminTab = 'users' | 'support' | 'activity';
+type AdminTab = 'userManagement' | 'support' | 'activity';
 
 const AdminDashboardView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavigate }) => {
     const [activeTab, setActiveTab] = useState<AdminTab>('support');
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'users':
-                return <NewUsersPanel />;
+            case 'userManagement':
+                return <UserManagementPanel />;
             case 'support':
                 return <SupportPanel />;
-            case 'activity':
-                return <UserActivityPanel />;
+            // case 'activity':
+            //     return <UserActivityPanel />;
             default:
-                return null;
+                return <SupportPanel />;
         }
     };
 
@@ -37,16 +36,16 @@ const AdminDashboardView: React.FC<{ onNavigate: (path: string) => void; }> = ({
                     />
                     <AdminTabButton
                         icon={Users}
-                        label="New Users"
-                        isActive={activeTab === 'users'}
-                        onClick={() => setActiveTab('users')}
+                        label="User Management"
+                        isActive={activeTab === 'userManagement'}
+                        onClick={() => setActiveTab('userManagement')}
                     />
-                    <AdminTabButton
+                    {/* <AdminTabButton
                         icon={Activity}
                         label="User Activity"
                         isActive={activeTab === 'activity'}
                         onClick={() => setActiveTab('activity')}
-                    />
+                    /> */}
                 </nav>
                 <main className="flex-1 overflow-y-auto">
                     {renderContent()}

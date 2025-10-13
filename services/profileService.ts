@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
@@ -140,7 +141,10 @@ export const useProfileData = (): ProfileData | null => {
         handleProfileChange();
 
         // Cleanup subscription on unmount
-        return () => unsubscribe();
+        // FIX: The cleanup function from useEffect must return void.
+        // The `unsubscribe` function returns a boolean. By wrapping the call
+        // in curly braces, we create a function that implicitly returns void.
+        return () => { unsubscribe(); };
     }, []);
 
     return profile;

@@ -1,131 +1,125 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../services/supabaseClient';
+import { Search } from '../common/Icons';
 
-interface NewUser {
+interface User {
     user_id: string;
     display_name: string;
     email: string;
-    created_at: string;
     avatar_url: string | null;
+    role: 'user' | 'admin' | null;
+    created_at: string;
 }
 
-const NewUsersPanel: React.FC = () => {
-    const [users, setUsers] = useState<NewUser[]>([]);
+const UserManagementPanel: React.FC = () => {
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // New state for invite form
-    const [inviteEmail, setInviteEmail] = useState('');
-    const [isInviting, setIsInviting] = useState(false);
-    const [inviteError, setInviteError] = useState<string | null>(null);
-    const [inviteSuccess, setInviteSuccess] = useState(false);
-
-    const fetchNewUsers = async () => {
-        setLoading(true);
-        const { data, error } = await supabase.rpc('get_new_users');
-        if (error) {
-            setError(error.message);
-            console.error("Error fetching new users:", error);
-        } else {
-            setUsers(data || []);
-        }
-        setLoading(false);
-    };
+    const [searchTerm, setSearchTerm] = useState('');
+    const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        fetchNewUsers();
+        const fetchAllUsers = async () => {
+            setLoading(true);
+            const { data, error } = await supabase.rpc('get_all_users_with_roles');
+            if (error) {
+                setError(error.message);
+                console.error("Error fetching all users:", error);
+            } else {
+                setUsers(data || []);
+            }
+            setLoading(false);
+        };
+        fetchAllUsers();
     }, []);
 
-    const handleInviteUser = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsInviting(true);
-        setInviteError(null);
-        setInviteSuccess(false);
-
+    const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
+        setUpdatingRoles(prev => ({ ...prev, [userId]: true }));
         try {
-            const { error } = await supabase.functions.invoke('invite-user', {
-                body: { email: inviteEmail },
+            const { error } = await supabase.functions.invoke('set-user-role', {
+                body: { user_id: userId, role: newRole },
             });
 
             if (error) {
-                // The error object from `invoke` has a `context` property with the raw response
-                const errorContext = await error.context.json();
-                const detailMessage = errorContext?.error || 'An unknown error occurred while inviting the user.';
-                
-                // Check for the specific database error from the image
-                if (detailMessage.includes('Database error saving new user')) {
-                    setInviteError("Invite failed: A database configuration error occurred. This is often because the 'profiles' table is missing default values for required columns. Please check your Supabase backend setup.");
-                } else {
-                    setInviteError(`Invite failed: ${detailMessage}`);
-                }
-            } else {
-                setInviteSuccess(true);
-                setInviteEmail('');
-                // Refresh the user list after a successful invite
-                fetchNewUsers();
+                throw new Error('Failed to update role. Check function logs.');
             }
+
+            // Optimistically update the UI
+            setUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.user_id === userId ? { ...user, role: newRole } : user
+                )
+            );
         } catch (err) {
-            setInviteError(err instanceof Error ? err.message : "An unexpected client-side error occurred.");
+            alert(err instanceof Error ? err.message : 'An unknown error occurred.');
         } finally {
-            setIsInviting(false);
+            setUpdatingRoles(prev => ({ ...prev, [userId]: false }));
         }
     };
 
+    const filteredUsers = useMemo(() =>
+        users.filter(user =>
+            user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        ), [users, searchTerm]);
 
-    if (loading && users.length === 0) {
-        return <div className="p-4 text-text-secondary">Loading new users...</div>;
+    if (loading) {
+        return <div className="p-4 text-text-secondary">Loading users...</div>;
     }
 
     if (error) {
-        return <div className="p-4 text-red-500">Error: {error}</div>;
+        return <div className="p-4 text-red-500">Error: {error}. Did you run the required SQL function in your Supabase project?</div>;
     }
 
     return (
         <div className="p-4 space-y-6">
             <div>
-                <h2 className="text-lg font-bold text-text-main mb-4">Invite New User</h2>
-                <form onSubmit={handleInviteUser} className="bg-card p-4 rounded-lg border border-border flex flex-col sm:flex-row items-center gap-4">
+                <h2 className="text-lg font-bold text-text-main mb-4">User Management ({filteredUsers.length})</h2>
+                 <div className="relative mb-4">
+                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
-                        type="email"
-                        placeholder="user@example.com"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        required
-                        className="w-full bg-background border border-border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
                     />
-                    <button
-                        type="submit"
-                        disabled={isInviting}
-                        className="w-full sm:w-auto flex-shrink-0 px-6 py-2 bg-primary text-white font-semibold rounded-lg button-press-feedback disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isInviting ? 'Sending...' : 'Send Invite'}
-                    </button>
-                </form>
-                {inviteSuccess && <p className="mt-2 text-sm text-green-600">Invitation sent successfully!</p>}
-                {inviteError && <p className="mt-2 text-sm text-red-500">{inviteError}</p>}
-            </div>
-
-            <div>
-                <h2 className="text-lg font-bold text-text-main mb-4">Latest Registered Users</h2>
+                </div>
                 <div className="bg-card rounded-lg border border-border">
                     <ul className="divide-y divide-border">
-                        {users.map(user => (
-                            <li key={user.user_id} className="p-3 flex items-center space-x-4">
-                                <img
-                                    src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name}&background=53AC53&color=fff`}
-                                    alt="avatar"
-                                    className="w-10 h-10 rounded-full"
-                                />
-                                <div className="flex-grow">
-                                    <p className="font-semibold text-text-main">{user.display_name}</p>
-                                    <p className="text-sm text-text-secondary">{user.email}</p>
-                                </div>
-                                <div className="text-sm text-text-secondary text-right">
-                                    <p>Joined:</p>
-                                    <p>{new Date(user.created_at).toLocaleDateString()}</p>
-                                </div>
-                            </li>
-                        ))}
+                        {filteredUsers.map(user => {
+                            const isUpdating = updatingRoles[user.user_id];
+                            return (
+                                <li key={user.user_id} className="p-3 flex items-center space-x-4">
+                                    <img
+                                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name || user.email}&background=53AC53&color=fff`}
+                                        alt="avatar"
+                                        className="w-10 h-10 rounded-full"
+                                    />
+                                    <div className="flex-grow">
+                                        <p className="font-semibold text-text-main">{user.display_name || 'No Name'}</p>
+                                        <p className="text-sm text-text-secondary">{user.email}</p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        {isUpdating ? (
+                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        ) : (
+                                            <select
+                                                value={user.role || 'user'}
+                                                onChange={(e) => handleRoleChange(user.user_id, e.target.value as 'user' | 'admin')}
+                                                className="bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold"
+                                            >
+                                                <option value="user">User</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </div>
             </div>
@@ -133,4 +127,4 @@ const NewUsersPanel: React.FC = () => {
     );
 };
 
-export default NewUsersPanel;
+export default UserManagementPanel;
