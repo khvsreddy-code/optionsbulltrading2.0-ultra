@@ -15,8 +15,8 @@ const getSupabaseAdmin = () => {
     return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 };
 
-// Helper function to check for admin role and get user ID
-const getAdminUserId = async (supabaseAdmin: any, req: Request): Promise<string> => {
+// Helper function to check for admin role
+const checkAdminRole = async (supabaseAdmin: any, req: Request) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('Missing Authorization header.');
     const jwt = authHeader.replace('Bearer ', '');
@@ -33,54 +33,14 @@ const getAdminUserId = async (supabaseAdmin: any, req: Request): Promise<string>
     if (error || profile?.role !== 'admin') {
       throw new Error('Permission denied. You must be an admin.');
     }
-    return user.id;
 };
 
-// Action: Fetch and combine all data to build the conversation list
-const handleGetConversations = async (supabaseAdmin: any) => {
-    const { data: { users }, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
-    if (usersError) throw usersError;
-    const userMap = new Map(users.map((u: any) => [u.id, {
-        display_name: u.user_metadata?.full_name || u.email || `User`,
-        avatar_url: u.user_metadata?.avatar_url || null,
-    }]));
-
-    const { data: messages, error: messagesError } = await supabaseAdmin
-        .from('support_chats').select('user_id, message_content, created_at').order('created_at', { ascending: false });
-    if (messagesError) throw messagesError;
-
-    const latestMessages = new Map<string, { content: string, at: string }>();
-    if (messages) {
-        for (const message of messages) {
-            if (!latestMessages.has(message.user_id)) {
-                latestMessages.set(message.user_id, {
-                    content: message.message_content,
-                    at: message.created_at,
-                });
-            }
-        }
-    }
-
-    const conversations = Array.from(latestMessages.entries()).map(([userId, lastMsg]) => {
-        // FIX: Explicitly type userDetails as `any` to resolve type inference issues where properties were not being found on type `unknown`.
-        const userDetails: any = userMap.get(userId) || { display_name: '', avatar_url: null };
-        return {
-            user_id: userId,
-            display_name: userDetails.display_name || `User ${userId.substring(0, 6)}`,
-            avatar_url: userDetails.avatar_url || `https://ui-avatars.com/api/?name=${(userDetails.display_name || 'U').charAt(0)}`,
-            last_message_content: lastMsg.content,
-            last_message_at: lastMsg.at,
-        };
-    });
-    conversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
-    return conversations;
-};
-
-// Action: Fetch all messages for a single conversation
-const handleGetMessages = async (supabaseAdmin: any, payload: any) => {
-    const { user_id } = payload;
-    if (!user_id) throw new Error('user_id is required for GET_MESSAGES action.');
-    const { data, error } = await supabaseAdmin.from('support_chats').select('*').eq('user_id', user_id).order('created_at', { ascending: true });
+// Action: Fetch all messages. The client will process them into conversations.
+const handleGetAllMessages = async (supabaseAdmin: any) => {
+    const { data, error } = await supabaseAdmin
+        .from('support_chats')
+        .select('*')
+        .order('created_at', { ascending: true });
     if (error) throw error;
     return data;
 };
@@ -97,7 +57,7 @@ const handleSendMessage = async (supabaseAdmin: any, payload: any) => {
     }).select();
     
     if (error) throw error;
-    return data;
+    return data[0]; // Return the newly created message
 };
 
 // Main server function
@@ -108,16 +68,13 @@ serve(async (req: Request) => {
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    await getAdminUserId(supabaseAdmin, req); // Security check
+    await checkAdminRole(supabaseAdmin, req); // Security check
     const { action, payload } = await req.json();
     
     let responseData;
     switch(action) {
-        case 'GET_CONVERSATIONS':
-            responseData = await handleGetConversations(supabaseAdmin);
-            break;
-        case 'GET_MESSAGES':
-            responseData = await handleGetMessages(supabaseAdmin, payload);
+        case 'GET_ALL_MESSAGES':
+            responseData = await handleGetAllMessages(supabaseAdmin);
             break;
         case 'SEND_MESSAGE':
             responseData = await handleSendMessage(supabaseAdmin, payload);

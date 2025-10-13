@@ -28,15 +28,14 @@ const SupportPanel: React.FC = () => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
     const [newMessage, setNewMessage] = useState('');
-    const [loading, setLoading] = useState<'list' | 'chat' | 'none'>('list');
+    const [loading, setLoading] = useState<'list' | 'none'>('list');
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isSending, setIsSending] = useState(false);
 
-    const processMessagesIntoConversations = useCallback((messages: Message[]) => {
+    const processMessages = useCallback((messages: Message[]) => {
         const convosMap = new Map<string, Conversation>();
-        // Messages are already sorted by created_at from the query
         for (const msg of messages) {
             convosMap.set(msg.user_id, {
                 user_id: msg.user_id,
@@ -44,55 +43,43 @@ const SupportPanel: React.FC = () => {
                 last_message_at: msg.created_at,
             });
         }
-        
         const sortedConversations = Array.from(convosMap.values())
             .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
         setConversations(sortedConversations);
     }, []);
 
-    const fetchAllMessages = useCallback(async () => {
-        // Don't show loading spinner on polls, only on initial load
-        if (loading !== 'list') {
-             // We are polling, no need to set error state and disrupt UI
-        } else {
+    const fetchAllData = useCallback(async (isInitialLoad: boolean) => {
+        if (isInitialLoad) {
+            setLoading('list');
             setError(null);
         }
-
         try {
-            const { data, error: fetchError } = await supabase
-                .from('support_chats')
-                .select('*')
-                .order('created_at', { ascending: true });
+            const { data, error: functionError } = await supabase.functions.invoke('admin-support-actions', {
+                body: { action: 'GET_ALL_MESSAGES' }
+            });
 
-            if (fetchError) throw fetchError;
-            
-            const messages = data || [];
-            setAllMessages(messages);
-            processMessagesIntoConversations(messages);
-
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to fetch conversations.";
-            // Only set error on initial load, not on background poll failures
-            if (loading === 'list') {
-                setError(errorMessage);
+            if (functionError) {
+                const errorContext = await functionError.context.json();
+                throw new Error(errorContext?.error || `Failed to fetch conversations: ${functionError.message}`);
             }
+
+            const messages = (data as Message[]) || [];
+            setAllMessages(messages);
+            processMessages(messages);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch data.";
+            if (isInitialLoad) setError(errorMessage);
             console.error("Polling/Fetch Error:", errorMessage);
         } finally {
-            if (loading === 'list') {
-                setLoading('none');
-            }
+            if (isInitialLoad) setLoading('none');
         }
-    }, [processMessagesIntoConversations, loading]);
+    }, [processMessages]);
 
-    // Initial fetch and polling
     useEffect(() => {
-        setLoading('list');
-        fetchAllMessages(); // Initial fetch
-        
-        const intervalId = setInterval(fetchAllMessages, 5000); // Poll every 5 seconds
-
-        return () => clearInterval(intervalId); // Cleanup interval on unmount
-    }, [fetchAllMessages]);
+        fetchAllData(true); // Initial fetch
+        const intervalId = setInterval(() => fetchAllData(false), 5000); // Poll every 5 seconds
+        return () => clearInterval(intervalId);
+    }, [fetchAllData]);
 
     const currentMessages = useMemo(() => {
         if (!selectedConvoId) return [];
@@ -100,36 +87,30 @@ const SupportPanel: React.FC = () => {
     }, [selectedConvoId, allMessages]);
     
     useEffect(() => {
-        if (currentMessages.length > 0) {
-             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [currentMessages, selectedConvoId]);
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [currentMessages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedConvoId || isSending) return;
-
         setIsSending(true);
         const optimisticMessageContent = newMessage.trim();
         setNewMessage('');
         
         try {
-            const { data, error } = await supabase.from('support_chats').insert({
-                user_id: selectedConvoId,
-                message_content: optimisticMessageContent,
-                sent_by: 'admin',
-            }).select();
-
+            const { data: sentMessage, error } = await supabase.functions.invoke('admin-support-actions', {
+                body: { 
+                    action: 'SEND_MESSAGE', 
+                    payload: { user_id: selectedConvoId, message_content: optimisticMessageContent } 
+                }
+            });
             if (error) throw error;
-            
-            // Optimistically update UI, then let the poll sync from the server
-            const newMsg = data[0] as Message;
-            setAllMessages(prev => [...prev, newMsg]);
-            processMessagesIntoConversations([...allMessages, newMsg]);
-
+            // Optimistically add the new message, the next poll will sync everything
+            setAllMessages(prev => [...prev, sentMessage as Message]);
+            processMessages([...allMessages, sentMessage as Message]);
         } catch (err) {
             alert(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            setNewMessage(optimisticMessageContent); // Restore message on failure
+            setNewMessage(optimisticMessageContent);
         } finally {
             setIsSending(false);
         }
@@ -152,7 +133,7 @@ const SupportPanel: React.FC = () => {
                     </div>
                 </div>
                 {loading === 'list' ? (
-                    <div className="flex-grow flex items-center justify-center"><p>Loading conversations...</p></div>
+                    <div className="flex-grow flex items-center justify-center p-4 text-center"><p className="text-text-secondary">Loading conversations...</p></div>
                 ) : error ? (
                     <div className="p-4 text-red-500">{error}</div>
                 ) : (
@@ -165,7 +146,7 @@ const SupportPanel: React.FC = () => {
                                     className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
                                     <img src={`https://ui-avatars.com/api/?name=${convo.user_id.charAt(0)}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
                                     <div className="flex-grow overflow-hidden">
-                                        <p className="font-semibold text-text-main truncate font-mono">{convo.user_id}</p>
+                                        <p className="font-semibold text-text-main truncate font-mono">{convo.user_id.substring(0, 12)}...</p>
                                         <p className="text-sm text-text-secondary truncate mt-1">
                                             {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
                                         </p>
@@ -213,7 +194,14 @@ const SupportPanel: React.FC = () => {
                                 className="w-full bg-background border border-border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
                             />
                             <button type="submit" disabled={isSending} className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback disabled:opacity-50" aria-label="Send message">
-                                <SendIcon className="w-6 h-6" />
+                                {isSending ? (
+                                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                ) : (
+                                    <SendIcon className="w-6 h-6" />
+                                )}
                             </button>
                         </form>
                     </>
