@@ -21,8 +21,7 @@ const ImageCard: React.FC<{
     image: string; 
     onClick: () => void; 
     className?: string;
-    altText?: string;
-}> = ({ image, onClick, className = '', altText = 'Image card' }) => {
+}> = ({ image, onClick, className = '' }) => {
     const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -68,7 +67,7 @@ const ImageCard: React.FC<{
             onClick={onClick}
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={altText} className="w-full h-auto block transition-transform duration-300 group-hover:scale-105" />
+            <img src={image} alt="" className="w-full h-auto block transition-transform duration-300 group-hover:scale-105" />
         </div>
     );
 };
@@ -133,25 +132,6 @@ const ProgressWidget: React.FC<{
     );
 };
 
-// --- NEW CATEGORY CARD COMPONENT ---
-const CategoryCard: React.FC<{
-    title: string;
-    image: string; 
-    onClick: () => void; 
-}> = ({ title, image, onClick }) => {
-    return (
-        <div
-            onClick={onClick}
-            className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group aspect-video button-press-feedback transition-transform duration-300 hover:-translate-y-1"
-        >
-            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-blue-900/10 p-4 flex items-center">
-                <h3 className="text-white font-bold text-base leading-tight [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] w-1/2">{title}</h3>
-            </div>
-        </div>
-    );
-};
-
 
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
     const profile = useProfileData();
@@ -210,35 +190,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             <ImageCard
                 image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png"
                 onClick={() => onNavigate('/practice')}
-                altText="Paper Trading"
             />
-
-            {/* --- UPDATED "What are you looking for?" SECTION --- */}
-            <div>
-                <h2 className="text-xl font-bold mb-4">What are you looking for?</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <CategoryCard 
-                        title="Technical Indicators" 
-                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" 
-                        onClick={() => onNavigate('/learning/indicators')} 
-                    />
-                    <CategoryCard 
-                        title="Market Basics" 
-                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" 
-                        onClick={() => onNavigate('/learning/module/ch1')} 
-                    />
-                    <CategoryCard 
-                        title="Fundamental Analysis" 
-                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" 
-                        onClick={() => onNavigate('/learning/fundamental')} 
-                    />
-                    <CategoryCard 
-                        title="Bearish Candlestick Patterns" 
-                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" 
-                        onClick={() => onNavigate('/learning/bearish')} 
-                    />
-                </div>
-            </div>
 
             {/* --- NEW Pro Features Section --- */}
             <div>
@@ -252,22 +204,18 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                     <ImageCard
                         image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/00673d26-3620-4e25-83f7-63c361937ead%20(1).png"
                         onClick={() => onNavigate('/pricing')}
-                        altText="Premium Courses"
                     />
                     <ImageCard
                         image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/220a283a-e23c-450e-833a-5a7bac49ee84.png"
                         onClick={() => onNavigate('/pricing')}
-                        altText="Daily Chart Analysis"
                     />
                     <ImageCard
                         image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/0ca90da9-e791-44ea-bb2d-eef8a3ec351b.png"
                         onClick={() => onNavigate('/pricing')}
-                        altText="Upcoming Stock Events"
                     />
                     <ImageCard
                         image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/365a317e-e26a-407f-9557-d0bcd77aaca0.png"
                         onClick={() => onNavigate('/pricing')}
-                        altText="Telegram Subscription"
                     />
                 </div>
             </div>
@@ -283,7 +231,6 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                     {learningCurriculum.map(chapter => (
                         <ImageCard 
                             key={chapter.id}
-                            altText={chapter.shortTitle}
                             image={chapter.image}
                             onClick={() => onNavigate(chapter.isExternalLink ? `/learning/${chapter.id.replace('ch', '') === '3' ? 'bullish' : 'bearish'}` : `/learning/module/${chapter.id}`)}
                         />
