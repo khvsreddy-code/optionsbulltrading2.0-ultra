@@ -46,27 +46,24 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // Step 1: Fetch user details using a robust inner join.
-            // This replaces the previously failing queries.
-            const { data: profiles, error: usersError } = await supabase
-                .from('profiles')
-                .select('id, users:users!inner(email, raw_user_meta_data)');
+            // DEFINITIVE FIX: Use a server-side RPC function to join 'profiles' and 'auth.users'.
+            // This bypasses client-side schema cache issues that cause "could not find relationship" errors.
+            // NOTE: This assumes an RPC function `get_all_user_details` exists on the Supabase project.
+            const { data: userData, error: usersError } = await supabase.rpc('get_all_user_details');
 
             if (usersError) {
-                throw new Error(`Failed to fetch user data: ${usersError.message}`);
+                throw new Error(`Failed to fetch user data via RPC: ${usersError.message}. Please ensure the 'get_all_user_details' function is created in your database.`);
             }
 
             const userMap = new Map<string, UserDetails>();
-            if (profiles) {
-                for (const profile of (profiles as any[])) {
-                    if (profile.users) {
-                        userMap.set(profile.id, {
-                            user_id: profile.id,
-                            display_name: profile.users.raw_user_meta_data?.full_name || 'No Name',
-                            email: profile.users.email,
-                            avatar_url: profile.users.raw_user_meta_data?.avatar_url || null
-                        });
-                    }
+            if (userData) {
+                for (const user of (userData as any[])) {
+                    userMap.set(user.user_id, {
+                        user_id: user.user_id,
+                        display_name: user.display_name || 'No Name',
+                        email: user.email,
+                        avatar_url: user.avatar_url || null
+                    });
                 }
             }
             

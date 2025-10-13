@@ -21,33 +21,23 @@ const UserManagementPanel: React.FC = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             setLoading(true);
-            // FIX: Use an explicit `!inner` join hint to make the query more robust and avoid schema cache issues.
-            const { data, error } = await supabase
-                .from('profiles')
-                .select(`
-                    id,
-                    role,
-                    users:users!inner (
-                        email,
-                        created_at,
-                        raw_user_meta_data
-                    )
-                `);
+            // DEFINITIVE FIX: Use a server-side RPC function to join 'profiles' and 'auth.users'.
+            // This bypasses client-side schema cache issues that cause "could not find relationship" errors.
+            // NOTE: This assumes an RPC function `get_all_user_details` exists on the Supabase project.
+            const { data, error } = await supabase.rpc('get_all_user_details');
 
             if (error) {
-                setError(`Failed to fetch user data: ${error.message}`);
-                console.error("Error fetching users:", error);
+                setError(`Failed to fetch user data via RPC: ${error.message}. Please ensure the 'get_all_user_details' function is created in your database.`);
+                console.error("Error fetching users with RPC:", error);
             } else if (data) {
-                const mappedUsers = data
-                    .filter(profile => profile.users) // Ensure user data exists after the join
-                    .map((profile: any) => ({ // Use 'any' to handle the nested structure from the join
-                        user_id: profile.id,
-                        display_name: profile.users.raw_user_meta_data?.full_name || 'No Name',
-                        email: profile.users.email,
-                        avatar_url: profile.users.raw_user_meta_data?.avatar_url,
-                        role: profile.role,
-                        created_at: profile.users.created_at,
-                    }));
+                const mappedUsers: User[] = data.map((user: any) => ({
+                    user_id: user.user_id,
+                    display_name: user.display_name || 'No Name',
+                    email: user.email,
+                    avatar_url: user.avatar_url,
+                    role: user.role,
+                    created_at: user.created_at,
+                }));
                 setUsers(mappedUsers);
             }
             setLoading(false);
@@ -90,7 +80,7 @@ const UserManagementPanel: React.FC = () => {
     }
 
     if (error) {
-        return <div className="p-4 text-red-500">Error: {error}. This may be a permissions issue. Ensure RLS policies allow admins to read user data.</div>;
+        return <div className="p-4 text-red-500">Error: {error}</div>;
     }
 
     return (
