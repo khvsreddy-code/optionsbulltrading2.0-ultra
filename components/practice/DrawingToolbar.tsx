@@ -16,25 +16,25 @@ const tools = [
 
 const DrawingToolbar: React.FC<DrawingToolbarProps> = ({ activeTool, onSelectTool, onClearDrawings }) => {
     return (
-        <div className="drawing-toolbar bg-card border-r border-border p-2 flex flex-col items-center space-y-1">
+        <div className="flex items-center space-x-1 bg-card border border-border rounded-lg p-1">
             {tools.map(tool => (
                 <button
                     key={tool.id}
                     onClick={() => onSelectTool(tool.id as DrawingTool)}
-                    className={`p-2 rounded-lg transition-colors ${activeTool === tool.id ? 'bg-primary text-white' : 'text-text-secondary hover:bg-background'}`}
+                    className={`p-2 rounded-md transition-colors ${activeTool === tool.id ? 'bg-primary text-white' : 'text-text-secondary hover:bg-background'}`}
                     aria-label={tool.label}
                     title={tool.label}
                 >
                     <tool.icon size={20} />
                 </button>
             ))}
-            <div className="flex-grow"></div> {/* Spacer */}
+            <div className="w-px h-6 bg-border mx-1"></div>
             <button
                 onClick={() => {
                     onClearDrawings();
                     onSelectTool('cursor');
                 }}
-                className="p-2 rounded-lg text-text-secondary hover:bg-background"
+                className="p-2 rounded-md text-text-secondary hover:bg-background"
                 aria-label="Clear All Drawings"
                 title="Clear All Drawings"
             >

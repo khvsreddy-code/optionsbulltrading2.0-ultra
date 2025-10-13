@@ -3,6 +3,8 @@ import anime from 'animejs';
 import type { Instrument, CandleData, Timeframe, OrderSide } from '../../types';
 import StockSelector from './StockSelector';
 import TimeframeSelector from './TimeframeSelector';
+import DrawingToolbar from './DrawingToolbar';
+import type { DrawingTool } from '../../views/PracticeView';
 
 interface ChartHeaderProps {
   instruments: Instrument[];
@@ -12,6 +14,9 @@ interface ChartHeaderProps {
   onSelectTimeframe: (timeframe: Timeframe) => void;
   liveOhlc: CandleData | null;
   onTradeButtonClick: (side: OrderSide) => void;
+  activeTool: DrawingTool;
+  onSelectTool: (tool: DrawingTool) => void;
+  onClearDrawings: () => void;
 }
 
 const ChartHeader: React.FC<ChartHeaderProps> = ({
@@ -21,7 +26,10 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
   selectedTimeframe,
   onSelectTimeframe,
   liveOhlc,
-  onTradeButtonClick
+  onTradeButtonClick,
+  activeTool,
+  onSelectTool,
+  onClearDrawings
 }) => {
   const price = liveOhlc?.close ?? selectedInstrument?.last_price ?? 0;
   const open = liveOhlc?.open ?? 0;
@@ -73,6 +81,11 @@ const ChartHeader: React.FC<ChartHeaderProps> = ({
                 SELL
             </button>
         </div>
+        <DrawingToolbar
+            activeTool={activeTool}
+            onSelectTool={onSelectTool}
+            onClearDrawings={onClearDrawings}
+        />
         {liveOhlc && (
           <div className="hidden sm:flex items-baseline space-x-2">
               <span ref={priceRef} className={`text-lg font-mono font-bold ${priceColor} rounded-md px-1 transition-colors duration-200`}>{price.toFixed(2)}</span>

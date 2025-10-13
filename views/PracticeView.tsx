@@ -15,8 +15,6 @@ import OrderDialog from '../components/practice/OrderDialog';
 import BottomPanel from '../components/practice/BottomPanel';
 import WelcomeDialog from '../components/practice/WelcomeDialog';
 import PortfolioBar from '../components/practice/PortfolioBar';
-import DrawingToolbar from '../components/practice/DrawingToolbar';
-
 
 interface PracticeViewProps {
   onNavigate: (path: string) => void;
@@ -347,51 +345,43 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             <WelcomeDialog isOpen={showWelcome} onClose={() => { setShowWelcome(false); localStorage.setItem('hasSeenSimulatorWelcome', 'true'); }} />
             <SimulatorHeader title="Market Simulator" />
             
-            <div className="practice-container flex-grow">
-                <DrawingToolbar
+            <main className="flex-grow flex flex-col">
+                <ChartHeader
+                    instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
+                    selectedTimeframe={timeframe} onSelectTimeframe={setTimeframe} liveOhlc={liveOhlc}
+                    onTradeButtonClick={handleOpenOrderDialog}
                     activeTool={activeDrawingTool}
-                    onSelectTool={(tool) => {
-                        if (tool !== activeDrawingTool) {
-                            setActiveDrawingTool(tool);
-                        }
-                    }}
+                    onSelectTool={(tool) => setActiveDrawingTool(tool)}
                     onClearDrawings={() => setDrawings([])}
                 />
-                <main className="practice-canvas-container flex flex-col">
-                    <ChartHeader
-                        instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
-                        selectedTimeframe={timeframe} onSelectTimeframe={setTimeframe} liveOhlc={liveOhlc}
-                        onTradeButtonClick={handleOpenOrderDialog}
-                    />
-                    <div className="flex-grow relative">
-                        {isLoading ? (
-                             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
-                                <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                             </div>
-                        ) : (
-                           <ChartComponent 
-                               ref={chartComponentRef}
-                               key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
-                               initialData={initialChartData}
-                               timeframe={timeframe}
-                               theme={theme}
-                               activeDrawingTool={activeDrawingTool}
-                               drawings={drawings}
-                               onDrawingComplete={(newDrawing) => {
-                                   setDrawings(prev => [...prev, newDrawing]);
-                                   // Revert to cursor tool after drawing for better UX
-                                   if (activeDrawingTool === 'horizontal' || activeDrawingTool === 'trendline') {
-                                       setActiveDrawingTool('cursor');
-                                   }
-                               }}
-                           />
-                        )}
-                    </div>
-                </main>
-            </div>
+                <div className="flex-grow relative">
+                    {isLoading ? (
+                         <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-30">
+                            <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                         </div>
+                    ) : (
+                       <ChartComponent 
+                           ref={chartComponentRef}
+                           key={selectedInstrument ? selectedInstrument.instrument_key + timeframe : timeframe}
+                           initialData={initialChartData}
+                           timeframe={timeframe}
+                           theme={theme}
+                           activeDrawingTool={activeDrawingTool}
+                           drawings={drawings}
+                           onDrawingComplete={(newDrawing) => {
+                               setDrawings(prev => [...prev, newDrawing]);
+                               // Revert to cursor tool after drawing for better UX
+                               if (activeDrawingTool === 'horizontal' || activeDrawingTool === 'trendline') {
+                                   setActiveDrawingTool('cursor');
+                               }
+                           }}
+                       />
+                    )}
+                </div>
+            </main>
             
             {isPortfolioOpen ? (
                 <BottomPanel
