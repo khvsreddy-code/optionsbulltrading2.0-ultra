@@ -61,6 +61,19 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         };
     }, [timeframe]);
 
+    const applyInitialZoom = useCallback((dataLength: number) => {
+        if (chartRef.current && dataLength > 0) {
+            const lastBarIndex = dataLength - 1;
+            const visibleBars = 40;
+            // Ensure the start of the range is not negative
+            const rangeStart = Math.max(0, lastBarIndex - visibleBars + 1);
+            
+            chartRef.current.timeScale().setVisibleLogicalRange({
+                from: rangeStart,
+                to: lastBarIndex
+            });
+        }
+    }, []);
 
     useImperativeHandle(ref, () => ({
         updateCandle(candle: CandleData) {
@@ -71,7 +84,9 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         },
         setData(data: CandleData[]) {
             if (candlestickSeriesRef.current) {
-                candlestickSeriesRef.current.setData(data.map(c => ({...c, time: c.time as UTCTimestamp})));
+                const candlestickData = data.map(c => ({...c, time: c.time as UTCTimestamp}));
+                candlestickSeriesRef.current.setData(candlestickData);
+                applyInitialZoom(candlestickData.length);
             }
         },
     }));
@@ -87,7 +102,12 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight,
             layout: { background: { type: ColorType.Solid, color: chartColors.bg }, textColor: chartColors.text },
             grid: { vertLines: { color: chartColors.grid }, horzLines: { color: chartColors.grid } },
-            timeScale: { timeVisible: true, secondsVisible: false, borderColor: chartColors.border },
+            timeScale: { 
+                timeVisible: true, 
+                secondsVisible: false, 
+                borderColor: chartColors.border,
+                rightOffset: 100, // Add space to the right for drawing future lines
+            },
             rightPriceScale: { 
                 borderColor: chartColors.border,
             },
@@ -137,9 +157,9 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                 time: c.time as UTCTimestamp, open: c.open, high: c.high, low: c.low, close: c.close,
             }));
             candlestickSeriesRef.current.setData(candlestickData);
-            if (chartRef.current) chartRef.current.timeScale().fitContent();
+            applyInitialZoom(candlestickData.length);
         }
-    }, [initialData]);
+    }, [initialData, applyInitialZoom]);
 
     useEffect(() => {
         const chart = chartRef.current;
@@ -168,10 +188,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
                     color: '#3B82F6', lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
                     autoscaleInfoProvider: () => null,
                 });
-                lineSeries.setData([
+                const lineData = [
                     { time: drawing.start.time as UTCTimestamp, value: drawing.start.price },
                     { time: drawing.end.time as UTCTimestamp, value: drawing.end.price },
-                ]);
+                ].sort((a,b) => a.time - b.time);
+                lineSeries.setData(lineData);
                 drawnObjectsRef.current.set(drawing.id, lineSeries);
             }
         });
