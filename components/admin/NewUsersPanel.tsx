@@ -21,12 +21,33 @@ const UserManagementPanel: React.FC = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             setLoading(true);
-            const { data, error } = await supabase.rpc('get_all_users_with_roles');
+            const { data, error } = await supabase
+                .from('profiles')
+                .select(`
+                    id,
+                    role,
+                    users (
+                        email,
+                        created_at,
+                        raw_user_meta_data
+                    )
+                `);
+
             if (error) {
                 setError(error.message);
-                console.error("Error fetching all users:", error);
-            } else {
-                setUsers(data || []);
+                console.error("Error fetching users:", error);
+            } else if (data) {
+                const mappedUsers = data
+                    .filter(profile => profile.users) // Ensure user data exists
+                    .map(profile => ({
+                        user_id: profile.id,
+                        display_name: profile.users.raw_user_meta_data?.full_name || 'No Name',
+                        email: profile.users.email,
+                        avatar_url: profile.users.raw_user_meta_data?.avatar_url,
+                        role: profile.role,
+                        created_at: profile.users.created_at,
+                    }));
+                setUsers(mappedUsers);
             }
             setLoading(false);
         };
@@ -68,7 +89,7 @@ const UserManagementPanel: React.FC = () => {
     }
 
     if (error) {
-        return <div className="p-4 text-red-500">Error: {error}. Did you run the required SQL function in your Supabase project?</div>;
+        return <div className="p-4 text-red-500">Error: {error}. This may be a permissions issue. Ensure RLS policies allow admins to read user data.</div>;
     }
 
     return (
@@ -102,7 +123,7 @@ const UserManagementPanel: React.FC = () => {
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         {isUpdating ? (
-                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>

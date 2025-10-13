@@ -68,7 +68,6 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
         (payload) => {
             const newMessageFromServer = payload.new as Message;
             setMessages(prevMessages => {
-                // Prevent duplicates from the realtime listener
                 if (prevMessages.some(msg => msg.id === newMessageFromServer.id)) {
                     return prevMessages;
                 }
@@ -95,8 +94,6 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
       const messageContent = newMessage.trim();
       setNewMessage('');
 
-      // Insert the message and immediately select it back.
-      // This guarantees the sender sees their message without relying on realtime.
       const { data: newMessages, error: insertError } = await supabase
         .from('support_chats')
         .insert({
@@ -109,13 +106,19 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
       if (insertError) {
           console.error("Error sending message:", insertError);
           alert("Failed to send message. Please try again.");
-          setNewMessage(messageContent); // Restore input on failure
+          setNewMessage(messageContent); 
       } else if (newMessages && newMessages.length > 0) {
-          // Manually add the new message to the state.
-          // This provides instant feedback for the sender.
           setMessages(prevMessages => [...prevMessages, newMessages[0] as Message]);
       }
   };
+
+  const AdminAvatar = () => (
+      <img
+        src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/Gemini_Generated_Image_e6q469e6q469e6q4.png"
+        alt="Support"
+        className="w-8 h-8 rounded-full"
+    />
+  );
 
   return (
     <div className="bg-background min-h-screen font-sans flex flex-col">
@@ -140,43 +143,44 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
                 </div>
             )}
             {!loading && !error && (
-                <>
-                    <div className="flex-grow overflow-y-auto space-y-4 pr-2">
-                        {messages.length === 0 ? (
-                            <div className="text-center text-text-secondary p-8">
-                                <h3 className="font-semibold text-text-main">Welcome to Live Support!</h3>
-                                <p>Ask us anything about the app, your subscription, or trading concepts. We'll get back to you as soon as possible.</p>
-                            </div>
-                        ) : (
-                             messages.map(msg => (
-                                <div key={msg.id} className={`flex ${msg.sent_by === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`p-3 rounded-lg max-w-xs md:max-w-md ${msg.sent_by === 'user' ? 'bg-primary text-white' : 'bg-card border border-border'}`}>
-                                        <p className="whitespace-pre-wrap">{msg.message_content}</p>
-                                        <p className={`text-xs mt-1 ${msg.sent_by === 'user' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
-                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
+                <div className="flex-grow overflow-y-auto space-y-4 pr-2">
+                    {messages.length === 0 ? (
+                        <div className="text-center text-text-secondary p-8">
+                            <h3 className="font-semibold text-text-main">Welcome to Live Support!</h3>
+                            <p>Ask us anything about the app, your subscription, or trading concepts. We'll get back to you as soon as possible.</p>
+                        </div>
+                    ) : (
+                         messages.map(msg => (
+                            <div key={msg.id} className={`flex items-end gap-2 ${msg.sent_by === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                {msg.sent_by === 'admin' && <AdminAvatar />}
+                                <div className={`p-3 rounded-2xl max-w-xs md:max-w-md ${msg.sent_by === 'user' ? 'bg-primary text-white rounded-br-none' : 'bg-card border border-border text-text-main rounded-bl-none'}`}>
+                                    <p className="whitespace-pre-wrap text-sm">{msg.message_content}</p>
+                                    <p className={`text-xs mt-1 ${msg.sent_by === 'user' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
+                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
                                 </div>
-                            ))
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-                    
-                    <form onSubmit={handleSendMessage} className="flex-shrink-0 mt-4 flex items-center space-x-2">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            className="w-full bg-card border border-border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
-                        />
-                        <button type="submit" className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback" aria-label="Send message">
-                            <SendIcon className="w-6 h-6" />
-                        </button>
-                    </form>
-                </>
+                            </div>
+                        ))
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
             )}
         </main>
+        
+        <footer className="sticky bottom-0 bg-card border-t border-border">
+            <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto p-3 flex items-center space-x-2">
+                <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="w-full bg-background border border-border rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
+                />
+                <button type="submit" className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback disabled:opacity-50" aria-label="Send message" disabled={!newMessage.trim()}>
+                    <SendIcon className="w-6 h-6" />
+                </button>
+            </form>
+        </footer>
     </div>
   );
 };

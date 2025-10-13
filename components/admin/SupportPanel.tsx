@@ -3,8 +3,6 @@ import { supabase } from '../../services/supabaseClient';
 import { Search } from '../../components/common/Icons';
 
 // --- TYPE DEFINITIONS ---
-// FIX: Add a type definition for the user data from the RPC call.
-// This resolves the 'unknown' type error by providing a clear structure.
 interface UserDetails {
   user_id: string;
   display_name: string;
@@ -47,23 +45,36 @@ const SupportPanel: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const fetchConversations = async () => {
-        // The original RPC 'get_support_conversations' is failing due to a database schema mismatch.
-        // Error: "column p.full_name does not exist".
-        // This workaround reconstructs the required data on the client-side.
         try {
-            // Step 1: Fetch all user details. This RPC is known to work.
-            const { data: usersData, error: usersError } = await supabase.rpc('get_all_users_with_roles');
+            // Step 1: Fetch user details by joining profiles and auth.users.
+            // This replaces the broken `get_all_users_with_roles` RPC.
+            const { data: profiles, error: usersError } = await supabase
+                .from('profiles')
+                .select('id, users(email, raw_user_meta_data)');
+
             if (usersError) {
                 throw new Error(`Failed to fetch user data: ${usersError.message}`);
             }
-            // FIX: Explicitly type the user map to ensure type safety.
-            const userMap = new Map((usersData as UserDetails[]).map((u) => [u.user_id, u]));
 
+            const userMap = new Map<string, UserDetails>();
+            if (profiles) {
+                for (const profile of profiles) {
+                    if (profile.users) {
+                        userMap.set(profile.id, {
+                            user_id: profile.id,
+                            display_name: profile.users.raw_user_meta_data?.full_name || 'No Name',
+                            email: profile.users.email,
+                            avatar_url: profile.users.raw_user_meta_data?.avatar_url || null
+                        });
+                    }
+                }
+            }
+            
             // Step 2: Fetch all support messages.
             const { data: messagesData, error: messagesError } = await supabase
                 .from('support_chats')
                 .select('*')
-                .order('created_at', { ascending: false }); // Order descending to easily find the latest.
+                .order('created_at', { ascending: false });
 
             if (messagesError) {
                 throw new Error(`Failed to fetch support chats: ${messagesError.message}`);
@@ -93,10 +104,9 @@ const SupportPanel: React.FC = () => {
                 }
             }
             
-            // Sort by most recent message
             combinedConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
-
             setConversations(combinedConversations);
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
             console.error("Error fetching conversations:", err);
@@ -111,7 +121,6 @@ const SupportPanel: React.FC = () => {
         const channel = supabase.channel('support-list-updates-admin')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_chats' }, 
             payload => {
-                // Re-fetch the entire list to update the "last message" correctly
                 fetchConversations();
             }).subscribe();
         return () => { supabase.removeChannel(channel); };
