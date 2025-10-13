@@ -36,9 +36,8 @@ const SupportPanel: React.FC = () => {
 
     const processMessagesIntoConversations = useCallback((messages: Message[]) => {
         const convosMap = new Map<string, Conversation>();
-        const sortedMsgs = [...messages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        
-        for (const msg of sortedMsgs) {
+        // Messages are already sorted by created_at from the query
+        for (const msg of messages) {
             convosMap.set(msg.user_id, {
                 user_id: msg.user_id,
                 last_message_content: msg.message_content,
@@ -52,7 +51,13 @@ const SupportPanel: React.FC = () => {
     }, []);
 
     const fetchAllMessages = useCallback(async () => {
-        setError(null);
+        // Don't show loading spinner on polls, only on initial load
+        if (loading !== 'list') {
+             // We are polling, no need to set error state and disrupt UI
+        } else {
+            setError(null);
+        }
+
         try {
             const { data, error: fetchError } = await supabase
                 .from('support_chats')
@@ -66,11 +71,18 @@ const SupportPanel: React.FC = () => {
             processMessagesIntoConversations(messages);
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to fetch conversations.");
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch conversations.";
+            // Only set error on initial load, not on background poll failures
+            if (loading === 'list') {
+                setError(errorMessage);
+            }
+            console.error("Polling/Fetch Error:", errorMessage);
         } finally {
-            setLoading('none');
+            if (loading === 'list') {
+                setLoading('none');
+            }
         }
-    }, [processMessagesIntoConversations]);
+    }, [processMessagesIntoConversations, loading]);
 
     // Initial fetch and polling
     useEffect(() => {
@@ -91,7 +103,7 @@ const SupportPanel: React.FC = () => {
         if (currentMessages.length > 0) {
              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, [currentMessages]);
+    }, [currentMessages, selectedConvoId]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -110,13 +122,14 @@ const SupportPanel: React.FC = () => {
 
             if (error) throw error;
             
-            // Add the new message from the server to our state
-            setAllMessages(prev => [...prev, data[0]]);
-            processMessagesIntoConversations([...allMessages, data[0]]);
+            // Optimistically update UI, then let the poll sync from the server
+            const newMsg = data[0] as Message;
+            setAllMessages(prev => [...prev, newMsg]);
+            processMessagesIntoConversations([...allMessages, newMsg]);
 
         } catch (err) {
             alert(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
-            // If it fails, the next poll will correct the state.
+            setNewMessage(optimisticMessageContent); // Restore message on failure
         } finally {
             setIsSending(false);
         }
@@ -139,7 +152,7 @@ const SupportPanel: React.FC = () => {
                     </div>
                 </div>
                 {loading === 'list' ? (
-                    <div className="flex-grow flex items-center justify-center"><p>Loading...</p></div>
+                    <div className="flex-grow flex items-center justify-center"><p>Loading conversations...</p></div>
                 ) : error ? (
                     <div className="p-4 text-red-500">{error}</div>
                 ) : (
@@ -152,7 +165,7 @@ const SupportPanel: React.FC = () => {
                                     className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
                                     <img src={`https://ui-avatars.com/api/?name=${convo.user_id.charAt(0)}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
                                     <div className="flex-grow overflow-hidden">
-                                        <p className="font-semibold text-text-main truncate font-mono">...{convo.user_id.slice(-8)}</p>
+                                        <p className="font-semibold text-text-main truncate font-mono">{convo.user_id}</p>
                                         <p className="text-sm text-text-secondary truncate mt-1">
                                             {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
                                         </p>
@@ -171,14 +184,14 @@ const SupportPanel: React.FC = () => {
                 ) : (
                     <>
                         <div className="p-3 border-b border-border flex items-center bg-card">
-                            <h3 className="font-bold text-text-main font-mono">User: ...{selectedConvoId.slice(-8)}</h3>
+                            <h3 className="font-bold text-text-main font-mono">User: {selectedConvoId}</h3>
                         </div>
                         <div className="flex-grow overflow-y-auto p-4 space-y-4">
                             {currentMessages.map(msg => {
                                 const isImage = msg.message_content.startsWith('[IMAGE]');
                                 const content = isImage ? msg.message_content.replace('[IMAGE]', '') : msg.message_content;
                                 return (
-                                    <div key={msg.id} className={`flex ${msg.sent_by === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                                    <div key={msg.id} className={`flex items-end ${msg.sent_by === 'admin' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`p-2 rounded-lg max-w-lg ${msg.sent_by === 'admin' ? 'bg-primary text-white' : 'bg-card border border-border'}`}>
                                             {isImage ? (
                                                 <a href={content} target="_blank" rel="noopener noreferrer">
