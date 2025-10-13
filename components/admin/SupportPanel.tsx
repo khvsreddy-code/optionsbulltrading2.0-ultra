@@ -44,43 +44,51 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // Step 1: Fetch all user details from the Edge Function.
-            const { data: usersData, error: usersError } = await supabase.functions.invoke('get-all-users');
-            if (usersError) {
-                throw new Error(`Failed to fetch user data via function: ${usersError.message}. Ensure the function is deployed.`);
-            }
-            if (!usersData) {
-                throw new Error("User data function returned no data.");
-            }
-
-            const userMap = new Map<string, UserDetails>();
-            for (const user of usersData) {
-                userMap.set(user.user_id, {
-                    user_id: user.user_id,
-                    display_name: user.display_name,
-                    avatar_url: user.avatar_url,
-                });
-            }
-            
-            // Step 2: Fetch all support messages.
+            // Step 1: Fetch all support messages to find participating users.
             const { data: messagesData, error: messagesError } = await supabase
                 .from('support_chats')
-                .select('*')
+                .select('user_id, message_content, created_at')
                 .order('created_at', { ascending: false });
 
             if (messagesError) {
                 throw new Error(`Failed to fetch support chats: ${messagesError.message}`);
             }
 
-            // Step 3: Process messages to find the last message for each user conversation.
+            // Step 2: Extract unique user IDs and build the latest message map.
             const latestMessages = new Map<string, any>();
+            const userIds = new Set<string>();
             for (const message of messagesData) {
+                userIds.add(message.user_id);
                 if (!latestMessages.has(message.user_id)) {
                     latestMessages.set(message.user_id, message);
                 }
             }
 
-            // Step 4: Combine user data with the latest message to build the Conversation list.
+            if (userIds.size === 0) {
+                setConversations([]);
+                return;
+            }
+
+            // Step 3: Fetch profile data for only the users who have sent messages.
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, avatar_url')
+                .in('id', Array.from(userIds));
+            
+            if (profilesError) {
+                throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
+            }
+
+            // Step 4: Create a map of user details with a fallback for the name.
+            const userMap = new Map<string, { display_name: string; avatar_url: string | null; }>();
+            for (const profile of profilesData) {
+                userMap.set(profile.id, {
+                    display_name: `User ID: ${profile.id.substring(0, 8)}...`,
+                    avatar_url: profile.avatar_url,
+                });
+            }
+            
+            // Step 5: Combine user data with the latest message to build the Conversation list.
             const combinedConversations: Conversation[] = [];
             for (const [userId, lastMessage] of latestMessages.entries()) {
                 const userDetails = userMap.get(userId);
@@ -112,6 +120,7 @@ const SupportPanel: React.FC = () => {
         const channel = supabase.channel('support-list-updates-admin')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_chats' }, 
             payload => {
+                // Refetch all conversations to ensure the list is correctly sorted and updated
                 fetchConversations();
             }).subscribe();
         return () => { supabase.removeChannel(channel); };

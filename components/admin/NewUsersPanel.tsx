@@ -23,18 +23,32 @@ const UserManagementPanel: React.FC = () => {
             setLoading(true);
             setError(null);
             try {
-                const { data, error } = await supabase.functions.invoke('get-all-users');
+                // Revert to a robust, client-side only query to the 'profiles' table
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('id, avatar_url, role'); // Fetch only the columns guaranteed to exist
 
                 if (error) {
-                    throw new Error(`Failed to execute 'get-all-users' function: ${error.message}. Ensure the function is deployed and you are logged in as an admin.`);
+                    throw error;
                 }
                 if (!data) {
-                    throw new Error("The user data function returned no data.");
+                    throw new Error("No profiles were found in the database.");
                 }
-                setUsers(data);
+                
+                // Map the profile data to the User interface, providing sensible fallbacks
+                const mappedUsers: User[] = data.map(profile => ({
+                    user_id: profile.id,
+                    display_name: `User ID: ${profile.id.substring(0, 8)}...`, // Use User ID as a fallback display name
+                    email: 'Email not available on client', // Email is not queryable from the client for security
+                    avatar_url: profile.avatar_url,
+                    role: profile.role,
+                    created_at: '', // This info is not available in the profiles table
+                }));
+
+                setUsers(mappedUsers);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-                console.error("Error fetching users via function:", err);
+                setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching profiles.');
+                console.error("Error fetching profiles:", err);
             } finally {
                 setLoading(false);
             }
@@ -45,12 +59,13 @@ const UserManagementPanel: React.FC = () => {
     const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
         setUpdatingRoles(prev => ({ ...prev, [userId]: true }));
         try {
+            // Role updates still require a secure backend function.
             const { error } = await supabase.functions.invoke('set-user-role', {
                 body: { user_id: userId, role: newRole },
             });
 
             if (error) {
-                throw new Error('Failed to update role. Check function logs.');
+                throw new Error(`Failed to update role: ${error.message}. Ensure the 'set-user-role' function is deployed.`);
             }
 
             // Optimistically update the UI
@@ -69,7 +84,7 @@ const UserManagementPanel: React.FC = () => {
     const filteredUsers = useMemo(() =>
         users.filter(user =>
             user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            user.user_id?.toLowerCase().includes(searchTerm.toLowerCase())
         ), [users, searchTerm]);
 
     if (loading) {
@@ -88,7 +103,7 @@ const UserManagementPanel: React.FC = () => {
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by name or email..."
+                        placeholder="Search by name or ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -106,7 +121,7 @@ const UserManagementPanel: React.FC = () => {
                                         className="w-10 h-10 rounded-full"
                                     />
                                     <div className="flex-grow">
-                                        <p className="font-semibold text-text-main">{user.display_name || 'No Name'}</p>
+                                        <p className="font-semibold text-text-main">{user.display_name}</p>
                                         <p className="text-sm text-text-secondary">{user.email}</p>
                                     </div>
                                     <div className="flex items-center space-x-2">
