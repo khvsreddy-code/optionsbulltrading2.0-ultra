@@ -12,18 +12,9 @@ export interface ProfileData {
     role?: 'user' | 'admin';
 }
 
-const defaultProfile: ProfileData = {
-    total_pnl: 0,
-    progress_data: {},
-    subscription_status: 'free',
-    subscription_expires_at: null,
-    role: 'user',
-};
-
 // --- STATE MANAGEMENT ---
 
 let profileState: ProfileData | null = null;
-let fetchStatus: 'idle' | 'loading' | 'loaded' = 'idle';
 const listeners = new Set<() => void>();
 
 const notify = () => {
@@ -37,13 +28,11 @@ const subscribe = (callback: () => void) => {
 
 export const setProfileData = (newProfile: ProfileData) => {
     profileState = newProfile;
-    fetchStatus = 'loaded';
     notify();
 };
 
 export const clearProfileData = () => {
     profileState = null;
-    fetchStatus = 'idle';
     notify();
 };
 
@@ -51,63 +40,93 @@ export const getProfileState = (): ProfileData | null => {
     return profileState;
 };
 
+
+// --- REALTIME LISTENER SETUP ---
+let profileChannel: any = null;
+let isListenerInitialized = false;
+
 /**
- * Fetches the complete profile for the currently authenticated user from Supabase.
- * This is a READ-ONLY operation to prevent client-side data corruption.
+ * Initializes a single, persistent listener for the user's profile.
+ * It handles initial data fetch, real-time updates via Supabase channels,
+ * and automatically responds to user sign-in and sign-out events.
+ * This should be called once when the application starts.
  */
-const fetchProfileFromDB = async (): Promise<ProfileData> => {
-    try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError || !session?.user) {
-            console.warn("No valid session for fetchProfileFromDB");
-            return defaultProfile;
-        }
-        
-        const userId = session.user.id;
+export const initializeProfileListener = () => {
+    if (isListenerInitialized) return;
+    isListenerInitialized = true;
 
-        // --- DEFINITIVE FIX ---
-        // Replaced the fragile `.single()` call with a more resilient query.
-        // `.single()` throws an error if no row is found, which can happen intermittently on load.
-        // This new method returns an empty array if no row is found, which is safer to handle.
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .limit(1);
-
-        if (error) {
-            // This now only catches actual database errors, not "not found" errors.
-            throw error;
+    const setupChannel = (userId: string) => {
+        // Clean up existing channel if it's for a different user or doesn't exist
+        if (profileChannel && profileChannel.topic !== `realtime:public:profiles:id=eq.${userId}`) {
+            supabase.removeChannel(profileChannel);
+            profileChannel = null;
         }
 
-        if (data && data.length > 0) {
-            // Successfully found the profile.
-            return data[0] as ProfileData;
+        if (!profileChannel) {
+            profileChannel = supabase.channel(`profile-${userId}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'profiles',
+                    filter: `id=eq.${userId}`
+                }, (payload) => {
+                    // On any change (INSERT for new users, UPDATE for existing), update the global state
+                    if (payload.new) {
+                        setProfileData(payload.new as ProfileData);
+                    }
+                })
+                .subscribe();
         }
+    };
 
-        // If the profile is still not found, it indicates a backend issue (e.g., trigger failure).
-        // The client must not attempt to create a profile. We log the error and return a default.
-        console.error(
-            `CRITICAL: Profile for user ${userId} not found. ` +
-            `This may indicate a failed backend trigger for new user creation. ` +
-            `Falling back to a temporary default profile to prevent a crash.`
-        );
-        return { ...defaultProfile, id: userId };
+    const handleAuthChange = async (session: any) => {
+        if (session?.user) {
+            const userId = session.user.id;
+            
+            // Perform initial fetch to get data immediately on load
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
 
-    } catch (e) {
-        console.error("Fatal error in fetchProfileFromDB:", e);
-        return defaultProfile;
-    }
+            if (data) {
+                setProfileData(data);
+            } else if (error && error.code !== 'PGRST116') { // PGRST116 = row not found
+                console.error("Error fetching initial profile:", error);
+            }
+            // If profile is not found, we don't set a default. We wait for the realtime
+            // INSERT event from the backend trigger, which solves the race condition.
+
+            // Set up the realtime channel for this user
+            setupChannel(userId);
+        } else {
+            // User signed out, clear data and unsubscribe
+            clearProfileData();
+            if (profileChannel) {
+                supabase.removeChannel(profileChannel);
+                profileChannel = null;
+            }
+        }
+    };
+
+    // Initial check when the service is first initialized
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        handleAuthChange(session);
+    });
+
+    // Listen for all future auth state changes
+    supabase.auth.onAuthStateChange((_event, session) => {
+        handleAuthChange(session);
+    });
 };
 
 
-export const forceRefetchProfileData = async () => {
-    fetchStatus = 'loading';
-    profileState = await fetchProfileFromDB();
-    fetchStatus = 'loaded';
-    notify();
-};
-
+/**
+ * A React hook that provides the current user's profile data.
+ * It subscribes to the global profile state, which is kept up-to-date
+ * in real-time by the initializeProfileListener.
+ */
 export const useProfileData = (): ProfileData | null => {
     const [profile, setProfile] = useState(profileState);
 
@@ -115,25 +134,12 @@ export const useProfileData = (): ProfileData | null => {
         const unsubscribe = subscribe(() => {
             setProfile(profileState);
         });
-
-        if (fetchStatus === 'idle') {
-            forceRefetchProfileData();
-        } else {
-            setProfile(profileState);
-        }
         
-        return () => {
-            unsubscribe();
-        };
+        // Set initial state from global store on mount
+        setProfile(profileState);
+
+        return () => unsubscribe();
     }, []);
 
     return profile;
-};
-
-export const getProfileData = async (): Promise<ProfileData> => {
-    if (fetchStatus === 'loaded' && profileState) {
-        return profileState;
-    }
-    await forceRefetchProfileData();
-    return profileState!;
 };

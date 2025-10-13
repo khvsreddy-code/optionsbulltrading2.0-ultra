@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 // FIX: Corrected animejs import to handle module interoperability issues.
 import * as animejs from 'animejs';
@@ -6,7 +7,7 @@ const anime = (animejs as any).default;
 import type { Session, User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './services/supabaseClient';
 import type { View } from './types';
-import { useProfileData, forceRefetchProfileData, clearProfileData } from './services/profileService'; // Import the profile hook
+import { useProfileData, initializeProfileListener } from './services/profileService'; // Import the profile hook
 
 // Layout components
 import Header from './components/layout/Header';
@@ -45,6 +46,11 @@ import LoginScreen from './components/auth/LoginScreen';
 // Lazily load quiz components to prevent startup crash
 const QuizView = lazy(() => import('./views/quiz/QuizView'));
 const QuizResultsView = lazy(() => import('./views/quiz/QuizResultsView'));
+
+
+// Initialize the real-time profile listener ONCE when the app loads.
+// This service will now manage all profile data fetching and state.
+initializeProfileListener();
 
 
 // --- NEW: Theme Management ---
@@ -134,19 +140,14 @@ const App: React.FC = () => {
         
         fetchSession();
 
+        // This listener now only manages the App component's local session state for UI rendering.
+        // Profile data fetching and state are handled entirely by the profileService.
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             
             if (_event === 'SIGNED_IN') {
-                // Force a refetch of the user's profile data from the DB
-                forceRefetchProfileData();
                 handleNavigate('/home');
-            }
-            
-            if (_event === 'SIGNED_OUT') {
-                // Clear the cached profile data on logout
-                clearProfileData();
             }
         });
 
