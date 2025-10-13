@@ -1,3 +1,4 @@
+
 import { supabase } from './supabaseClient';
 import { setProfileData, ProfileData } from './profileService';
 
@@ -34,17 +35,24 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             .eq('id', session.user.id)
             .single();
 
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' for new users.
+        // Abort on critical fetch error, but allow "not found" for new profiles.
+        if (fetchError && fetchError.code !== 'PGRST116') {
             throw fetchError;
         }
 
-        // Step 2: MODIFY the progress data on the full profile object.
-        const profileToUpdate: ProfileData = currentProfile || {
+        // Step 2: MODIFY the progress data using a non-destructive pattern.
+        const baseProfile: ProfileData = {
             id: session.user.id,
             total_pnl: 0,
             progress_data: {},
             subscription_status: 'free',
             subscription_expires_at: null,
+            role: 'user',
+        };
+
+        const profileToUpdate: ProfileData = {
+            ...baseProfile,
+            ...currentProfile,
         };
         
         const newProgress = { ...(profileToUpdate.progress_data || {}) };
@@ -110,4 +118,67 @@ export const getTotalLessonCount = (): number => {
     const fundamentalLessons = fundamentalAnalysisTopics.length;
 
     return basicsLessons + bullishLessons + bearishLessons + indicatorLessons + fundamentalLessons;
+};
+
+/**
+ * DEFINITIVE FIX: Updates the user's total realized P&L using a robust, full-object
+ * "read-modify-write" pattern that no longer destroys other profile data.
+ * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
+ */
+export const updateUserPnl = async (pnl: number): Promise<void> => {
+    try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.user) {
+            console.warn("No session for updateUserPnl");
+            return;
+        }
+        
+        // Step 1: READ the entire latest profile.
+        const { data: currentProfile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        // Abort on critical fetch error, but allow "not found".
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            throw fetchError;
+        }
+
+        // Step 2: MODIFY the P&L data using a non-destructive pattern.
+        const baseProfile: ProfileData = {
+            id: session.user.id,
+            total_pnl: 0,
+            progress_data: {},
+            subscription_status: 'free',
+            subscription_expires_at: null,
+            role: 'user',
+        };
+        const profileToUpdate: ProfileData = {
+            ...baseProfile,
+            ...currentProfile,
+        };
+        
+        profileToUpdate.total_pnl = (profileToUpdate.total_pnl || 0) + pnl;
+        profileToUpdate.updated_at = new Date().toISOString();
+
+        // Step 3 & 4: UPSERT the entire object and get it back with .select().
+        const { data: updatedProfile, error: upsertError } = await supabase
+            .from('profiles')
+            .upsert(profileToUpdate)
+            .select('*')
+            .single();
+            
+        if (upsertError) {
+            console.error("Error updating user PNL:", upsertError);
+            return;
+        }
+        
+        // Step 5: Update the central store with the guaranteed fresh data.
+        if (updatedProfile) {
+            setProfileData(updatedProfile);
+        }
+    } catch (e) {
+        console.error("Unexpected error in updateUserPnl:", e);
+    }
 };
