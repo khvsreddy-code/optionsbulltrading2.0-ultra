@@ -66,7 +66,14 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
           filter: `user_id=eq.${user.id}` 
         }, 
         (payload) => {
-            setMessages(prevMessages => [...prevMessages, payload.new as Message]);
+            const newMessageFromServer = payload.new as Message;
+            setMessages(prevMessages => {
+                // Prevent duplicates from the realtime listener
+                if (prevMessages.some(msg => msg.id === newMessageFromServer.id)) {
+                    return prevMessages;
+                }
+                return [...prevMessages, newMessageFromServer];
+            });
         }
       )
       .subscribe();
@@ -88,16 +95,25 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
       const messageContent = newMessage.trim();
       setNewMessage('');
 
-      const { error: insertError } = await supabase.from('support_chats').insert({
-          user_id: user.id,
-          message_content: messageContent,
-          sent_by: 'user',
-      });
+      // Insert the message and immediately select it back.
+      // This guarantees the sender sees their message without relying on realtime.
+      const { data: newMessages, error: insertError } = await supabase
+        .from('support_chats')
+        .insert({
+            user_id: user.id,
+            message_content: messageContent,
+            sent_by: 'user',
+        })
+        .select();
 
       if (insertError) {
           console.error("Error sending message:", insertError);
-          // Optional: Re-add the message to the input if it fails
-          setNewMessage(messageContent);
+          alert("Failed to send message. Please try again.");
+          setNewMessage(messageContent); // Restore input on failure
+      } else if (newMessages && newMessages.length > 0) {
+          // Manually add the new message to the state.
+          // This provides instant feedback for the sender.
+          setMessages(prevMessages => [...prevMessages, newMessages[0] as Message]);
       }
   };
 
