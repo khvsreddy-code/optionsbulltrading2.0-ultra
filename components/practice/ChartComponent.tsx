@@ -63,15 +63,11 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
 
     const applyInitialZoom = useCallback((dataLength: number) => {
         if (chartRef.current && dataLength > 0) {
-            const lastBarIndex = dataLength - 1;
             const visibleBars = 40;
-            // Ensure the start of the range is not negative
-            const rangeStart = Math.max(0, lastBarIndex - visibleBars + 1);
-            
-            chartRef.current.timeScale().setVisibleLogicalRange({
-                from: rangeStart,
-                to: lastBarIndex
-            });
+            // Scroll to a position from the right edge. A negative value does this.
+            // This will show the last `visibleBars` candles while respecting the rightOffset.
+            // FIX: The scrollToPosition method requires two arguments: the position and a boolean for animation.
+            chartRef.current.timeScale().scrollToPosition(-visibleBars, false);
         }
     }, []);
 
