@@ -133,6 +133,26 @@ const ProgressWidget: React.FC<{
     );
 };
 
+// --- NEW CATEGORY CARD COMPONENT ---
+const CategoryCard: React.FC<{
+    title: string;
+    image: string; 
+    onClick: () => void; 
+}> = ({ title, image, onClick }) => {
+    return (
+        <div
+            onClick={onClick}
+            className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group aspect-video button-press-feedback transition-transform duration-300 hover:-translate-y-1"
+        >
+            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-blue-900/10 p-4 flex items-center">
+                <h3 className="text-white font-bold text-base leading-tight [text-shadow:0_1px_3px_rgba(0,0,0,0.5)] w-1/2">{title}</h3>
+            </div>
+        </div>
+    );
+};
+
+
 const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
     const profile = useProfileData();
 
@@ -203,13 +223,30 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                 </div>
             </div>
 
+            {/* --- UPDATED "What are you looking for?" SECTION --- */}
             <div>
                 <h2 className="text-xl font-bold mb-4">What are you looking for?</h2>
-                <div className="grid grid-cols-4 gap-4">
-                    <ImageCard altText="Daily Chart Analysis" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} />
-                    <ImageCard altText="Upcoming Stock Events" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} />
-                    <ImageCard altText="Telegram Subscriptions" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} />
-                    <ImageCard altText="Courses" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} />
+                <div className="grid grid-cols-2 gap-4">
+                    <CategoryCard 
+                        title="Technical Indicators" 
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" 
+                        onClick={() => onNavigate('/learning/indicators')} 
+                    />
+                    <CategoryCard 
+                        title="Market Basics" 
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" 
+                        onClick={() => onNavigate('/learning/module/ch1')} 
+                    />
+                    <CategoryCard 
+                        title="Fundamental Analysis" 
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" 
+                        onClick={() => onNavigate('/learning/fundamental')} 
+                    />
+                    <CategoryCard 
+                        title="Bearish Candlestick Patterns" 
+                        image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" 
+                        onClick={() => onNavigate('/learning/bearish')} 
+                    />
                 </div>
             </div>
 
