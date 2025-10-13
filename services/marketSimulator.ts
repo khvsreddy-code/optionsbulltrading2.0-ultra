@@ -39,18 +39,16 @@ class CryptoPriceGenerator {
 }
 
 export class MarketSimulator {
-    private intervalId: number | null = null;
+    private tickIntervalId: number | null = null;
+    private candleEmitIntervalId: number | null = null;
     private readonly instrument: Instrument;
     private priceGenerator: CryptoPriceGenerator;
-    private lastTickTime: number;
-    // FIX: Add missing 'lastPrice' property declaration.
     private lastPrice: number;
 
     constructor(instrument: Instrument) {
         this.instrument = instrument;
         this.lastPrice = instrument.last_price;
         this.priceGenerator = new CryptoPriceGenerator(this.lastPrice);
-        this.lastTickTime = Date.now();
     }
     
     // This function ONLY generates 1-minute bars now.
@@ -91,16 +89,16 @@ export class MarketSimulator {
         
         this.lastPrice = lastClose;
         this.priceGenerator = new CryptoPriceGenerator(lastClose);
-        this.lastTickTime = Date.now();
         return data;
     }
 
-    // This function now emits a complete 1-minute candle every second for simulation speed.
+    // This function provides a continuous stream of updating 1-minute candles.
     public start(callback: (candle: CandleData) => void): void {
         this.stop();
         let currentCandle: CandleData | null = null;
 
-        const tickLoop = () => {
+        // High-frequency internal loop to generate ticks and update the candle state
+        this.tickIntervalId = window.setInterval(() => {
             const now = Date.now();
             const currentTimeSeconds = Math.floor(now / 1000);
             const candleStartTime = currentTimeSeconds - (currentTimeSeconds % 60);
@@ -108,9 +106,7 @@ export class MarketSimulator {
             const tick = this.priceGenerator.getNextTick();
             
             if (!currentCandle || currentCandle.time !== candleStartTime) {
-                if (currentCandle) {
-                    callback(currentCandle); // Emit the completed previous candle
-                }
+                // Start a new 1-minute candle
                 currentCandle = {
                     time: candleStartTime,
                     open: tick.price,
@@ -120,24 +116,31 @@ export class MarketSimulator {
                     volume: tick.volume,
                 };
             } else {
+                // Update the existing candle with the new tick
                 currentCandle.high = Math.max(currentCandle.high, tick.price);
                 currentCandle.low = Math.min(currentCandle.low, tick.price);
                 currentCandle.close = tick.price;
                 currentCandle.volume = (currentCandle.volume || 0) + tick.volume;
             }
-            
-            // For simulation purposes, we speed up time. We'll emit a "minute" worth of ticks quickly
-            // and then finalize the candle. Let's run this loop at a high frequency.
-            this.intervalId = window.setTimeout(tickLoop, 200); // Generate ticks every 200ms
-        };
-        
-        tickLoop();
+        }, 200); // Generate a tick every 200ms
+
+        // Lower-frequency emitter that sends the latest candle state to the UI
+        this.candleEmitIntervalId = window.setInterval(() => {
+            if (currentCandle) {
+                // Send a copy to the callback to prevent mutation issues
+                callback({ ...currentCandle });
+            }
+        }, 5000); // Emit update every 5 seconds as requested
     }
 
     public stop(): void {
-        if (this.intervalId) {
-            clearTimeout(this.intervalId);
-            this.intervalId = null;
+        if (this.tickIntervalId) {
+            clearInterval(this.tickIntervalId);
+            this.tickIntervalId = null;
+        }
+        if (this.candleEmitIntervalId) {
+            clearInterval(this.candleEmitIntervalId);
+            this.candleEmitIntervalId = null;
         }
     }
 }

@@ -120,7 +120,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         }
     }, []);
 
-    // Effect for handling instrument changes (generates base data)
+    // Effect for handling instrument changes (generates base data and starts live updates)
     useEffect(() => {
         if (!selectedInstrument) return;
 
@@ -135,42 +135,27 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         const historicalData = simulator.generateHistoricalData(50000);
         setBaseData(historicalData);
         
-        simulator.start((newOneMinCandle) => {
-            // Live update logic
-            const timeframeSeconds = parseInt(activeTimeframe.replace('m', '')) * 60;
-            const timeframeStart = newOneMinCandle.time - (newOneMinCandle.time % timeframeSeconds);
-            const lastCandle = lastAggregatedCandleRef.current;
-
-            let updatedCandle: CandleData;
-
-            if (lastCandle && lastCandle.time === timeframeStart) {
-                // Update the last aggregated candle
-                updatedCandle = {
-                    ...lastCandle,
-                    high: Math.max(lastCandle.high, newOneMinCandle.high),
-                    low: Math.min(lastCandle.low, newOneMinCandle.low),
-                    close: newOneMinCandle.close,
-                    volume: (lastCandle.volume || 0) + (newOneMinCandle.volume || 0),
-                };
-            } else {
-                // Start a new aggregated candle
-                updatedCandle = {
-                    time: timeframeStart,
-                    open: newOneMinCandle.open,
-                    high: newOneMinCandle.high,
-                    low: newOneMinCandle.low,
-                    close: newOneMinCandle.close,
-                    volume: newOneMinCandle.volume || 0,
-                };
-            }
-
-            lastAggregatedCandleRef.current = updatedCandle;
-            chartComponentRef.current?.updateCandle(updatedCandle);
-
+        simulator.start((updatingOneMinCandle) => {
+            // This callback runs every 5 seconds with the latest 1-min candle state.
+            
             // Update portfolio and UI with the latest price
-            const lastPrice = newOneMinCandle.close;
+            const lastPrice = updatingOneMinCandle.close;
             setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: lastPrice } : inst));
             setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: lastPrice }));
+
+            // Update the base data array. This will trigger the aggregation useEffect.
+            setBaseData(prevData => {
+                const lastCandle = prevData.length > 0 ? prevData[prevData.length - 1] : null;
+                if (lastCandle && lastCandle.time === updatingOneMinCandle.time) {
+                    // Update the last candle in the array
+                    const newData = [...prevData];
+                    newData[newData.length - 1] = updatingOneMinCandle;
+                    return newData;
+                } else {
+                    // Append a new candle if the minute has rolled over
+                    return [...prevData, updatingOneMinCandle];
+                }
+            });
         });
 
         return () => {
@@ -178,27 +163,30 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         };
     }, [selectedInstrument]);
 
-    // Effect for handling timeframe changes (aggregates base data)
+    // Effect for handling timeframe/data changes (aggregates base data for the chart)
     useEffect(() => {
-        if (baseData.length === 0) return;
-        
-        setIsLoading(true);
-        const aggregated = aggregateCandles(baseData, activeTimeframe);
-        setChartData(aggregated);
+        if (baseData.length === 0 || !selectedInstrument) return;
 
-        if (aggregated.length > 0) {
-            const lastCandle = aggregated[aggregated.length - 1];
-            lastAggregatedCandleRef.current = { ...lastCandle };
-             // Set live OHLC to the last aggregated candle
-            const initialPrice = lastCandle.close;
-            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument?.instrument_key ? { ...inst, last_price: initialPrice } : inst));
-            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument!.instrument_key]: initialPrice }));
+        const aggregated = aggregateCandles(baseData, activeTimeframe);
+        
+        const lastChartCandle = chartData.length > 0 ? chartData[chartData.length - 1] : null;
+        const latestAggregatedCandle = aggregated[aggregated.length - 1];
+        lastAggregatedCandleRef.current = latestAggregatedCandle;
+
+        // Efficiently update or replace chart data
+        if (lastChartCandle && latestAggregatedCandle && lastChartCandle.time === latestAggregatedCandle.time) {
+            // This is an update to the current bar
+            chartComponentRef.current?.updateCandle(latestAggregatedCandle);
+        } else {
+            // This is a new bar or a full timeframe change, so reset the data
+            setChartData(aggregated);
         }
 
         setIsLoading(false);
-    }, [baseData, activeTimeframe]);
+    }, [baseData, activeTimeframe, selectedInstrument]);
 
-    // Effect to pass aggregated data to the chart component
+
+    // Effect to pass newly aggregated data to the chart component
     useEffect(() => {
         if (chartData.length > 0) {
             chartComponentRef.current?.setData(chartData);
