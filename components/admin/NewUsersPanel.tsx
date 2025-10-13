@@ -5,7 +5,6 @@ import { Search } from '../common/Icons';
 interface User {
     user_id: string;
     display_name: string;
-    email: string;
     avatar_url: string | null;
     role: 'user' | 'admin' | null;
     created_at: string;
@@ -21,15 +20,21 @@ const UserManagementPanel: React.FC = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             setLoading(true);
-            // DEFINITIVE FIX: Use the new, reliable server-side Edge Function.
-            const { data, error } = await supabase.functions.invoke('get-all-users');
+            // Reverted to a direct client-side query on profiles to avoid environmental issues with Edge Functions.
+            const { data, error } = await supabase.from('profiles').select('*');
 
             if (error) {
-                setError(`Failed to fetch user data via function: ${error.message}. Please ensure the 'get-all-users' function is deployed and you are logged in as an admin.`);
-                console.error("Error fetching users with function:", error);
+                setError(`Failed to fetch profiles: ${error.message}`);
+                console.error("Error fetching profiles:", error);
             } else if (data) {
-                // The function returns data in the exact format needed. No client-side mapping required.
-                setUsers(data);
+                const mappedUsers = data.map(profile => ({
+                    user_id: profile.id,
+                    display_name: profile.full_name || 'No Name',
+                    avatar_url: profile.avatar_url,
+                    role: profile.role,
+                    created_at: profile.created_at || new Date().toISOString(),
+                }));
+                setUsers(mappedUsers);
             }
             setLoading(false);
         };
@@ -62,8 +67,7 @@ const UserManagementPanel: React.FC = () => {
 
     const filteredUsers = useMemo(() =>
         users.filter(user =>
-            user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            user.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
         ), [users, searchTerm]);
 
     if (loading) {
@@ -82,7 +86,7 @@ const UserManagementPanel: React.FC = () => {
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by name or email..."
+                        placeholder="Search by name..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -95,13 +99,12 @@ const UserManagementPanel: React.FC = () => {
                             return (
                                 <li key={user.user_id} className="p-3 flex items-center space-x-4">
                                     <img
-                                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name || user.email}&background=53AC53&color=fff`}
+                                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name}&background=53AC53&color=fff`}
                                         alt="avatar"
                                         className="w-10 h-10 rounded-full"
                                     />
                                     <div className="flex-grow">
                                         <p className="font-semibold text-text-main">{user.display_name || 'No Name'}</p>
-                                        <p className="text-sm text-text-secondary">{user.email}</p>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         {isUpdating ? (

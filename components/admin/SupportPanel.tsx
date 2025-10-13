@@ -6,7 +6,6 @@ import { Search } from '../../components/common/Icons';
 interface UserDetails {
   user_id: string;
   display_name: string;
-  email: string;
   avatar_url: string | null;
 }
 
@@ -20,7 +19,6 @@ interface Message {
 interface Conversation {
   user_id: string;
   display_name: string;
-  email: string;
   last_message_content: string;
   last_message_at: string;
   avatar_url: string | null;
@@ -46,23 +44,22 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // DEFINITIVE FIX: Use the new, reliable server-side Edge Function.
-            const { data: userData, error: usersError } = await supabase.functions.invoke('get-all-users');
+            // Step 1: Fetch all user profiles to build a user map.
+            const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, full_name, avatar_url');
 
-            if (usersError) {
-                throw new Error(`Failed to fetch user data via function: ${usersError.message}. Please ensure the 'get-all-users' function is deployed and you are logged in as an admin.`);
+            if (profilesError) {
+                throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
             }
 
             const userMap = new Map<string, UserDetails>();
-            if (userData) {
-                for (const user of (userData as any[])) {
-                    userMap.set(user.user_id, {
-                        user_id: user.user_id,
-                        display_name: user.display_name,
-                        email: user.email,
-                        avatar_url: user.avatar_url,
-                    });
-                }
+            for (const profile of profilesData) {
+                userMap.set(profile.id, {
+                    user_id: profile.id,
+                    display_name: profile.full_name || 'No Name',
+                    avatar_url: profile.avatar_url,
+                });
             }
             
             // Step 2: Fetch all support messages.
@@ -91,7 +88,6 @@ const SupportPanel: React.FC = () => {
                     combinedConversations.push({
                         user_id: userId,
                         display_name: userDetails.display_name,
-                        email: userDetails.email,
                         avatar_url: userDetails.avatar_url,
                         last_message_content: lastMessage.message_content,
                         last_message_at: lastMessage.created_at,
@@ -179,8 +175,7 @@ const SupportPanel: React.FC = () => {
 
     const filteredConversations = useMemo(() => 
         conversations.filter(convo =>
-            convo.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            convo.email?.toLowerCase().includes(searchTerm.toLowerCase())
+            convo.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
         ), [conversations, searchTerm]);
 
     return (
@@ -193,7 +188,7 @@ const SupportPanel: React.FC = () => {
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                         <input
                             type="text"
-                            placeholder="Search by name or email..."
+                            placeholder="Search by name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -212,7 +207,6 @@ const SupportPanel: React.FC = () => {
                                 <img src={convo.avatar_url || `https://ui-avatars.com/api/?name=${convo.display_name}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
                                 <div className="flex-grow overflow-hidden">
                                     <p className="font-semibold text-text-main truncate">{convo.display_name || 'No Name'}</p>
-                                    <p className="text-xs text-text-secondary truncate">{convo.email}</p>
                                     <p className="text-sm text-text-secondary truncate mt-1">
                                         {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
                                     </p>
