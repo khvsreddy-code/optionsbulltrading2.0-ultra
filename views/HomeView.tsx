@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 // FIX: Updated Supabase type import to resolve module export errors.
 import type { User as SupabaseUser } from '@supabase/auth-js';
@@ -67,7 +68,7 @@ const ImageCard: React.FC<{
             onClick={onClick}
             className={`pro-card relative rounded-2xl overflow-hidden cursor-pointer group ${className}`}
         >
-            <img src={image} alt={altText} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <img src={image} alt={altText} className="w-full h-auto block transition-transform duration-300 group-hover:scale-105" />
         </div>
     );
 };
@@ -189,9 +190,13 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             <div>
                 <div
                     onClick={() => onNavigate('/practice')}
-                    className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group aspect-[4/3] md:aspect-[2/1] bg-cover bg-center"
-                    style={{ backgroundImage: `url('https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/paper%20trading%20card.png')` }}
+                    className="pro-card relative rounded-2xl overflow-hidden cursor-pointer group"
                 >
+                    <img 
+                        src="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/c1802249-a012-4953-95fe-62a74a6bce77.png" 
+                        alt="Paper Trading"
+                        className="w-full h-auto block transition-transform duration-300 group-hover:scale-105"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent p-6 flex flex-col justify-center">
                         <h2 className="text-4xl md:text-5xl font-extrabold text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">Paper<br/>Trading</h2>
                     </div>
@@ -201,10 +206,10 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
             <div>
                 <h2 className="text-xl font-bold mb-4">What are you looking for?</h2>
                 <div className="grid grid-cols-4 gap-4">
-                    <ImageCard altText="Daily Chart Analysis" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" />
-                    <ImageCard altText="Upcoming Stock Events" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} className="aspect-[9/16]" />
-                    <ImageCard altText="Telegram Subscriptions" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} className="aspect-[9/16]" />
-                    <ImageCard altText="Courses" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} className="aspect-[9/16]" />
+                    <ImageCard altText="Daily Chart Analysis" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/7316d482-dd0a-4128-a74d-0fc27123bc2f.png" onClick={() => onNavigate('/finance')} />
+                    <ImageCard altText="Upcoming Stock Events" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/97e41b94-b2fe-4131-a7c7-7485966375f9.png" onClick={() => onNavigate('/finance')} />
+                    <ImageCard altText="Telegram Subscriptions" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/16219e00-425a-4957-83df-ab7b87c95446.png" onClick={() => onNavigate('/pricing')} />
+                    <ImageCard altText="Courses" image="https://twiojujlmgannxhmrbou.supabase.co/storage/v1/object/public/app%20images/079a8f3e-3ac1-4088-aad1-d41b86041fc8.png" onClick={() => onNavigate('/learning')} />
                 </div>
             </div>
 
@@ -216,13 +221,12 @@ const HomeView: React.FC<HomeViewProps> = ({ onNavigate, user }) => {
                     </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {learningCurriculum.slice(0, 3).map(chapter => (
+                    {learningCurriculum.map(chapter => (
                         <ImageCard 
                             key={chapter.id}
                             altText={chapter.shortTitle}
                             image={chapter.image}
                             onClick={() => onNavigate(chapter.isExternalLink ? `/learning/${chapter.id.replace('ch', '') === '3' ? 'bullish' : 'bearish'}` : `/learning/module/${chapter.id}`)}
-                            className="aspect-video"
                         />
                     ))}
                 </div>
