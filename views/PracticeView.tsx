@@ -272,7 +272,6 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                     )}
                     <ChartComponent 
                        ref={chartComponentRef}
-                       key={`${selectedInstrument?.instrument_key}-${activeTimeframe}`}
                        initialData={initialChartData}
                        theme={theme}
                        activeDrawingTool={activeDrawingTool}

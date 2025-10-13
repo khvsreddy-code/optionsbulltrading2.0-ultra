@@ -42,7 +42,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         return value * 60;
     };
 
-    const startCountdown = useCallback(() => {
+    // This effect now ONLY handles the countdown timer logic.
+    useEffect(() => {
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
         countdownIntervalRef.current = window.setInterval(() => {
@@ -54,6 +55,10 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             const seconds = secondsUntilNextBar % 60;
             setCountdown(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
         }, 1000);
+
+        return () => {
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        };
     }, [timeframe]);
 
 
@@ -108,8 +113,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             borderUpColor: '#16A34A', wickDownColor: '#EF4444', wickUpColor: '#16A34A',
         });
         
-        startCountdown();
-
         const resizeObserver = new ResizeObserver(entries => {
             if (entries[0] && chartRef.current) {
                 chartRef.current.resize(entries[0].contentRect.width, entries[0].contentRect.height);
@@ -119,7 +122,6 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         
         return () => {
             resizeObserver.disconnect();
-            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
             if (chartRef.current) {
                 chartRef.current.remove();
             }
@@ -127,7 +129,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             candlestickSeriesRef.current = null;
             drawnObjectsRef.current.clear();
         };
-    }, [theme, startCountdown]);
+    }, [theme]);
     
     useEffect(() => {
         if (candlestickSeriesRef.current && initialData.length > 0) {
