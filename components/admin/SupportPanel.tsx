@@ -3,12 +3,6 @@ import { supabase } from '../../services/supabaseClient';
 import { Search } from '../../components/common/Icons';
 
 // --- TYPE DEFINITIONS ---
-interface UserDetails {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-}
-
 interface Message {
   id: string;
   created_at: string;
@@ -24,13 +18,11 @@ interface Conversation {
   avatar_url: string | null;
 }
 
-// Simple SVG Send Icon
 const SendIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
     </svg>
 );
-
 
 const SupportPanel: React.FC = () => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -41,95 +33,69 @@ const SupportPanel: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [isSending, setIsSending] = useState(false);
 
-    const fetchConversations = async () => {
+    // Fetch conversations list via Edge Function
+    const fetchConversations = async (isInitialLoad = false) => {
+        if (isInitialLoad) setLoading('list');
+        setError(null);
         try {
-            // Step 1: Fetch all support messages to find participating users.
-            const { data: messagesData, error: messagesError } = await supabase
-                .from('support_chats')
-                .select('user_id, message_content, created_at')
-                .order('created_at', { ascending: false });
-
-            if (messagesError) {
-                throw new Error(`Failed to fetch support chats: ${messagesError.message}`);
-            }
-
-            if (!messagesData || messagesData.length === 0) {
-                setConversations([]);
-                return;
-            }
-
-            // Step 2: Group messages by user_id to find the last message for each.
-            const latestMessages = new Map<string, { content: string, at: string }>();
-            for (const message of messagesData) {
-                if (!latestMessages.has(message.user_id)) {
-                    latestMessages.set(message.user_id, { content: message.message_content, at: message.created_at });
-                }
-            }
-
-            // Step 3: Build conversation list directly without fetching from `profiles` to ensure stability.
-            const combinedConversations: Conversation[] = Array.from(latestMessages.entries()).map(([userId, lastMsg]) => ({
-                user_id: userId,
-                display_name: `User ${userId.substring(0, 8)}...`,
-                avatar_url: `https://ui-avatars.com/api/?name=${userId.substring(0, 2)}&background=7065F0&color=fff`,
-                last_message_content: lastMsg.content,
-                last_message_at: lastMsg.at,
-            }));
-            
-            combinedConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
-            setConversations(combinedConversations);
-
+            const { data, error: funcError } = await supabase.functions.invoke('admin-support-actions', {
+                body: { action: 'GET_CONVERSATIONS' },
+            });
+            if (funcError) throw funcError;
+            setConversations(data || []);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-            console.error("Error fetching conversations:", err);
+            const errorMsg = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to fetch conversations: ${errorMsg}`);
         } finally {
-            setLoading('none');
+            if (isInitialLoad) setLoading('none');
         }
     };
 
-    // Fetch conversation list on mount and subscribe to updates
+    // Poll for conversation list updates
     useEffect(() => {
-        fetchConversations();
-        const channel = supabase.channel('support-list-updates-admin')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_chats' }, 
-            payload => {
-                // Refetch all conversations to ensure the list is correctly sorted and updated
-                fetchConversations();
-            }).subscribe();
-        return () => { supabase.removeChannel(channel); };
+        fetchConversations(true);
+        const intervalId = setInterval(() => fetchConversations(false), 5000); // Poll every 5 seconds
+        return () => clearInterval(intervalId);
     }, []);
 
-    // Fetch messages when a conversation is selected
+    // Fetch messages for a selected conversation via Edge Function and poll for updates
     useEffect(() => {
-        if (!selectedConvoId) return;
-        
-        const fetchMessages = async () => {
-            setLoading('chat');
-            const { data, error } = await supabase
-                .from('support_chats')
-                .select('*')
-                .eq('user_id', selectedConvoId)
-                .order('created_at', { ascending: true });
-            
-            if (error) {
-                setError(error.message);
-            } else {
-                setMessages(data || []);
+        if (!selectedConvoId) {
+            setMessages([]);
+            return;
+        }
+
+        let isMounted = true;
+        let intervalId: number;
+
+        const fetchMessages = async (isInitialLoad = false) => {
+            if (isInitialLoad) setLoading('chat');
+            try {
+                const { data, error: funcError } = await supabase.functions.invoke('admin-support-actions', {
+                    body: { action: 'GET_MESSAGES', payload: { user_id: selectedConvoId } },
+                });
+                if (funcError) throw funcError;
+                if (isMounted) {
+                    setMessages(data || []);
+                }
+            } catch (err) {
+                 if (isMounted) setError(err instanceof Error ? err.message : "Failed to fetch messages.");
+            } finally {
+                if (isMounted && isInitialLoad) setLoading('none');
             }
-            setLoading('none');
         };
 
-        fetchMessages();
+        fetchMessages(true);
+        intervalId = setInterval(() => fetchMessages(false), 3000); // Poll every 3 seconds
 
-        const channel = supabase.channel(`admin-support-chat-${selectedConvoId}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_chats', filter: `user_id=eq.${selectedConvoId}` },
-            payload => {
-                setMessages(prev => [...prev, payload.new as Message]);
-            }).subscribe();
-
-        return () => { supabase.removeChannel(channel); };
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
     }, [selectedConvoId]);
-
+    
     // Scroll to bottom on new message
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,24 +103,31 @@ const SupportPanel: React.FC = () => {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !selectedConvoId) return;
+        if (!newMessage.trim() || !selectedConvoId || isSending) return;
 
-        const { error } = await supabase.from('support_chats').insert({
-            user_id: selectedConvoId,
-            message_content: newMessage.trim(),
-            sent_by: 'admin',
-        });
-
-        if (error) {
-            console.error("Error sending admin message:", error);
-            alert("Failed to send message.");
-        } else {
+        setIsSending(true);
+        try {
+            const { data, error: funcError } = await supabase.functions.invoke('admin-support-actions', {
+                body: {
+                    action: 'SEND_MESSAGE',
+                    payload: {
+                        user_id: selectedConvoId,
+                        message_content: newMessage.trim(),
+                    }
+                }
+            });
+            if (funcError) throw funcError;
+            // Optimistically add the new message
+            setMessages(prev => [...prev, data[0]]);
             setNewMessage('');
+        } catch (err) {
+            alert(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            setIsSending(false);
         }
     };
 
     const selectedConvo = conversations.find(c => c.user_id === selectedConvoId);
-
     const filteredConversations = useMemo(() => 
         conversations.filter(convo =>
             convo.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -162,19 +135,13 @@ const SupportPanel: React.FC = () => {
 
     return (
         <div className="h-full flex overflow-hidden">
-            {/* Conversation List Panel */}
             <aside className="w-1/3 max-w-sm flex-shrink-0 bg-background border-r border-border flex flex-col">
                 <div className="p-3 border-b border-border">
                     <h2 className="font-bold text-text-main mb-2">Conversations ({filteredConversations.length})</h2>
                     <div className="relative">
                         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
-                        <input
-                            type="text"
-                            placeholder="Search by name..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
-                        />
+                        <input type="text" placeholder="Search by name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main" />
                     </div>
                 </div>
                 {loading === 'list' ? (
@@ -202,8 +169,6 @@ const SupportPanel: React.FC = () => {
                     </div>
                 )}
             </aside>
-
-            {/* Chat Panel */}
             <main className="flex-1 flex flex-col bg-background">
                 {!selectedConvoId ? (
                     <div className="flex-grow flex items-center justify-center text-center text-text-secondary p-4">
@@ -219,7 +184,6 @@ const SupportPanel: React.FC = () => {
                             {messages.map(msg => {
                                 const isImage = msg.message_content.startsWith('[IMAGE]');
                                 const content = isImage ? msg.message_content.replace('[IMAGE]', '') : msg.message_content;
-
                                 return (
                                     <div key={msg.id} className={`flex ${msg.sent_by === 'admin' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`p-2 rounded-lg max-w-lg ${msg.sent_by === 'admin' ? 'bg-primary text-white' : 'bg-card border border-border'}`}>
@@ -227,9 +191,7 @@ const SupportPanel: React.FC = () => {
                                                 <a href={content} target="_blank" rel="noopener noreferrer">
                                                     <img src={content} alt="User attachment" className="rounded-md max-w-xs cursor-pointer" />
                                                 </a>
-                                            ) : (
-                                                <p className="whitespace-pre-wrap px-1">{content}</p>
-                                            )}
+                                            ) : ( <p className="whitespace-pre-wrap px-1">{content}</p> )}
                                             <p className={`text-xs mt-1 ${msg.sent_by === 'admin' ? 'text-white/70' : 'text-text-secondary'} text-right`}>
                                                 {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </p>
@@ -240,12 +202,11 @@ const SupportPanel: React.FC = () => {
                             <div ref={messagesEndRef} />
                         </div>
                         <form onSubmit={handleSendMessage} className="flex-shrink-0 p-3 border-t border-border flex items-center space-x-2 bg-card">
-                            <input
-                                type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
+                            <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)}
                                 placeholder="Type your reply..."
                                 className="w-full bg-background border border-border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-text-main"
                             />
-                            <button type="submit" className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback" aria-label="Send message">
+                            <button type="submit" disabled={isSending} className="w-12 h-12 flex-shrink-0 bg-primary text-white rounded-full flex items-center justify-center button-press-feedback disabled:opacity-50" aria-label="Send message">
                                 <SendIcon className="w-6 h-6" />
                             </button>
                         </form>

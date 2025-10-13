@@ -17,53 +17,47 @@ const UserManagementPanel: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     
+    const fetchUsers = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const { data, error: funcError } = await supabase.functions.invoke('get-all-users');
+            if (funcError) throw funcError;
+            setUsers(data || []);
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to fetch users via function: ${errorMsg}`);
+            console.error("Error fetching users:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchChatUsers = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // To bypass errors with fetching all profiles, we will list users who have started a support chat.
-                const { data: chatData, error: chatError } = await supabase
-                    .from('support_chats')
-                    .select('user_id');
-
-                if (chatError) {
-                    throw new Error(`Failed to get user list from chats: ${chatError.message}`);
-                }
-
-                if (!chatData) {
-                    setUsers([]);
-                    return;
-                }
-                
-                // FIX: The user_id from the database can be inferred as 'unknown'. We must filter for strings to ensure type safety.
-                const userIds = [...new Set(chatData.map(c => c.user_id))].filter((id): id is string => typeof id === 'string');
-
-                const mappedUsers: User[] = userIds.map(userId => ({
-                    user_id: userId,
-                    display_name: `User ${userId.substring(0, 8)}...`,
-                    email: 'N/A',
-                    avatar_url: `https://ui-avatars.com/api/?name=${userId.substring(0, 2)}&background=53AC53&color=fff`,
-                    role: null, // Role information is unavailable without access to the 'profiles' table.
-                    created_at: '',
-                }));
-
-                setUsers(mappedUsers);
-
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching users.');
-                console.error("Error fetching users:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchChatUsers();
+        fetchUsers();
     }, []);
+
+    const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
+        if (!window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+            return;
+        }
+        try {
+            const { error } = await supabase.functions.invoke('set-user-role', {
+                body: { user_id: userId, role: newRole },
+            });
+            if (error) throw error;
+            // Refresh user list to show the change
+            fetchUsers();
+            alert("Role updated successfully!");
+        } catch (err) {
+            alert(`Failed to update role: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        }
+    };
 
     const filteredUsers = useMemo(() =>
         users.filter(user =>
             user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.user_id?.toLowerCase().includes(searchTerm.toLowerCase())
+            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
         ), [users, searchTerm]);
 
     if (loading) {
@@ -77,12 +71,12 @@ const UserManagementPanel: React.FC = () => {
     return (
         <div className="p-4 space-y-6">
             <div>
-                <h2 className="text-lg font-bold text-text-main mb-4">Users Who Contacted Support ({filteredUsers.length})</h2>
+                <h2 className="text-lg font-bold text-text-main mb-4">User Management ({filteredUsers.length})</h2>
                  <div className="relative mb-4">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by ID..."
+                        placeholder="Search by name or email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -99,9 +93,18 @@ const UserManagementPanel: React.FC = () => {
                                 />
                                 <div className="flex-grow">
                                     <p className="font-semibold text-text-main">{user.display_name}</p>
-                                    <p className="text-sm text-text-secondary">{user.user_id}</p>
+                                    <p className="text-sm text-text-secondary">{user.email}</p>
                                 </div>
-                                {/* Role management is temporarily disabled to ensure stability. */}
+                                <div className="flex-shrink-0">
+                                    <select
+                                        value={user.role || 'user'}
+                                        onChange={(e) => handleRoleChange(user.user_id, e.target.value as 'user' | 'admin')}
+                                        className="bg-background border border-border rounded-md px-2 py-1 text-sm text-text-main focus:outline-none focus:ring-1 focus:ring-primary"
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
                             </li>
                         ))}
                     </ul>
