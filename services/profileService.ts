@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
@@ -8,7 +9,7 @@ export interface ProfileData {
     subscription_status: 'free' | 'premium';
     subscription_expires_at: string | null;
     updated_at?: string;
-    role?: 'user' | 'admin'; // NEW: Add role property
+    role?: 'user' | 'admin';
 }
 
 const defaultProfile: ProfileData = {
@@ -16,13 +17,13 @@ const defaultProfile: ProfileData = {
     progress_data: {},
     subscription_status: 'free',
     subscription_expires_at: null,
-    role: 'user', // NEW: Default role
+    role: 'user',
 };
 
 // --- RE-ENGINEERED STATE MANAGEMENT LOGIC to prevent race conditions ---
 
 let profileState: ProfileData | null = null;
-let fetchStatus: 'idle' | 'loading' | 'loaded' = 'idle'; // NEW: Status to prevent race conditions
+let fetchStatus: 'idle' | 'loading' | 'loaded' = 'idle';
 const listeners = new Set<() => void>();
 
 const notify = () => {
@@ -34,30 +35,54 @@ const subscribe = (callback: () => void) => {
     return () => listeners.delete(callback);
 };
 
-/**
- * Directly sets the profile data in the store and notifies all subscribers.
- * @param {ProfileData} newProfile - The fresh profile data to set.
- */
 export const setProfileData = (newProfile: ProfileData) => {
     profileState = newProfile;
-    fetchStatus = 'loaded'; // Ensure status is updated
+    fetchStatus = 'loaded';
     notify();
 };
 
-
-/**
- * Clears the cached profile data and resets the fetch status on logout.
- */
 export const clearProfileData = () => {
     profileState = null;
-    fetchStatus = 'idle'; // NEW: Reset status to allow refetch on next login
+    fetchStatus = 'idle';
     notify();
 };
 
+/**
+ * A robust, read-only function to fetch the user profile from the database.
+ * It retries a few times to wait for a backend trigger to create the profile for a new user.
+ * It NEVER writes or creates a profile, preventing role overwrites.
+ * @param {string} userId - The ID of the user to fetch.
+ * @param {number} retries - The number of retry attempts.
+ * @returns {Promise<ProfileData | null>} The user's profile data or null if not found after retries.
+ */
+const fetchWithRetry = async (userId: string, retries: number): Promise<ProfileData | null> => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+    if (data) {
+        return data as ProfileData;
+    }
+
+    // If profile not found, it might be a new user and the backend trigger is delayed.
+    if (error && error.code === 'PGRST116' && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+        return fetchWithRetry(userId, retries - 1);
+    }
+
+    if (error && error.code !== 'PGRST116') {
+        throw error; // A real database error occurred
+    }
+
+    // After all retries, if still not found, return null.
+    return null;
+};
 
 /**
  * Fetches the complete profile for the currently authenticated user from Supabase.
- * If a profile doesn't exist, it creates one with proper default values.
+ * This is now a READ-ONLY operation from the client's perspective to prevent data corruption.
  */
 const fetchProfileFromDB = async (): Promise<ProfileData> => {
     try {
@@ -66,51 +91,33 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
             console.warn("No valid session for fetchProfileFromDB");
             return defaultProfile;
         }
+        
+        const userId = session.user.id;
+        const profileData = await fetchWithRetry(userId, 3); // Retry 3 times over 1.5 seconds
 
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-        let profileData: ProfileData | null = null;
-
-        if (error && error.code === 'PGRST116') {
-            // Profile does not exist, create one
-            const { data: newProfile, error: insertError } = await supabase
-                .from('profiles')
-                .insert({ 
-                    id: session.user.id,
-                    total_pnl: 0,
-                    progress_data: {},
-                    subscription_status: 'free',
-                    role: 'user',
-                })
-                .select('*')
-                .single();
-            
-            if (insertError) throw insertError;
-            profileData = newProfile;
-
-        } else if (error) {
-            throw error;
-        } else {
-            profileData = data;
+        if (profileData) {
+            return profileData;
         }
 
-        const finalProfile = profileData || defaultProfile;
-        
-        return finalProfile;
+        // CRITICAL: If the profile is still not found, it indicates a backend issue
+        // (e.g., the new user trigger failed). The client MUST NOT attempt to fix this
+        // by creating a profile, as that was the source of the role-overwrite bug.
+        // We log a clear error and return a temporary default profile to prevent the app
+        // from crashing, but crucially, WE DO NOT WRITE ANYTHING to the database.
+        console.error(
+            `CRITICAL: Profile for user ${userId} not found after multiple retries. ` +
+            `This may indicate a failed backend trigger for new user creation. ` +
+            `Falling back to a temporary default profile to prevent a crash. The user's role and data will be incorrect until the backend profile is created.`
+        );
+        return { ...defaultProfile, id: userId };
+
     } catch (e) {
-        console.error("Error in fetchProfileFromDB:", e);
+        console.error("Fatal error in fetchProfileFromDB:", e);
         return defaultProfile;
     }
 };
 
-/**
- * Forces a refetch of profile data, updates the store, and notifies all subscribers.
- * Now manages fetch status to prevent race conditions.
- */
+
 export const forceRefetchProfileData = async () => {
     fetchStatus = 'loading';
     profileState = await fetchProfileFromDB();
@@ -118,10 +125,6 @@ export const forceRefetchProfileData = async () => {
     notify();
 };
 
-/**
- * A custom hook that provides reactive access to the user's profile data.
- * Now includes logic to prevent multiple concurrent initial fetches.
- */
 export const useProfileData = (): ProfileData | null => {
     const [profile, setProfile] = useState(profileState);
 
@@ -130,7 +133,6 @@ export const useProfileData = (): ProfileData | null => {
             setProfile(profileState);
         });
 
-        // This check prevents multiple components from triggering a fetch simultaneously.
         if (fetchStatus === 'idle') {
             forceRefetchProfileData();
         } else {
@@ -145,15 +147,10 @@ export const useProfileData = (): ProfileData | null => {
     return profile;
 };
 
-/**
- * Gets the current profile data from the store, fetching if necessary.
- * Primarily for non-component logic. Components should use the hook.
- */
 export const getProfileData = async (): Promise<ProfileData> => {
     if (fetchStatus === 'loaded' && profileState) {
         return profileState;
     }
-    // If not loaded, trigger a fetch and wait for it.
     await forceRefetchProfileData();
     return profileState!;
 };
