@@ -19,9 +19,10 @@ const defaultProfile: ProfileData = {
     role: 'user', // NEW: Default role
 };
 
-// --- NEW STATE MANAGEMENT LOGIC ---
+// --- RE-ENGINEERED STATE MANAGEMENT LOGIC to prevent race conditions ---
 
 let profileState: ProfileData | null = null;
+let fetchStatus: 'idle' | 'loading' | 'loaded' = 'idle'; // NEW: Status to prevent race conditions
 const listeners = new Set<() => void>();
 
 const notify = () => {
@@ -35,21 +36,21 @@ const subscribe = (callback: () => void) => {
 
 /**
  * Directly sets the profile data in the store and notifies all subscribers.
- * This is used by write operations to bypass read-after-write race conditions.
  * @param {ProfileData} newProfile - The fresh profile data to set.
  */
 export const setProfileData = (newProfile: ProfileData) => {
     profileState = newProfile;
+    fetchStatus = 'loaded'; // Ensure status is updated
     notify();
 };
 
 
 /**
- * NEW: Clears the cached profile data from the local store.
- * This should be called on user logout.
+ * Clears the cached profile data and resets the fetch status on logout.
  */
 export const clearProfileData = () => {
     profileState = null;
+    fetchStatus = 'idle'; // NEW: Reset status to allow refetch on next login
     notify();
 };
 
@@ -57,7 +58,6 @@ export const clearProfileData = () => {
 /**
  * Fetches the complete profile for the currently authenticated user from Supabase.
  * If a profile doesn't exist, it creates one with proper default values.
- * This is the internal fetcher for our store.
  */
 const fetchProfileFromDB = async (): Promise<ProfileData> => {
     try {
@@ -84,7 +84,7 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
                     total_pnl: 0,
                     progress_data: {},
                     subscription_status: 'free',
-                    role: 'user', // NEW: Ensure new profiles get a role
+                    role: 'user',
                 })
                 .select('*')
                 .single();
@@ -109,38 +109,34 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
 
 /**
  * Forces a refetch of profile data, updates the store, and notifies all subscribers.
- * This should be called after any mutation.
+ * Now manages fetch status to prevent race conditions.
  */
 export const forceRefetchProfileData = async () => {
+    fetchStatus = 'loading';
     profileState = await fetchProfileFromDB();
+    fetchStatus = 'loaded';
     notify();
 };
 
 /**
  * A custom hook that provides reactive access to the user's profile data.
- * Components using this hook will automatically re-render when the profile data changes.
+ * Now includes logic to prevent multiple concurrent initial fetches.
  */
 export const useProfileData = (): ProfileData | null => {
     const [profile, setProfile] = useState(profileState);
 
     useEffect(() => {
-        // Subscribe to future changes
         const unsubscribe = subscribe(() => {
             setProfile(profileState);
         });
 
-        // Initial fetch if state is not yet populated
-        if (!profileState) {
+        // This check prevents multiple components from triggering a fetch simultaneously.
+        if (fetchStatus === 'idle') {
             forceRefetchProfileData();
         } else {
-            // Sync with latest state on mount if it's already available
             setProfile(profileState);
         }
-
-        // The useEffect cleanup function must return void or undefined.
-        // The `subscribe` function returns `() => boolean` because `Set.delete()` returns a boolean.
-        // The original arrow function `() => unsubscribe()` would implicitly return that boolean.
-        // This version wraps the call in a block to ensure the function returns void.
+        
         return () => {
             unsubscribe();
         };
@@ -154,9 +150,10 @@ export const useProfileData = (): ProfileData | null => {
  * Primarily for non-component logic. Components should use the hook.
  */
 export const getProfileData = async (): Promise<ProfileData> => {
-    if (profileState) {
+    if (fetchStatus === 'loaded' && profileState) {
         return profileState;
     }
-    profileState = await fetchProfileFromDB();
-    return profileState;
+    // If not loaded, trigger a fetch and wait for it.
+    await forceRefetchProfileData();
+    return profileState!;
 };
