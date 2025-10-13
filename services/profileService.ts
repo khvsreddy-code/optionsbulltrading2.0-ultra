@@ -48,6 +48,16 @@ export const clearProfileData = () => {
 };
 
 /**
+ * DEFINITIVE FIX: Exports the current in-memory profile state.
+ * This allows other services to perform optimistic UI updates safely
+ * without re-fetching from the database and risking data corruption from RLS.
+ */
+export const getProfileState = (): ProfileData | null => {
+    return profileState;
+};
+
+
+/**
  * A robust, read-only function to fetch the user profile from the database.
  * It retries a few times to wait for a backend trigger to create the profile for a new user.
  * It NEVER writes or creates a profile, preventing role overwrites.

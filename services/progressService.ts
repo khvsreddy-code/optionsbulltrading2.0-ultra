@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import { setProfileData } from './profileService';
+import { setProfileData, getProfileState } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -16,8 +16,9 @@ export type TestProgressData = {
 };
 
 /**
- * DEFINITIVE FIX: Toggles the completion status for a lesson using a safe, partial upsert.
- * This non-destructive "read-modify-write" pattern prevents overwriting other profile data like the user's role.
+ * DEFINITIVE FIX: Toggles lesson completion using a safe, optimistic update pattern.
+ * It reads the profile from the local state, writes only the changed data to the DB,
+ * and then updates the local state directly, preventing any possibility of overwriting the role.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -28,38 +29,36 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // Step 1: READ only the necessary data.
-        const { data: currentProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('progress_data')
-            .eq('id', session.user.id)
-            .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
-            throw fetchError;
+        const currentProfile = getProfileState();
+        if (!currentProfile) {
+            console.error("Profile not loaded in state, cannot toggle completion.");
+            return;
         }
-
-        // Step 2: MODIFY the progress data locally.
-        const newProgress = { ...(currentProfile?.progress_data || {}) };
-        newProgress[lessonId] = !newProgress[lessonId]; // Toggle the state.
         
-        // Step 3 & 4: UPSERT only the changed data columns, leaving other columns (like 'role') untouched.
-        const { data: updatedProfile, error: upsertError } = await supabase
+        // Step 1: MODIFY the progress data locally.
+        const newProgress = { ...(currentProfile.progress_data || {}) };
+        newProgress[lessonId] = !newProgress[lessonId];
+        
+        // Step 2: UPDATE only the changed data in the database. This is non-destructive.
+        const { error: updateError } = await supabase
             .from('profiles')
-            .upsert({
-                id: session.user.id, // The key for the upsert operation
+            .update({
                 progress_data: newProgress,
                 updated_at: new Date().toISOString(),
             })
-            .select('*')
-            .single();
+            .eq('id', session.user.id);
             
-        if (upsertError) throw upsertError;
-        
-        // Step 5: Update the central store with the guaranteed fresh full profile.
-        if (updatedProfile) {
-            setProfileData(updatedProfile);
+        if (updateError) {
+            console.error("Failed to update lesson completion in DB:", updateError);
+            // Optionally revert UI change here if needed, but for now we log the error.
+            return;
         }
+        
+        // Step 3: Update the central state store optimistically.
+        setProfileData({
+            ...currentProfile,
+            progress_data: newProgress,
+        });
         
     } catch (error) {
         console.error("Error in toggleSubChapterCompletion:", error);
@@ -106,9 +105,9 @@ export const getTotalLessonCount = (): number => {
 };
 
 /**
- * DEFINITIVE FIX: Updates the user's total realized P&L using a safe, partial upsert.
- * This non-destructive approach ensures that only the 'total_pnl' field is modified,
- * preserving all other profile data such as the user's role.
+ * DEFINITIVE FIX: Updates the user's P&L using a safe, optimistic update pattern.
+ * It reads from local state, writes only the 'total_pnl' to the DB, and updates
+ * the local state directly, ensuring the user's role is never touched or overwritten.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -119,40 +118,33 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        // Step 1: READ only the PNL data.
-        const { data: currentProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('total_pnl')
-            .eq('id', session.user.id)
-            .single();
-
-        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
-            throw fetchError;
+        const currentProfile = getProfileState();
+        if (!currentProfile) {
+            console.error("Profile not loaded in state, cannot update PNL.");
+            return;
         }
 
-        // Step 2: Calculate the new PNL.
-        const newPnl = (currentProfile?.total_pnl || 0) + pnl;
+        const newPnl = (currentProfile.total_pnl || 0) + pnl;
 
-        // Step 3 & 4: UPSERT only the changed data columns.
-        const { data: updatedProfile, error: upsertError } = await supabase
+        const { error: updateError } = await supabase
             .from('profiles')
-            .upsert({
-                id: session.user.id,
+            .update({
                 total_pnl: newPnl,
                 updated_at: new Date().toISOString(),
             })
-            .select('*')
-            .single();
+            .eq('id', session.user.id);
             
-        if (upsertError) {
-            console.error("Error updating user PNL:", upsertError);
+        if (updateError) {
+            console.error("Error updating user PNL in DB:", updateError);
             return;
         }
         
-        // Step 5: Update the central store with the guaranteed fresh full profile.
-        if (updatedProfile) {
-            setProfileData(updatedProfile);
-        }
+        // Optimistically update the central state
+        setProfileData({
+            ...currentProfile,
+            total_pnl: newPnl,
+        });
+
     } catch (e) {
         console.error("Unexpected error in updateUserPnl:", e);
     }
