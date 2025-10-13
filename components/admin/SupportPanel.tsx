@@ -59,8 +59,21 @@ const SupportPanel: React.FC = () => {
             });
 
             if (functionError) {
-                const errorContext = await functionError.context.json();
-                throw new Error(errorContext?.error || `Failed to fetch conversations: ${functionError.message}`);
+                let detailMessage = "Failed to fetch conversations.";
+                // Check if context is a Response object and has a json method
+                if (functionError.context && typeof functionError.context.json === 'function') {
+                    try {
+                        const errorContext = await functionError.context.json();
+                        detailMessage = errorContext?.error || `The admin service returned an error: ${functionError.message}`;
+                    } catch (e) {
+                        // In case .json() fails for other reasons (e.g., not valid JSON response)
+                        detailMessage = `Could not parse the error response from the admin service.`;
+                    }
+                } else {
+                    // This branch handles network errors, CORS, 404s etc.
+                    detailMessage = `Failed to send a request to the Edge Function. Ensure the function is deployed.`;
+                }
+                throw new Error(detailMessage);
             }
 
             const messages = (data as Message[]) || [];

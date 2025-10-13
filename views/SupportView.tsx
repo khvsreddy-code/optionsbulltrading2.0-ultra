@@ -74,8 +74,16 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
         }, 
         (payload) => {
             const newMessageFromServer = payload.new as Message;
+            // Use a function for setMessages to replace optimistic message with the real one from DB
             setMessages(prevMessages => {
-                // Avoid duplicating messages that were added optimistically
+                // If a message with a temporary ID exists, replace it
+                const optimisticIndex = prevMessages.findIndex(msg => msg.id.startsWith('temp_'));
+                if (optimisticIndex > -1) {
+                    const newMessages = [...prevMessages];
+                    newMessages[optimisticIndex] = newMessageFromServer;
+                    return newMessages;
+                }
+                // Avoid duplicating messages if it's already there
                 if (prevMessages.some(msg => msg.id === newMessageFromServer.id)) {
                     return prevMessages;
                 }
@@ -120,31 +128,65 @@ const SupportView: React.FC<{ onNavigate: (path: string) => void; }> = ({ onNavi
   const handleSendMessage = async (e: React.FormEvent) => {
       e.preventDefault();
       if ((!newMessage.trim() && !imageFile) || !user) return;
+      
+      const tempId = `temp_${Date.now()}`;
 
       if (imageFile) {
           setIsUploading(true);
+          const currentImageFile = imageFile;
+          
+          // Optimistic update for image
+          const optimisticMessage: Message = {
+            id: tempId,
+            created_at: new Date().toISOString(),
+            user_id: user.id,
+            message_content: `[IMAGE]${previewUrl}`,
+            sent_by: 'user',
+          };
+          setMessages(prev => [...prev, optimisticMessage]);
+          clearAttachment();
+
           try {
-              const publicUrl = await uploadSupportImage(user.id, imageFile);
+              const publicUrl = await uploadSupportImage(user.id, currentImageFile);
               await supabase.from('support_chats').insert({
                   user_id: user.id,
                   message_content: `[IMAGE]${publicUrl}`,
                   sent_by: 'user',
               });
-              clearAttachment();
           } catch (error) {
               console.error("Error sending image:", error);
               alert(error instanceof Error ? error.message : "Failed to send image.");
+              setMessages(prev => prev.filter(m => m.id !== tempId)); // Revert on error
           } finally {
               setIsUploading(false);
           }
       } else {
           const messageContent = newMessage.trim();
           setNewMessage('');
-          await supabase.from('support_chats').insert({
+          
+          // Optimistic Update for text
+          const optimisticMessage: Message = {
+              id: tempId,
+              created_at: new Date().toISOString(),
+              user_id: user.id,
+              message_content: messageContent,
+              sent_by: 'user',
+          };
+          setMessages(prev => [...prev, optimisticMessage]);
+
+          const { error } = await supabase.from('support_chats').insert({
               user_id: user.id,
               message_content: messageContent,
               sent_by: 'user',
           });
+
+          if (error) {
+              console.error("Error sending message:", error);
+              // Revert on error
+              setMessages(prev => prev.filter(m => m.id !== tempId));
+              setNewMessage(messageContent); // Put text back
+              alert("Failed to send message.");
+          }
       }
   };
 
