@@ -46,13 +46,11 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // DEFINITIVE FIX: Use a server-side RPC function to join 'profiles' and 'auth.users'.
-            // This bypasses client-side schema cache issues that cause "could not find relationship" errors.
-            // NOTE: This assumes an RPC function `get_all_user_detail` exists on the Supabase project.
-            const { data: userData, error: usersError } = await supabase.rpc('get_all_user_detail');
+            // DEFINITIVE FIX: Use the new, reliable server-side Edge Function.
+            const { data: userData, error: usersError } = await supabase.functions.invoke('get-all-users');
 
             if (usersError) {
-                throw new Error(`Failed to fetch user data via RPC: ${usersError.message}. Please ensure the 'get_all_user_detail' function is created in your database.`);
+                throw new Error(`Failed to fetch user data via function: ${usersError.message}. Please ensure the 'get-all-users' function is deployed and you are logged in as an admin.`);
             }
 
             const userMap = new Map<string, UserDetails>();
@@ -60,9 +58,9 @@ const SupportPanel: React.FC = () => {
                 for (const user of (userData as any[])) {
                     userMap.set(user.user_id, {
                         user_id: user.user_id,
-                        display_name: user.display_name || 'No Name',
+                        display_name: user.display_name,
                         email: user.email,
-                        avatar_url: user.avatar_url || null
+                        avatar_url: user.avatar_url,
                     });
                 }
             }
