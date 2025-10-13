@@ -34,15 +34,25 @@ const SupportPanel: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isSending, setIsSending] = useState(false);
 
-    const processMessages = useCallback((messages: Message[]) => {
-        const convosMap = new Map<string, Conversation>();
-        for (const msg of messages) {
-            convosMap.set(msg.user_id, {
-                user_id: msg.user_id,
-                last_message_content: msg.message_content,
-                last_message_at: msg.created_at,
-            });
+    const processAndSetConversations = useCallback((messages: Message[]) => {
+        if (!messages || messages.length === 0) {
+            setConversations([]);
+            return;
         }
+
+        const convosMap = new Map<string, Conversation>();
+        // Iterate backwards to find the last message first
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const msg = messages[i];
+            if (!convosMap.has(msg.user_id)) {
+                convosMap.set(msg.user_id, {
+                    user_id: msg.user_id,
+                    last_message_content: msg.message_content,
+                    last_message_at: msg.created_at,
+                });
+            }
+        }
+
         const sortedConversations = Array.from(convosMap.values())
             .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
         setConversations(sortedConversations);
@@ -54,31 +64,20 @@ const SupportPanel: React.FC = () => {
             setError(null);
         }
         try {
-            const { data, error: functionError } = await supabase.functions.invoke('admin-support-actions', {
-                body: { action: 'GET_ALL_MESSAGES' }
-            });
+            // This direct, client-side query bypasses the need for a deployed Edge Function.
+            // It relies on RLS policies allowing an admin to read the 'support_chats' table.
+            const { data, error: fetchError } = await supabase
+                .from('support_chats')
+                .select('*')
+                .order('created_at', { ascending: true });
 
-            if (functionError) {
-                let detailMessage = "Failed to fetch conversations.";
-                // Check if context is a Response object and has a json method
-                if (functionError.context && typeof functionError.context.json === 'function') {
-                    try {
-                        const errorContext = await functionError.context.json();
-                        detailMessage = errorContext?.error || `The admin service returned an error: ${functionError.message}`;
-                    } catch (e) {
-                        // In case .json() fails for other reasons (e.g., not valid JSON response)
-                        detailMessage = `Could not parse the error response from the admin service.`;
-                    }
-                } else {
-                    // This branch handles network errors, CORS, 404s etc.
-                    detailMessage = `Failed to send a request to the Edge Function. Ensure the function is deployed.`;
-                }
-                throw new Error(detailMessage);
+            if (fetchError) {
+                throw new Error(`Database error: ${fetchError.message}. Please ensure your RLS policies allow admin access.`);
             }
 
-            const messages = (data as Message[]) || [];
+            const messages = data || [];
             setAllMessages(messages);
-            processMessages(messages);
+            processAndSetConversations(messages);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch data.";
             if (isInitialLoad) setError(errorMessage);
@@ -86,7 +85,7 @@ const SupportPanel: React.FC = () => {
         } finally {
             if (isInitialLoad) setLoading('none');
         }
-    }, [processMessages]);
+    }, [processAndSetConversations]);
 
     useEffect(() => {
         fetchAllData(true); // Initial fetch
@@ -106,23 +105,34 @@ const SupportPanel: React.FC = () => {
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedConvoId || isSending) return;
-        setIsSending(true);
+
         const optimisticMessageContent = newMessage.trim();
         setNewMessage('');
-        
+        setIsSending(true);
+
+        const tempId = `temp_${Date.now()}`;
+        const optimisticMessage: Message = {
+            id: tempId,
+            created_at: new Date().toISOString(),
+            user_id: selectedConvoId,
+            message_content: optimisticMessageContent,
+            sent_by: 'admin',
+        };
+        setAllMessages(prev => [...prev, optimisticMessage]);
+        processAndSetConversations([...allMessages, optimisticMessage]);
+
+
         try {
-            const { data: sentMessage, error } = await supabase.functions.invoke('admin-support-actions', {
-                body: { 
-                    action: 'SEND_MESSAGE', 
-                    payload: { user_id: selectedConvoId, message_content: optimisticMessageContent } 
-                }
+            // Use a direct insert. This relies on RLS policies allowing an admin to insert.
+            const { error } = await supabase.from('support_chats').insert({
+                user_id: selectedConvoId,
+                message_content: optimisticMessageContent,
+                sent_by: 'admin',
             });
             if (error) throw error;
-            // Optimistically add the new message, the next poll will sync everything
-            setAllMessages(prev => [...prev, sentMessage as Message]);
-            processMessages([...allMessages, sentMessage as Message]);
         } catch (err) {
             alert(`Failed to send message: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            setAllMessages(prev => prev.filter(msg => msg.id !== tempId));
             setNewMessage(optimisticMessageContent);
         } finally {
             setIsSending(false);
@@ -159,7 +169,7 @@ const SupportPanel: React.FC = () => {
                                     className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
                                     <img src={`https://ui-avatars.com/api/?name=${convo.user_id.charAt(0)}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
                                     <div className="flex-grow overflow-hidden">
-                                        <p className="font-semibold text-text-main truncate font-mono">{convo.user_id.substring(0, 12)}...</p>
+                                        <p className="font-semibold text-text-main truncate font-mono text-sm" title={convo.user_id}>{convo.user_id}</p>
                                         <p className="text-sm text-text-secondary truncate mt-1">
                                             {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
                                         </p>
