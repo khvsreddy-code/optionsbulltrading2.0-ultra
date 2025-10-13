@@ -16,70 +16,49 @@ const UserManagementPanel: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>({});
-
+    
     useEffect(() => {
-        const fetchAllUsers = async () => {
+        const fetchChatUsers = async () => {
             setLoading(true);
             setError(null);
             try {
-                // Revert to a robust, client-side only query to the 'profiles' table
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select('id, avatar_url, role'); // Fetch only the columns guaranteed to exist
+                // To bypass errors with fetching all profiles, we will list users who have started a support chat.
+                const { data: chatData, error: chatError } = await supabase
+                    .from('support_chats')
+                    .select('user_id');
 
-                if (error) {
-                    throw error;
+                if (chatError) {
+                    throw new Error(`Failed to get user list from chats: ${chatError.message}`);
                 }
-                if (!data) {
-                    throw new Error("No profiles were found in the database.");
+
+                if (!chatData) {
+                    setUsers([]);
+                    return;
                 }
                 
-                // Map the profile data to the User interface, providing sensible fallbacks
-                const mappedUsers: User[] = data.map(profile => ({
-                    user_id: profile.id,
-                    display_name: `User ID: ${profile.id.substring(0, 8)}...`, // Use User ID as a fallback display name
-                    email: 'Email not available on client', // Email is not queryable from the client for security
-                    avatar_url: profile.avatar_url,
-                    role: profile.role,
-                    created_at: '', // This info is not available in the profiles table
+                // FIX: The user_id from the database can be inferred as 'unknown'. We must filter for strings to ensure type safety.
+                const userIds = [...new Set(chatData.map(c => c.user_id))].filter((id): id is string => typeof id === 'string');
+
+                const mappedUsers: User[] = userIds.map(userId => ({
+                    user_id: userId,
+                    display_name: `User ${userId.substring(0, 8)}...`,
+                    email: 'N/A',
+                    avatar_url: `https://ui-avatars.com/api/?name=${userId.substring(0, 2)}&background=53AC53&color=fff`,
+                    role: null, // Role information is unavailable without access to the 'profiles' table.
+                    created_at: '',
                 }));
 
                 setUsers(mappedUsers);
+
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching profiles.');
-                console.error("Error fetching profiles:", err);
+                setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching users.');
+                console.error("Error fetching users:", err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchAllUsers();
+        fetchChatUsers();
     }, []);
-
-    const handleRoleChange = async (userId: string, newRole: 'user' | 'admin') => {
-        setUpdatingRoles(prev => ({ ...prev, [userId]: true }));
-        try {
-            // Role updates still require a secure backend function.
-            const { error } = await supabase.functions.invoke('set-user-role', {
-                body: { user_id: userId, role: newRole },
-            });
-
-            if (error) {
-                throw new Error(`Failed to update role: ${error.message}. Ensure the 'set-user-role' function is deployed.`);
-            }
-
-            // Optimistically update the UI
-            setUsers(prevUsers =>
-                prevUsers.map(user =>
-                    user.user_id === userId ? { ...user, role: newRole } : user
-                )
-            );
-        } catch (err) {
-            alert(err instanceof Error ? err.message : 'An unknown error occurred.');
-        } finally {
-            setUpdatingRoles(prev => ({ ...prev, [userId]: false }));
-        }
-    };
 
     const filteredUsers = useMemo(() =>
         users.filter(user =>
@@ -98,12 +77,12 @@ const UserManagementPanel: React.FC = () => {
     return (
         <div className="p-4 space-y-6">
             <div>
-                <h2 className="text-lg font-bold text-text-main mb-4">User Management ({filteredUsers.length})</h2>
+                <h2 className="text-lg font-bold text-text-main mb-4">Users Who Contacted Support ({filteredUsers.length})</h2>
                  <div className="relative mb-4">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by name or ID..."
+                        placeholder="Search by ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -111,39 +90,20 @@ const UserManagementPanel: React.FC = () => {
                 </div>
                 <div className="bg-card rounded-lg border border-border">
                     <ul className="divide-y divide-border">
-                        {filteredUsers.map(user => {
-                            const isUpdating = updatingRoles[user.user_id];
-                            return (
-                                <li key={user.user_id} className="p-3 flex items-center space-x-4">
-                                    <img
-                                        src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name}&background=53AC53&color=fff`}
-                                        alt="avatar"
-                                        className="w-10 h-10 rounded-full"
-                                    />
-                                    <div className="flex-grow">
-                                        <p className="font-semibold text-text-main">{user.display_name}</p>
-                                        <p className="text-sm text-text-secondary">{user.email}</p>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        {isUpdating ? (
-                                             <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        ) : (
-                                            <select
-                                                value={user.role || 'user'}
-                                                onChange={(e) => handleRoleChange(user.user_id, e.target.value as 'user' | 'admin')}
-                                                className="bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold"
-                                            >
-                                                <option value="user">User</option>
-                                                <option value="admin">Admin</option>
-                                            </select>
-                                        )}
-                                    </div>
-                                </li>
-                            );
-                        })}
+                        {filteredUsers.map(user => (
+                            <li key={user.user_id} className="p-3 flex items-center space-x-4">
+                                <img
+                                    src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.display_name}&background=53AC53&color=fff`}
+                                    alt="avatar"
+                                    className="w-10 h-10 rounded-full"
+                                />
+                                <div className="flex-grow">
+                                    <p className="font-semibold text-text-main">{user.display_name}</p>
+                                    <p className="text-sm text-text-secondary">{user.user_id}</p>
+                                </div>
+                                {/* Role management is temporarily disabled to ensure stability. */}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </div>

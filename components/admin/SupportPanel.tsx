@@ -54,54 +54,27 @@ const SupportPanel: React.FC = () => {
                 throw new Error(`Failed to fetch support chats: ${messagesError.message}`);
             }
 
-            // Step 2: Extract unique user IDs and build the latest message map.
-            const latestMessages = new Map<string, any>();
-            const userIds = new Set<string>();
-            for (const message of messagesData) {
-                userIds.add(message.user_id);
-                if (!latestMessages.has(message.user_id)) {
-                    latestMessages.set(message.user_id, message);
-                }
-            }
-
-            if (userIds.size === 0) {
+            if (!messagesData || messagesData.length === 0) {
                 setConversations([]);
                 return;
             }
 
-            // Step 3: Fetch profile data for only the users who have sent messages.
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, avatar_url')
-                .in('id', Array.from(userIds));
-            
-            if (profilesError) {
-                throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
-            }
-
-            // Step 4: Create a map of user details with a fallback for the name.
-            const userMap = new Map<string, { display_name: string; avatar_url: string | null; }>();
-            for (const profile of profilesData) {
-                userMap.set(profile.id, {
-                    display_name: `User ID: ${profile.id.substring(0, 8)}...`,
-                    avatar_url: profile.avatar_url,
-                });
-            }
-            
-            // Step 5: Combine user data with the latest message to build the Conversation list.
-            const combinedConversations: Conversation[] = [];
-            for (const [userId, lastMessage] of latestMessages.entries()) {
-                const userDetails = userMap.get(userId);
-                if (userDetails) {
-                    combinedConversations.push({
-                        user_id: userId,
-                        display_name: userDetails.display_name,
-                        avatar_url: userDetails.avatar_url,
-                        last_message_content: lastMessage.message_content,
-                        last_message_at: lastMessage.created_at,
-                    });
+            // Step 2: Group messages by user_id to find the last message for each.
+            const latestMessages = new Map<string, { content: string, at: string }>();
+            for (const message of messagesData) {
+                if (!latestMessages.has(message.user_id)) {
+                    latestMessages.set(message.user_id, { content: message.message_content, at: message.created_at });
                 }
             }
+
+            // Step 3: Build conversation list directly without fetching from `profiles` to ensure stability.
+            const combinedConversations: Conversation[] = Array.from(latestMessages.entries()).map(([userId, lastMsg]) => ({
+                user_id: userId,
+                display_name: `User ${userId.substring(0, 8)}...`,
+                avatar_url: `https://ui-avatars.com/api/?name=${userId.substring(0, 2)}&background=7065F0&color=fff`,
+                last_message_content: lastMsg.content,
+                last_message_at: lastMsg.at,
+            }));
             
             combinedConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
             setConversations(combinedConversations);
@@ -210,18 +183,22 @@ const SupportPanel: React.FC = () => {
                     <div className="p-4 text-red-500">{error}</div>
                 ) : (
                     <div className="flex-grow overflow-y-auto">
-                        {filteredConversations.map(convo => (
-                            <button key={convo.user_id} onClick={() => setSelectedConvoId(convo.user_id)}
-                                className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
-                                <img src={convo.avatar_url || `https://ui-avatars.com/api/?name=${convo.display_name}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
-                                <div className="flex-grow overflow-hidden">
-                                    <p className="font-semibold text-text-main truncate">{convo.display_name || 'No Name'}</p>
-                                    <p className="text-sm text-text-secondary truncate mt-1">
-                                        {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
-                                    </p>
-                                </div>
-                            </button>
-                        ))}
+                        {filteredConversations.length === 0 ? (
+                            <p className="p-4 text-center text-text-secondary">No conversations yet.</p>
+                        ) : (
+                            filteredConversations.map(convo => (
+                                <button key={convo.user_id} onClick={() => setSelectedConvoId(convo.user_id)}
+                                    className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
+                                    <img src={convo.avatar_url || `https://ui-avatars.com/api/?name=${convo.display_name}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
+                                    <div className="flex-grow overflow-hidden">
+                                        <p className="font-semibold text-text-main truncate">{convo.display_name || 'No Name'}</p>
+                                        <p className="text-sm text-text-secondary truncate mt-1">
+                                            {convo.last_message_content.startsWith('[IMAGE]') ? 'Photo attachment' : convo.last_message_content}
+                                        </p>
+                                    </div>
+                                </button>
+                            ))
+                        )}
                     </div>
                 )}
             </aside>
