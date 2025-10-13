@@ -73,8 +73,10 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
             .eq('id', session.user.id)
             .single();
 
+        let profileData: ProfileData | null = null;
+
         if (error && error.code === 'PGRST116') {
-            // FIX: Insert a new profile with correct default values.
+            // Profile does not exist, create one
             const { data: newProfile, error: insertError } = await supabase
                 .from('profiles')
                 .insert({ 
@@ -88,14 +90,17 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
                 .single();
             
             if (insertError) throw insertError;
-
-            return newProfile || defaultProfile;
+            profileData = newProfile;
 
         } else if (error) {
             throw error;
+        } else {
+            profileData = data;
         }
 
-        return data || defaultProfile;
+        const finalProfile = profileData || defaultProfile;
+        
+        return finalProfile;
     } catch (e) {
         console.error("Error in fetchProfileFromDB:", e);
         return defaultProfile;
