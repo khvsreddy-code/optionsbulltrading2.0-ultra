@@ -73,7 +73,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             setPortfolio(loadedPortfolio);
         };
         initializePortfolio();
-        setSelectedInstrument(curatedStocks[0]); // Default to first instrument
+        setSelectedInstrument(curatedStocks.find(s => s.instrument_key === 'CRYPTO_BTCUSDT') || curatedStocks[0]); // Default to BTC
         if (!localStorage.getItem('hasSeenSimulatorWelcome')) {
             const timer = setTimeout(() => setShowWelcome(true), 500);
             return () => clearTimeout(timer);

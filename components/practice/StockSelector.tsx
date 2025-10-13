@@ -32,21 +32,29 @@ const StockSelector: React.FC<StockSelectorProps> = ({ instruments, onSelect, se
       {isOpen && (
         <div className="absolute z-50 w-72 mt-1 bg-card border border-border rounded-lg shadow-xl">
           <ul className="max-h-72 overflow-y-auto p-1">
-            {instruments.map(instrument => (
-                <li
-                  key={instrument.instrument_key}
-                  onClick={() => handleSelect(instrument)}
-                  className="flex items-center justify-between p-3 rounded-md transition-colors cursor-pointer hover:bg-background"
-                >
-                    <div className="flex items-center">
-                        <instrument.icon size={22} className="mr-3 text-text-main" />
-                        <div>
-                            <span className="font-semibold text-text-main">{instrument.exchange_token}</span>
-                            <div className="text-xs text-text-secondary">{instrument.name}</div>
+            {instruments.map(instrument => {
+                const isEnabled = instrument.instrument_key === 'CRYPTO_BTCUSDT';
+                return (
+                    <li
+                        key={instrument.instrument_key}
+                        onClick={() => isEnabled && handleSelect(instrument)}
+                        className={`flex items-center justify-between p-3 rounded-md transition-colors ${isEnabled ? 'cursor-pointer hover:bg-background' : 'opacity-50 cursor-not-allowed'}`}
+                    >
+                        <div className="flex items-center">
+                            <instrument.icon size={22} className="mr-3 text-text-main" />
+                            <div>
+                                <span className="font-semibold text-text-main">{instrument.exchange_token}</span>
+                                <div className="text-xs text-text-secondary">{instrument.name}</div>
+                            </div>
                         </div>
-                    </div>
-                </li>
-            ))}
+                        {!isEnabled && (
+                            <span className="text-xs font-semibold bg-primary-light text-primary px-2 py-1 rounded-full">
+                                Coming Soon
+                            </span>
+                        )}
+                    </li>
+                );
+            })}
           </ul>
         </div>
       )}

@@ -43,9 +43,9 @@ export const curatedStocks: Instrument[] = [
     expiry: '', strike: '0', tick_size: '0.05', lot_size: '1', segment: 'NSE_EQ', exchange: 'NSE'
   },
   {
-    instrument_key: 'CRYPTO_BTCUSD',
-    exchange_token: 'BTC',
-    tradingsymbol: 'BTC/USD',
+    instrument_key: 'CRYPTO_BTCUSDT',
+    exchange_token: 'BTCUSDT',
+    tradingsymbol: 'BTC/USDT',
     name: 'Bitcoin',
     last_price: 65000.00,
     instrument_type: 'CRYPTO',
