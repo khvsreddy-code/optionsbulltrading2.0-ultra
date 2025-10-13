@@ -45,6 +45,16 @@ export const setProfileData = (newProfile: ProfileData) => {
 
 
 /**
+ * NEW: Clears the cached profile data from the local store.
+ * This should be called on user logout.
+ */
+export const clearProfileData = () => {
+    profileState = null;
+    notify();
+};
+
+
+/**
  * Fetches the complete profile for the currently authenticated user from Supabase.
  * If a profile doesn't exist, it creates one with proper default values.
  * This is the internal fetcher for our store.

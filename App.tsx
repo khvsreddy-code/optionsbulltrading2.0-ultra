@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, lazy, Suspense, useRef, createContext } from 'react';
 // FIX: Corrected animejs import to handle module interoperability issues.
 import * as animejs from 'animejs';
@@ -12,7 +6,7 @@ const anime = (animejs as any).default;
 import type { Session, User as SupabaseUser } from '@supabase/auth-js';
 import { supabase } from './services/supabaseClient';
 import type { View } from './types';
-import { useProfileData } from './services/profileService'; // Import the profile hook
+import { useProfileData, forceRefetchProfileData, clearProfileData } from './services/profileService'; // Import the profile hook
 
 // Layout components
 import Header from './components/layout/Header';
@@ -143,8 +137,16 @@ const App: React.FC = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
+            
             if (_event === 'SIGNED_IN') {
+                // Force a refetch of the user's profile data from the DB
+                forceRefetchProfileData();
                 handleNavigate('/home');
+            }
+            
+            if (_event === 'SIGNED_OUT') {
+                // Clear the cached profile data on logout
+                clearProfileData();
             }
         });
 

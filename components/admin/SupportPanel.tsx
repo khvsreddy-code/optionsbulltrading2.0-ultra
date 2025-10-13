@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../services/supabaseClient';
-import { User } from '../../components/common/Icons';
+import { Search } from '../../components/common/Icons';
 
 // --- TYPE DEFINITIONS ---
 interface Message {
@@ -34,6 +34,7 @@ const SupportPanel: React.FC = () => {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState<'list' | 'chat' | 'none'>('list');
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const fetchConversations = async () => {
@@ -114,18 +115,33 @@ const SupportPanel: React.FC = () => {
 
     const selectedConvo = conversations.find(c => c.user_id === selectedConvoId);
 
+    const filteredConversations = conversations.filter(convo =>
+        convo.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        convo.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="h-full flex overflow-hidden">
             {/* Conversation List Panel */}
             <aside className="w-1/3 max-w-sm flex-shrink-0 bg-background border-r border-border flex flex-col">
                 <div className="p-3 border-b border-border">
-                    <h2 className="font-bold text-text-main">Conversations ({conversations.length})</h2>
+                    <h2 className="font-bold text-text-main mb-2">Conversations ({filteredConversations.length})</h2>
+                    <div className="relative">
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
+                        />
+                    </div>
                 </div>
                 {loading === 'list' ? (
                     <div className="flex-grow flex items-center justify-center"><p>Loading...</p></div>
                 ) : (
                     <div className="flex-grow overflow-y-auto">
-                        {conversations.map(convo => (
+                        {filteredConversations.map(convo => (
                             <button key={convo.user_id} onClick={() => setSelectedConvoId(convo.user_id)}
                                 className={`w-full text-left p-3 border-b border-border flex items-center space-x-3 transition-colors ${selectedConvoId === convo.user_id ? 'bg-primary-light' : 'hover:bg-background/50'}`}>
                                 <img src={convo.avatar_url || `https://ui-avatars.com/api/?name=${convo.display_name}&background=7065F0&color=fff`} alt="avatar" className="w-10 h-10 rounded-full" />
