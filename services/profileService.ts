@@ -55,51 +55,46 @@ export const initializeProfileListener = () => {
     if (isListenerInitialized) return;
     isListenerInitialized = true;
 
+    // This function sets up the real-time channel for a given user.
+    // The key change is that the initial data fetch now happens *after*
+    // the channel has successfully subscribed, which solves a critical race condition
+    // where database queries could fail before the user's auth context was fully ready.
     const setupChannel = (userId: string) => {
-        // Clean up existing channel if it's for a different user or doesn't exist
-        if (profileChannel && profileChannel.topic !== `realtime:public:profiles:id=eq.${userId}`) {
+        if (profileChannel) {
             supabase.removeChannel(profileChannel);
             profileChannel = null;
         }
 
-        if (!profileChannel) {
-            profileChannel = supabase.channel(`profile-${userId}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'profiles',
-                    filter: `id=eq.${userId}`
-                }, (payload) => {
-                    // On any change (INSERT for new users, UPDATE for existing), update the global state
-                    if (payload.new) {
-                        setProfileData(payload.new as ProfileData);
+        profileChannel = supabase.channel(`profile-${userId}`)
+            .on('postgres_changes', {
+                event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${userId}`
+            }, (payload) => {
+                if (payload.new) {
+                    setProfileData(payload.new as ProfileData);
+                }
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Now that subscription is confirmed, it's safe to fetch initial data.
+                    const { data, error } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .single();
+                    
+                    if (data) {
+                        setProfileData(data);
+                    } else if (error && error.code !== 'PGRST116') {
+                        console.error("Error fetching profile on subscription:", error);
                     }
-                })
-                .subscribe();
-        }
+                }
+            });
     };
 
-    const handleAuthChange = async (session: any) => {
+    const handleAuthChange = (session: any) => {
         if (session?.user) {
-            const userId = session.user.id;
-            
-            // Perform initial fetch to get data immediately on load
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (data) {
-                setProfileData(data);
-            } else if (error && error.code !== 'PGRST116') { // PGRST116 = row not found
-                console.error("Error fetching initial profile:", error);
-            }
-            // If profile is not found, we don't set a default. We wait for the realtime
-            // INSERT event from the backend trigger, which solves the race condition.
-
-            // Set up the realtime channel for this user
-            setupChannel(userId);
+            // No initial fetch here anymore. Just set up the channel.
+            setupChannel(session.user.id);
         } else {
             // User signed out, clear data and unsubscribe
             clearProfileData();
@@ -112,7 +107,9 @@ export const initializeProfileListener = () => {
 
     // Initial check when the service is first initialized
     supabase.auth.getSession().then(({ data: { session } }) => {
-        handleAuthChange(session);
+        if (session) {
+            handleAuthChange(session);
+        }
     });
 
     // Listen for all future auth state changes
@@ -131,13 +128,18 @@ export const useProfileData = (): ProfileData | null => {
     const [profile, setProfile] = useState(profileState);
 
     useEffect(() => {
-        const unsubscribe = subscribe(() => {
-            setProfile(profileState);
-        });
-        
-        // Set initial state from global store on mount
-        setProfile(profileState);
+        // Function to update local state from global state
+        const handleProfileChange = () => {
+            setProfile(getProfileState());
+        };
 
+        // Subscribe to changes in the global profile state
+        const unsubscribe = subscribe(handleProfileChange);
+        
+        // Set initial state from global store on mount, in case it's already populated
+        handleProfileChange();
+
+        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
 
