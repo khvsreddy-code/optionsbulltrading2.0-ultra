@@ -2,16 +2,6 @@ import type { CandleData, Instrument } from '../types';
 import * as animejs from 'animejs';
 const anime = (animejs as any).default;
 
-// --- A standard price movement generator for Equities ---
-function generateNextEquityPrice(lastPrice: number): number {
-    const volatility = 0.0015;
-    const trend = (Math.random() - 0.495) * 0.05;
-    const randomFactor = (Math.random() - 0.5) * 2;
-    const changePercent = trend + randomFactor * volatility;
-    let newPrice = lastPrice * (1 + changePercent);
-    return Math.max(newPrice, 0.01);
-}
-
 // --- A stateful, more advanced generator for Crypto (BTC) based on user's plan ---
 class CryptoPriceGenerator {
     private lastPrice: number;
@@ -31,59 +21,46 @@ class CryptoPriceGenerator {
     getNextTick(): { price: number, volume: number } {
         // 1. Update volatility (GARCH-like behavior)
         this.volatility = Math.sqrt(this.omega + this.alpha * this.lastReturnSq + this.beta * (this.volatility ** 2));
-
-        // 2. Generate random shock (approximating normal distribution)
         const shock = (Math.random() - 0.5) + (Math.random() - 0.5) + (Math.random() - 0.5);
-
-        // 3. Generate jump (Levy-like behavior for black swans)
         let jump = 0;
-        if (Math.random() < 0.0005) { // Low probability of a jump per tick
-            const jumpMagnitude = (Math.random() * 0.015) - 0.0075; // Jump between -0.75% and +0.75%
+        if (Math.random() < 0.0005) {
+            const jumpMagnitude = (Math.random() * 0.015) - 0.0075;
             jump = jumpMagnitude;
         }
-
-        // 4. Calculate return and new price
         const return_t = this.drift + shock * this.volatility + jump;
         const newPrice = this.lastPrice * (1 + return_t);
-
-        // 5. Update state for the next tick
         this.lastReturnSq = return_t ** 2;
         this.lastPrice = newPrice;
-        
-        // 6. Generate synthetic volume correlated with volatility
         const baseVolume = 0.05;
         const volumeMultiplier = 1 + (Math.abs(return_t) / (this.volatility + 0.00001)) * 10;
         const volume = baseVolume * volumeMultiplier * (Math.random() + 0.5);
-
-        return {
-            price: Math.max(newPrice, 0.01),
-            volume: volume,
-        };
+        return { price: Math.max(newPrice, 0.01), volume };
     }
 }
 
 export class MarketSimulator {
     private intervalId: number | null = null;
     private readonly instrument: Instrument;
-    private cryptoGenerator: CryptoPriceGenerator | null = null;
+    private priceGenerator: CryptoPriceGenerator;
+    private lastTickTime: number;
+    // FIX: Add missing 'lastPrice' property declaration.
     private lastPrice: number;
 
     constructor(instrument: Instrument) {
         this.instrument = instrument;
         this.lastPrice = instrument.last_price;
-        if (this.instrument.instrument_type === 'CRYPTO') {
-            this.cryptoGenerator = new CryptoPriceGenerator(this.lastPrice);
-        }
+        this.priceGenerator = new CryptoPriceGenerator(this.lastPrice);
+        this.lastTickTime = Date.now();
     }
-
-    public generateHistoricalData(count: number, periodInSeconds: number): CandleData[] {
+    
+    // This function ONLY generates 1-minute bars now.
+    public generateHistoricalData(count: number): CandleData[] {
         const data: CandleData[] = [];
-        let lastClose = this.instrument.last_price * (1 - (Math.random() * 0.1));
+        let lastClose = this.instrument.last_price * (1 - (Math.random() * 0.05));
+        const periodInSeconds = 60; // Hardcoded to 1 minute
         let currentTime = Math.floor(Date.now() / 1000) - count * periodInSeconds;
         
-        const localGenerator = this.instrument.instrument_type === 'CRYPTO'
-            ? new CryptoPriceGenerator(lastClose)
-            : null;
+        const localGenerator = new CryptoPriceGenerator(lastClose);
 
         for (let i = 0; i < count; i++) {
             const open = lastClose;
@@ -92,16 +69,9 @@ export class MarketSimulator {
             let close = open;
             let volume = 0;
 
-            const ticksPerCandle = periodInSeconds > 60 ? 60 : periodInSeconds;
+            const ticksPerCandle = 30; // Simulate 30 ticks per minute
             for (let j = 0; j < ticksPerCandle; j++) {
-                let tick;
-                if(localGenerator) {
-                    const cryptoTick = localGenerator.getNextTick();
-                    tick = { price: cryptoTick.price, volume: cryptoTick.volume };
-                } else {
-                    tick = { price: generateNextEquityPrice(close), volume: Math.random() * 100 + 10 };
-                }
-                
+                const tick = localGenerator.getNextTick();
                 high = Math.max(high, tick.price);
                 low = Math.min(low, tick.price);
                 close = tick.price;
@@ -111,7 +81,7 @@ export class MarketSimulator {
             if (low > open) low = open * 0.999;
             if (high < open) high = open * 1.001;
             if (close > high) high = close;
-            if (close < low) close = low;
+            if (close < low) low = low;
 
             const candle: CandleData = { time: currentTime, open, high, low, close, volume };
             data.push(candle);
@@ -120,27 +90,47 @@ export class MarketSimulator {
         }
         
         this.lastPrice = lastClose;
-        if(this.cryptoGenerator) {
-            this.cryptoGenerator = new CryptoPriceGenerator(lastClose);
-        }
-
+        this.priceGenerator = new CryptoPriceGenerator(lastClose);
+        this.lastTickTime = Date.now();
         return data;
     }
 
-    public start(callback: (tick: { price: number, volume: number, time: number }) => void): void {
+    // This function now emits a complete 1-minute candle every second for simulation speed.
+    public start(callback: (candle: CandleData) => void): void {
         this.stop();
-        const tickLoop = () => {
-            let tick;
-            if (this.cryptoGenerator) {
-                tick = this.cryptoGenerator.getNextTick();
-            } else {
-                this.lastPrice = generateNextEquityPrice(this.lastPrice);
-                tick = { price: this.lastPrice, volume: Math.random() * 10 + 1 };
-            }
+        let currentCandle: CandleData | null = null;
 
-            callback({ ...tick, time: Date.now() });
-            this.intervalId = window.setTimeout(tickLoop, anime.random(100, 400));
+        const tickLoop = () => {
+            const now = Date.now();
+            const currentTimeSeconds = Math.floor(now / 1000);
+            const candleStartTime = currentTimeSeconds - (currentTimeSeconds % 60);
+
+            const tick = this.priceGenerator.getNextTick();
+            
+            if (!currentCandle || currentCandle.time !== candleStartTime) {
+                if (currentCandle) {
+                    callback(currentCandle); // Emit the completed previous candle
+                }
+                currentCandle = {
+                    time: candleStartTime,
+                    open: tick.price,
+                    high: tick.price,
+                    low: tick.price,
+                    close: tick.price,
+                    volume: tick.volume,
+                };
+            } else {
+                currentCandle.high = Math.max(currentCandle.high, tick.price);
+                currentCandle.low = Math.min(currentCandle.low, tick.price);
+                currentCandle.close = tick.price;
+                currentCandle.volume = (currentCandle.volume || 0) + tick.volume;
+            }
+            
+            // For simulation purposes, we speed up time. We'll emit a "minute" worth of ticks quickly
+            // and then finalize the candle. Let's run this loop at a high frequency.
+            this.intervalId = window.setTimeout(tickLoop, 200); // Generate ticks every 200ms
         };
+        
         tickLoop();
     }
 

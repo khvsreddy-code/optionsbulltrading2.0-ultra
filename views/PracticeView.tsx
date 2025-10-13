@@ -32,12 +32,48 @@ interface ChartComponentHandle {
     setData: (data: CandleData[]) => void;
 }
 
+// Helper function to aggregate 1-minute candles into a larger timeframe
+const aggregateCandles = (oneMinData: CandleData[], timeframe: Timeframe): CandleData[] => {
+    const timeframeSeconds = parseInt(timeframe.replace('m', '')) * 60;
+    if (timeframeSeconds === 60) return oneMinData;
+
+    const result: CandleData[] = [];
+    let currentCandle: CandleData | null = null;
+
+    for (const oneMin of oneMinData) {
+        const timeframeStart = oneMin.time - (oneMin.time % timeframeSeconds);
+
+        if (!currentCandle || timeframeStart !== currentCandle.time) {
+            if (currentCandle) {
+                result.push(currentCandle);
+            }
+            currentCandle = {
+                time: timeframeStart,
+                open: oneMin.open,
+                high: oneMin.high,
+                low: oneMin.low,
+                close: oneMin.close,
+                volume: oneMin.volume || 0
+            };
+        } else {
+            currentCandle.high = Math.max(currentCandle.high, oneMin.high);
+            currentCandle.low = Math.min(currentCandle.low, oneMin.low);
+            currentCandle.close = oneMin.close;
+            currentCandle.volume = (currentCandle.volume || 0) + (oneMin.volume || 0);
+        }
+    }
+
+    if (currentCandle) {
+        result.push(currentCandle);
+    }
+    return result;
+};
+
+
 const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const { theme } = useContext(ThemeContext);
     const [instruments, setInstruments] = useState<Instrument[]>(curatedStocks);
     const [selectedInstrument, setSelectedInstrument] = useState<Instrument | null>(null);
-    const [initialChartData, setInitialChartData] = useState<CandleData[]>([]);
-    const [liveOhlc, setLiveOhlc] = useState<CandleData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [portfolio, setPortfolio] = useState<Portfolio>(createInitialPortfolio());
     const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
@@ -46,6 +82,10 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const [error, setError] = useState<string | null>(null);
     const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>('15m');
     
+    // New state for base 1-min data and aggregated chart data
+    const [baseData, setBaseData] = useState<CandleData[]>([]);
+    const [chartData, setChartData] = useState<CandleData[]>([]);
+
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
     const [orderDialogSide, setOrderDialogSide] = useState<OrderSide>('BUY');
     const [isPortfolioOpen, setIsPortfolioOpen] = useState(false);
@@ -56,7 +96,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
     const chartComponentRef = useRef<ChartComponentHandle>(null);
     const saveTimeoutRef = useRef<number | null>(null);
     const simulatorRef = useRef<MarketSimulator | null>(null);
-    const lastCandleRef = useRef<CandleData | null>(null);
+    const lastAggregatedCandleRef = useRef<CandleData | null>(null);
 
     // Debounced portfolio saving
     useEffect(() => {
@@ -66,7 +106,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
     }, [portfolio, isLoading]);
 
-    // Main initialization effect
+    // Initial load
     useEffect(() => {
         const initializePortfolio = async () => {
             const { portfolio: loadedPortfolio } = await loadPortfolio();
@@ -80,73 +120,90 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
         }
     }, []);
 
-    // Effect for handling instrument and timeframe changes
+    // Effect for handling instrument changes (generates base data)
     useEffect(() => {
         if (!selectedInstrument) return;
 
         simulatorRef.current?.stop();
         const simulator = new MarketSimulator(selectedInstrument);
         simulatorRef.current = simulator;
-
-        const timeframeInSeconds = parseInt(activeTimeframe.replace('m', '')) * 60;
         
         setIsLoading(true);
         setError(null);
 
-        const historicalData = simulator.generateHistoricalData(200, timeframeInSeconds);
-        setInitialChartData(historicalData);
+        // Generate a large set of 1-minute candles as the source of truth
+        const historicalData = simulator.generateHistoricalData(50000);
+        setBaseData(historicalData);
         
-        if (historicalData.length > 0) {
-            const lastHistCandle = historicalData[historicalData.length - 1];
-            lastCandleRef.current = { ...lastHistCandle };
-            setLiveOhlc(lastHistCandle);
+        simulator.start((newOneMinCandle) => {
+            // Live update logic
+            const timeframeSeconds = parseInt(activeTimeframe.replace('m', '')) * 60;
+            const timeframeStart = newOneMinCandle.time - (newOneMinCandle.time % timeframeSeconds);
+            const lastCandle = lastAggregatedCandleRef.current;
 
-            const initialPrice = lastHistCandle.close;
-            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: initialPrice } : inst));
-            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: initialPrice }));
-        }
-        setIsLoading(false);
+            let updatedCandle: CandleData;
 
-        simulator.start((tick) => {
-            const tickTimeSeconds = Math.floor(tick.time / 1000);
-            
-            let currentCandle = lastCandleRef.current;
-            if (!currentCandle) return;
-
-            const currentCandleStartTime = currentCandle.time - (currentCandle.time % timeframeInSeconds);
-
-            if (tickTimeSeconds >= currentCandleStartTime + timeframeInSeconds) {
-                // New candle
-                const newCandleStartTime = tickTimeSeconds - (tickTimeSeconds % timeframeInSeconds);
-                currentCandle = {
-                    time: newCandleStartTime,
-                    open: tick.price,
-                    high: tick.price,
-                    low: tick.price,
-                    close: tick.price,
+            if (lastCandle && lastCandle.time === timeframeStart) {
+                // Update the last aggregated candle
+                updatedCandle = {
+                    ...lastCandle,
+                    high: Math.max(lastCandle.high, newOneMinCandle.high),
+                    low: Math.min(lastCandle.low, newOneMinCandle.low),
+                    close: newOneMinCandle.close,
+                    volume: (lastCandle.volume || 0) + (newOneMinCandle.volume || 0),
                 };
             } else {
-                // Update existing candle
-                currentCandle = {
-                    ...currentCandle,
-                    high: Math.max(currentCandle.high, tick.price),
-                    low: Math.min(currentCandle.low, tick.price),
-                    close: tick.price,
+                // Start a new aggregated candle
+                updatedCandle = {
+                    time: timeframeStart,
+                    open: newOneMinCandle.open,
+                    high: newOneMinCandle.high,
+                    low: newOneMinCandle.low,
+                    close: newOneMinCandle.close,
+                    volume: newOneMinCandle.volume || 0,
                 };
             }
 
-            lastCandleRef.current = currentCandle;
-            chartComponentRef.current?.updateCandle(currentCandle);
-            setLiveOhlc(currentCandle);
+            lastAggregatedCandleRef.current = updatedCandle;
+            chartComponentRef.current?.updateCandle(updatedCandle);
 
-            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: tick.price } : inst));
-            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: tick.price }));
+            // Update portfolio and UI with the latest price
+            const lastPrice = newOneMinCandle.close;
+            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument.instrument_key ? { ...inst, last_price: lastPrice } : inst));
+            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument.instrument_key]: lastPrice }));
         });
 
         return () => {
             simulatorRef.current?.stop();
         };
-    }, [selectedInstrument, activeTimeframe]);
+    }, [selectedInstrument]);
+
+    // Effect for handling timeframe changes (aggregates base data)
+    useEffect(() => {
+        if (baseData.length === 0) return;
+        
+        setIsLoading(true);
+        const aggregated = aggregateCandles(baseData, activeTimeframe);
+        setChartData(aggregated);
+
+        if (aggregated.length > 0) {
+            const lastCandle = aggregated[aggregated.length - 1];
+            lastAggregatedCandleRef.current = { ...lastCandle };
+             // Set live OHLC to the last aggregated candle
+            const initialPrice = lastCandle.close;
+            setInstruments(prev => prev.map(inst => inst.instrument_key === selectedInstrument?.instrument_key ? { ...inst, last_price: initialPrice } : inst));
+            setPortfolio(prev => updatePortfolioValue(prev, { [selectedInstrument!.instrument_key]: initialPrice }));
+        }
+
+        setIsLoading(false);
+    }, [baseData, activeTimeframe]);
+
+    // Effect to pass aggregated data to the chart component
+    useEffect(() => {
+        if (chartData.length > 0) {
+            chartComponentRef.current?.setData(chartData);
+        }
+    }, [chartData]);
     
     const savePortfolioNow = (portfolioState: Portfolio): Portfolio => {
         if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -252,7 +309,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
             <main className="flex-grow flex flex-col">
                 <ChartHeader
                     instruments={instruments} onSelectInstrument={setSelectedInstrument} selectedInstrument={selectedInstrument}
-                    liveOhlc={liveOhlc}
+                    liveOhlc={lastAggregatedCandleRef.current}
                     onTradeButtonClick={handleOpenOrderDialog}
                     activeTool={activeDrawingTool}
                     onSelectTool={(tool) => setActiveDrawingTool(tool)}
@@ -272,7 +329,7 @@ const PracticeView: React.FC<PracticeViewProps> = ({ onNavigate }) => {
                     )}
                     <ChartComponent 
                        ref={chartComponentRef}
-                       initialData={initialChartData}
+                       initialData={chartData}
                        theme={theme}
                        activeDrawingTool={activeDrawingTool}
                        drawings={drawings}
