@@ -5,6 +5,7 @@ import { Search } from '../common/Icons';
 interface User {
     user_id: string;
     display_name: string;
+    email: string;
     avatar_url: string | null;
     role: 'user' | 'admin' | null;
     created_at: string;
@@ -20,23 +21,23 @@ const UserManagementPanel: React.FC = () => {
     useEffect(() => {
         const fetchAllUsers = async () => {
             setLoading(true);
-            // Reverted to a direct client-side query on profiles to avoid environmental issues with Edge Functions.
-            const { data, error } = await supabase.from('profiles').select('*');
+            setError(null);
+            try {
+                const { data, error } = await supabase.functions.invoke('get-all-users');
 
-            if (error) {
-                setError(`Failed to fetch profiles: ${error.message}`);
-                console.error("Error fetching profiles:", error);
-            } else if (data) {
-                const mappedUsers = data.map(profile => ({
-                    user_id: profile.id,
-                    display_name: profile.full_name || 'No Name',
-                    avatar_url: profile.avatar_url,
-                    role: profile.role,
-                    created_at: profile.created_at || new Date().toISOString(),
-                }));
-                setUsers(mappedUsers);
+                if (error) {
+                    throw new Error(`Failed to execute 'get-all-users' function: ${error.message}. Ensure the function is deployed and you are logged in as an admin.`);
+                }
+                if (!data) {
+                    throw new Error("The user data function returned no data.");
+                }
+                setUsers(data);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                console.error("Error fetching users via function:", err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchAllUsers();
     }, []);
@@ -67,7 +68,8 @@ const UserManagementPanel: React.FC = () => {
 
     const filteredUsers = useMemo(() =>
         users.filter(user =>
-            user.display_name?.toLowerCase().includes(searchTerm.toLowerCase())
+            user.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
         ), [users, searchTerm]);
 
     if (loading) {
@@ -86,7 +88,7 @@ const UserManagementPanel: React.FC = () => {
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
                     <input
                         type="text"
-                        placeholder="Search by name..."
+                        placeholder="Search by name or email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full max-w-sm bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 text-text-main"
@@ -105,6 +107,7 @@ const UserManagementPanel: React.FC = () => {
                                     />
                                     <div className="flex-grow">
                                         <p className="font-semibold text-text-main">{user.display_name || 'No Name'}</p>
+                                        <p className="text-sm text-text-secondary">{user.email}</p>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         {isUpdating ? (

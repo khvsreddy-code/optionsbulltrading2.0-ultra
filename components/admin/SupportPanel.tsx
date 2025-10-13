@@ -44,21 +44,21 @@ const SupportPanel: React.FC = () => {
 
     const fetchConversations = async () => {
         try {
-            // Step 1: Fetch all user profiles to build a user map.
-            const { data: profilesData, error: profilesError } = await supabase
-                .from('profiles')
-                .select('id, full_name, avatar_url');
-
-            if (profilesError) {
-                throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
+            // Step 1: Fetch all user details from the Edge Function.
+            const { data: usersData, error: usersError } = await supabase.functions.invoke('get-all-users');
+            if (usersError) {
+                throw new Error(`Failed to fetch user data via function: ${usersError.message}. Ensure the function is deployed.`);
+            }
+            if (!usersData) {
+                throw new Error("User data function returned no data.");
             }
 
             const userMap = new Map<string, UserDetails>();
-            for (const profile of profilesData) {
-                userMap.set(profile.id, {
-                    user_id: profile.id,
-                    display_name: profile.full_name || 'No Name',
-                    avatar_url: profile.avatar_url,
+            for (const user of usersData) {
+                userMap.set(user.user_id, {
+                    user_id: user.user_id,
+                    display_name: user.display_name,
+                    avatar_url: user.avatar_url,
                 });
             }
             
