@@ -20,7 +20,7 @@ const defaultProfile: ProfileData = {
     role: 'user',
 };
 
-// --- RE-ENGINEERED STATE MANAGEMENT LOGIC to prevent race conditions ---
+// --- STATE MANAGEMENT ---
 
 let profileState: ProfileData | null = null;
 let fetchStatus: 'idle' | 'loading' | 'loaded' = 'idle';
@@ -47,52 +47,13 @@ export const clearProfileData = () => {
     notify();
 };
 
-/**
- * DEFINITIVE FIX: Exports the current in-memory profile state.
- * This allows other services to perform optimistic UI updates safely
- * without re-fetching from the database and risking data corruption from RLS.
- */
 export const getProfileState = (): ProfileData | null => {
     return profileState;
 };
 
-
-/**
- * A robust, read-only function to fetch the user profile from the database.
- * It retries a few times to wait for a backend trigger to create the profile for a new user.
- * It NEVER writes or creates a profile, preventing role overwrites.
- * @param {string} userId - The ID of the user to fetch.
- * @param {number} retries - The number of retry attempts.
- * @returns {Promise<ProfileData | null>} The user's profile data or null if not found after retries.
- */
-const fetchWithRetry = async (userId: string, retries: number): Promise<ProfileData | null> => {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-    if (data) {
-        return data as ProfileData;
-    }
-
-    // If profile not found, it might be a new user and the backend trigger is delayed.
-    if (error && error.code === 'PGRST116' && retries > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-        return fetchWithRetry(userId, retries - 1);
-    }
-
-    if (error && error.code !== 'PGRST116') {
-        throw error; // A real database error occurred
-    }
-
-    // After all retries, if still not found, return null.
-    return null;
-};
-
 /**
  * Fetches the complete profile for the currently authenticated user from Supabase.
- * This is now a READ-ONLY operation from the client's perspective to prevent data corruption.
+ * This is a READ-ONLY operation to prevent client-side data corruption.
  */
 const fetchProfileFromDB = async (): Promise<ProfileData> => {
     try {
@@ -103,21 +64,33 @@ const fetchProfileFromDB = async (): Promise<ProfileData> => {
         }
         
         const userId = session.user.id;
-        const profileData = await fetchWithRetry(userId, 3); // Retry 3 times over 1.5 seconds
 
-        if (profileData) {
-            return profileData;
+        // --- DEFINITIVE FIX ---
+        // Replaced the fragile `.single()` call with a more resilient query.
+        // `.single()` throws an error if no row is found, which can happen intermittently on load.
+        // This new method returns an empty array if no row is found, which is safer to handle.
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .limit(1);
+
+        if (error) {
+            // This now only catches actual database errors, not "not found" errors.
+            throw error;
         }
 
-        // CRITICAL: If the profile is still not found, it indicates a backend issue
-        // (e.g., the new user trigger failed). The client MUST NOT attempt to fix this
-        // by creating a profile, as that was the source of the role-overwrite bug.
-        // We log a clear error and return a temporary default profile to prevent the app
-        // from crashing, but crucially, WE DO NOT WRITE ANYTHING to the database.
+        if (data && data.length > 0) {
+            // Successfully found the profile.
+            return data[0] as ProfileData;
+        }
+
+        // If the profile is still not found, it indicates a backend issue (e.g., trigger failure).
+        // The client must not attempt to create a profile. We log the error and return a default.
         console.error(
-            `CRITICAL: Profile for user ${userId} not found after multiple retries. ` +
+            `CRITICAL: Profile for user ${userId} not found. ` +
             `This may indicate a failed backend trigger for new user creation. ` +
-            `Falling back to a temporary default profile to prevent a crash. The user's role and data will be incorrect until the backend profile is created.`
+            `Falling back to a temporary default profile to prevent a crash.`
         );
         return { ...defaultProfile, id: userId };
 
