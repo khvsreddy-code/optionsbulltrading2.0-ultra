@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, memo } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState, memo, useCallback } from 'react';
 import { createChart, IChartApi, ISeriesApi, UTCTimestamp, ColorType, BarData, CrosshairMode, ILineSeries, IPriceLine, LineStyle } from 'lightweight-charts';
 import type { CandleData, Timeframe } from '../../types';
 import type { Drawing, DrawingTool } from '../../views/PracticeView';
@@ -85,11 +85,7 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         candlestickSeriesRef.current.applyOptions({
             lastValueVisible: true,
             priceLineVisible: true,
-            priceFormat: {
-                type: 'price',
-                precision: 2,
-                minMove: 0.01,
-            },
+            priceFormat: { type: 'price', precision: 2, minMove: 0.01 },
         });
 
         const resizeObserver = new ResizeObserver(entries => {
@@ -101,8 +97,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         
         return () => {
             resizeObserver.disconnect();
-            if (chart) {
-                chart.remove();
+            if (chartRef.current) {
+                chartRef.current.remove();
             }
             chartRef.current = null;
             candlestickSeriesRef.current = null;
@@ -115,25 +111,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
             const candlestickData: BarData[] = initialData.map(c => ({
                 time: c.time as UTCTimestamp, open: c.open, high: c.high, low: c.low, close: c.close,
             }));
-
             candlestickSeriesRef.current.setData(candlestickData);
-            
-            if (chartRef.current) {
-                const dataLength = candlestickData.length;
-                if (dataLength > 1) {
-                    const lastBar = candlestickData[dataLength - 1];
-                    const visibleBars = 200; 
-                    const firstVisibleBarIndex = Math.max(0, dataLength - visibleBars);
-                    const firstVisibleBar = candlestickData[firstVisibleBarIndex];
-
-                    chartRef.current.timeScale().setVisibleRange({
-                        from: firstVisibleBar.time,
-                        to: lastBar.time,
-                    });
-                } else {
-                    chartRef.current.timeScale().fitContent();
-                }
-            }
+            if (chartRef.current) chartRef.current.timeScale().fitContent();
         }
     }, [initialData]);
 
@@ -144,11 +123,8 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
     
         drawnObjectsRef.current.forEach(obj => {
             try {
-                if ('price' in obj) { 
-                    series.removePriceLine(obj as IPriceLine);
-                } else if ('setData' in obj) {
-                    chart.removeSeries(obj as ILineSeries);
-                }
+                if ('price' in (obj as any)) series.removePriceLine(obj as IPriceLine);
+                else chart.removeSeries(obj as ILineSeries);
             } catch (e) { console.warn("Could not remove drawn object", e); }
         });
         drawnObjectsRef.current.clear();
@@ -173,96 +149,87 @@ const ChartComponent = forwardRef<({ updateCandle: (candle: CandleData) => void;
         });
     }, [drawings]);
 
-    useEffect(() => {
+    const handleCrosshairMove = useCallback((param: any) => {
+        const now = Date.now();
+        if (now - lastMouseMoveTimeRef.current < 16) return;
+        lastMouseMoveTimeRef.current = now;
+
         const chart = chartRef.current;
-        if (!chart) return;
+        const series = candlestickSeriesRef.current;
 
-        const handleCrosshairMove = (param: any) => {
-            // LAG FIX: Throttle event handler to prevent main thread blocking
-            const now = Date.now();
-            if (now - lastMouseMoveTimeRef.current < 16) { // ~60fps
-                return;
-            }
-            lastMouseMoveTimeRef.current = now;
+        if (!chart || !series || !drawingStateRef.current.isDrawing || !drawingStateRef.current.startPoint || !param.point) return;
 
-            // CRASH FIX: Add safety checks for refs to prevent crashes on re-render
-            const currentChart = chartRef.current;
-            const currentSeries = candlestickSeriesRef.current;
-            if (!currentChart || !currentSeries || !drawingStateRef.current.isDrawing || !drawingStateRef.current.startPoint || !param.point) return;
-
-            if (activeDrawingTool === 'trendline') {
-                const price = currentSeries.coordinateToPrice(param.point.y);
-                const time = currentChart.timeScale().coordinateToTime(param.point.x);
+        if (activeDrawingTool === 'trendline') {
+            try {
+                const price = series.coordinateToPrice(param.point.y);
+                const time = chart.timeScale().coordinateToTime(param.point.x);
                 if (price && time && drawingStateRef.current.tempLine) {
                     drawingStateRef.current.tempLine.setData([
                         { time: drawingStateRef.current.startPoint.time, value: drawingStateRef.current.startPoint.price },
                         { time: time as UTCTimestamp, value: price },
                     ]);
                 }
+            } catch (e) {
+                console.error("Error drawing temp line:", e);
             }
-        };
+        }
+    }, [activeDrawingTool]);
 
-        const handleClick = (param: any) => {
-            // CRASH FIX: Add safety checks for refs
-            const currentChart = chartRef.current;
-            const currentSeries = candlestickSeriesRef.current;
-            if (!currentChart || !currentSeries || !param.point) return;
-            
-            const price = currentSeries.coordinateToPrice(param.point.y);
-            const time = currentChart.timeScale().coordinateToTime(param.point.x);
-            if (!price || !time) return;
+    const handleClick = useCallback((param: any) => {
+        const chart = chartRef.current;
+        const series = candlestickSeriesRef.current;
+        if (!chart || !series || !param.point) return;
+        
+        const price = series.coordinateToPrice(param.point.y);
+        const time = chart.timeScale().coordinateToTime(param.point.x);
+        if (!price || !time) return;
 
-            if (activeDrawingTool === 'horizontal') {
-                onDrawingComplete({ id: `d_${Date.now()}_${Math.random()}`, type: 'horizontal', price });
-            }
-
-            if (activeDrawingTool === 'trendline') {
-                if (!drawingStateRef.current.isDrawing) { // First click
-                    drawingStateRef.current.isDrawing = true;
-                    drawingStateRef.current.startPoint = { time: time as UTCTimestamp, price };
-                    drawingStateRef.current.tempLine = currentChart.addLineSeries({
-                        color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false,
-                    });
-                } else { // Second click
-                    if (drawingStateRef.current.startPoint) {
-                        onDrawingComplete({
-                            id: `d_${Date.now()}_${Math.random()}`, type: 'trendline',
-                            start: drawingStateRef.current.startPoint, end: { time: time as UTCTimestamp, price }
-                        });
-                    }
-                    if (drawingStateRef.current.tempLine) {
-                        try { currentChart.removeSeries(drawingStateRef.current.tempLine); } catch(e) {}
-                    }
-                    drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
-                }
-            }
-        };
-
-        let crosshairMoveHandler: any = null;
-        let clickHandler: any = null;
-
-        if (activeDrawingTool !== 'cursor') {
-            crosshairMoveHandler = (e: any) => handleCrosshairMove(e);
-            clickHandler = (e: any) => handleClick(e);
-            chart.subscribeCrosshairMove(crosshairMoveHandler);
-            chart.subscribeClick(clickHandler);
+        if (activeDrawingTool === 'horizontal') {
+            onDrawingComplete({ id: `d_${Date.now()}_${Math.random()}`, type: 'horizontal', price });
         }
 
-        return () => {
-            if (crosshairMoveHandler && chartRef.current) chartRef.current.unsubscribeCrosshairMove(crosshairMoveHandler);
-            if (clickHandler && chartRef.current) chartRef.current.unsubscribeClick(clickHandler);
-            
-            if (drawingStateRef.current.tempLine && chartRef.current) {
-                try {
-                    chartRef.current.removeSeries(drawingStateRef.current.tempLine);
-                } catch (e) {
-                    console.warn("Could not remove temp line series, chart might have been removed.", e);
+        if (activeDrawingTool === 'trendline') {
+            if (!drawingStateRef.current.isDrawing) {
+                drawingStateRef.current = {
+                    isDrawing: true,
+                    startPoint: { time: time as UTCTimestamp, price },
+                    tempLine: chart.addLineSeries({ color: '#9CA3AF', lineWidth: 2, lineStyle: LineStyle.Dashed, lastValueVisible: false, priceLineVisible: false }),
+                };
+            } else {
+                if (drawingStateRef.current.startPoint) {
+                    onDrawingComplete({
+                        id: `d_${Date.now()}_${Math.random()}`, type: 'trendline',
+                        start: drawingStateRef.current.startPoint, end: { time: time as UTCTimestamp, price }
+                    });
                 }
+                if (drawingStateRef.current.tempLine) {
+                    try { chart.removeSeries(drawingStateRef.current.tempLine); } catch(e) {}
+                }
+                drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
+            }
+        }
+    }, [activeDrawingTool, onDrawingComplete]);
+
+    useEffect(() => {
+        const chart = chartRef.current;
+        if (!chart || activeDrawingTool === 'cursor') return;
+
+        chart.subscribeCrosshairMove(handleCrosshairMove);
+        chart.subscribeClick(handleClick);
+
+        return () => {
+            if (chartRef.current) {
+                try {
+                    chartRef.current.unsubscribeCrosshairMove(handleCrosshairMove);
+                    chartRef.current.unsubscribeClick(handleClick);
+                } catch(e) {}
+            }
+            if (drawingStateRef.current.tempLine && chartRef.current) {
+                try { chartRef.current.removeSeries(drawingStateRef.current.tempLine); } catch(e) {}
             }
             drawingStateRef.current = { isDrawing: false, startPoint: null, tempLine: null };
         };
-    }, [activeDrawingTool, onDrawingComplete]);
-
+    }, [activeDrawingTool, handleClick, handleCrosshairMove]);
 
     return (
         <div className="absolute inset-0">
