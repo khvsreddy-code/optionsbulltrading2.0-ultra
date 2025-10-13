@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import { setProfileData, ProfileData } from './profileService';
+import { setProfileData } from './profileService';
 
 import { learningCurriculum } from '../data/learningContent';
 import { bullishPatterns } from '../data/learning/bullishPatternsContent';
@@ -16,8 +16,8 @@ export type TestProgressData = {
 };
 
 /**
- * DEFINITIVE FIX: Toggles the completion status for a lesson using a robust, full-object
- * "read-modify-write" pattern. This prevents data loss and avoids race conditions.
+ * DEFINITIVE FIX: Toggles the completion status for a lesson using a safe, partial upsert.
+ * This non-destructive "read-modify-write" pattern prevents overwriting other profile data like the user's role.
  * @param {string} lessonId - The ID of the lesson to update.
  */
 export const toggleSubChapterCompletion = async (lessonId: string): Promise<void> => {
@@ -28,56 +28,41 @@ export const toggleSubChapterCompletion = async (lessonId: string): Promise<void
             return;
         }
 
-        // Step 1: READ the entire latest profile.
+        // Step 1: READ only the necessary data.
         const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('progress_data')
             .eq('id', session.user.id)
             .single();
 
-        // Abort on critical fetch error, but allow "not found" for new profiles.
-        if (fetchError && fetchError.code !== 'PGRST116') {
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
             throw fetchError;
         }
 
-        // Step 2: MODIFY the progress data using a non-destructive pattern.
-        const baseProfile: ProfileData = {
-            id: session.user.id,
-            total_pnl: 0,
-            progress_data: {},
-            subscription_status: 'free',
-            subscription_expires_at: null,
-            role: 'user',
-        };
-
-        const profileToUpdate: ProfileData = {
-            ...baseProfile,
-            ...currentProfile,
-        };
-        
-        const newProgress = { ...(profileToUpdate.progress_data || {}) };
+        // Step 2: MODIFY the progress data locally.
+        const newProgress = { ...(currentProfile?.progress_data || {}) };
         newProgress[lessonId] = !newProgress[lessonId]; // Toggle the state.
         
-        profileToUpdate.progress_data = newProgress;
-        profileToUpdate.updated_at = new Date().toISOString();
-
-
-        // Step 3 & 4: UPSERT the entire object and get it back with .select().
+        // Step 3 & 4: UPSERT only the changed data columns, leaving other columns (like 'role') untouched.
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert(profileToUpdate)
+            .upsert({
+                id: session.user.id, // The key for the upsert operation
+                progress_data: newProgress,
+                updated_at: new Date().toISOString(),
+            })
             .select('*')
             .single();
             
         if (upsertError) throw upsertError;
         
-        // Step 5: Update the central store with the guaranteed fresh data.
+        // Step 5: Update the central store with the guaranteed fresh full profile.
         if (updatedProfile) {
             setProfileData(updatedProfile);
         }
         
     } catch (error) {
-        console.error("Error saving progress to Supabase", error);
+        console.error("Error in toggleSubChapterCompletion:", error);
     }
 };
 
@@ -121,8 +106,9 @@ export const getTotalLessonCount = (): number => {
 };
 
 /**
- * DEFINITIVE FIX: Updates the user's total realized P&L using a robust, full-object
- * "read-modify-write" pattern that no longer destroys other profile data.
+ * DEFINITIVE FIX: Updates the user's total realized P&L using a safe, partial upsert.
+ * This non-destructive approach ensures that only the 'total_pnl' field is modified,
+ * preserving all other profile data such as the user's role.
  * @param {number} pnl - The P&L from the latest trade (can be positive or negative).
  */
 export const updateUserPnl = async (pnl: number): Promise<void> => {
@@ -133,39 +119,28 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        // Step 1: READ the entire latest profile.
+        // Step 1: READ only the PNL data.
         const { data: currentProfile, error: fetchError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('total_pnl')
             .eq('id', session.user.id)
             .single();
 
-        // Abort on critical fetch error, but allow "not found".
-        if (fetchError && fetchError.code !== 'PGRST116') {
+        if (fetchError && fetchError.code !== 'PGRST116') { // Allow 'not found' error.
             throw fetchError;
         }
 
-        // Step 2: MODIFY the P&L data using a non-destructive pattern.
-        const baseProfile: ProfileData = {
-            id: session.user.id,
-            total_pnl: 0,
-            progress_data: {},
-            subscription_status: 'free',
-            subscription_expires_at: null,
-            role: 'user',
-        };
-        const profileToUpdate: ProfileData = {
-            ...baseProfile,
-            ...currentProfile,
-        };
-        
-        profileToUpdate.total_pnl = (profileToUpdate.total_pnl || 0) + pnl;
-        profileToUpdate.updated_at = new Date().toISOString();
+        // Step 2: Calculate the new PNL.
+        const newPnl = (currentProfile?.total_pnl || 0) + pnl;
 
-        // Step 3 & 4: UPSERT the entire object and get it back with .select().
+        // Step 3 & 4: UPSERT only the changed data columns.
         const { data: updatedProfile, error: upsertError } = await supabase
             .from('profiles')
-            .upsert(profileToUpdate)
+            .upsert({
+                id: session.user.id,
+                total_pnl: newPnl,
+                updated_at: new Date().toISOString(),
+            })
             .select('*')
             .single();
             
@@ -174,7 +149,7 @@ export const updateUserPnl = async (pnl: number): Promise<void> => {
             return;
         }
         
-        // Step 5: Update the central store with the guaranteed fresh data.
+        // Step 5: Update the central store with the guaranteed fresh full profile.
         if (updatedProfile) {
             setProfileData(updatedProfile);
         }
