@@ -48,11 +48,11 @@ const SupportPanel: React.FC = () => {
         try {
             // DEFINITIVE FIX: Use a server-side RPC function to join 'profiles' and 'auth.users'.
             // This bypasses client-side schema cache issues that cause "could not find relationship" errors.
-            // NOTE: This assumes an RPC function `get_all_user_details` exists on the Supabase project.
-            const { data: userData, error: usersError } = await supabase.rpc('get_all_user_details');
+            // NOTE: This assumes an RPC function `get_all_user_detail` exists on the Supabase project.
+            const { data: userData, error: usersError } = await supabase.rpc('get_all_user_detail');
 
             if (usersError) {
-                throw new Error(`Failed to fetch user data via RPC: ${usersError.message}. Please ensure the 'get_all_user_details' function is created in your database.`);
+                throw new Error(`Failed to fetch user data via RPC: ${usersError.message}. Please ensure the 'get_all_user_detail' function is created in your database.`);
             }
 
             const userMap = new Map<string, UserDetails>();
